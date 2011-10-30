@@ -1,3 +1,18 @@
+/*  Copyright (C) 2011 Ian Brown
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package net.ijbrown.bgtools.lmp;
 
 import javax.imageio.ImageIO;
@@ -14,7 +29,7 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA_extracted/player1.tex";
+        String filename = "/emu/bgda/BG/DATA_extracted/chest_large.tex";
 
         String outDir = "/emu/bgda/BG/DATA_extracted/";
 
@@ -29,10 +44,13 @@ public class TexDecode
     // 16 byte header.
     //    short width
     //    short height
-    //    int pad, pad, pad
 
     // Then starting at address 0x80
     // GS Packet
+
+    // Currently it is assumed that all the image data is in one GIFTag segment.
+    // This is not the case for some textures (e.g. chest_large), so the code will
+    // need extending to read the GIFTags properly.
 
     private void extract(String filename, File outDirFile) throws IOException
     {
@@ -68,11 +86,9 @@ public class TexDecode
         int rrh = DataUtil.getLEShort(fileData, 0x514);
 
         byte dbw = fileData[0x4f6];
-        int dbwPixels = dbw * 64;
 
         PalEntry[] pixels = readPixels32(fileData, palette, 0x550, rrw, rrh, rrw);
 
-//        pixels = unswizzle8bpp(pixels, finalw, finalh);
         pixels = unswizzle8bpp(pixels, rrw*2, rrh*2);
 
         int sourcew = rrw*2;
@@ -112,81 +128,6 @@ public class TexDecode
         }
     }
 
-    private PalEntry[] unswizzle32bpp(PalEntry[] pixels, int w, int h)
-    {
-        PalEntry[] unswizzled = new PalEntry[pixels.length];
-
-        for (int y = 0; y < h; ++y) {
-            for (int xx = 0; xx < w; ++xx) {
-
-                int x = xx * 4;   // byte position
-
-                int block_location = (y & (~0xf)) * w + (x & (~0xf)) * 2;
-                int swap_selector = (((y + 2) >> 2) & 0x1) * 4;
-                int posY = (((y & (~3)) >> 1) + (y & 1)) & 0x7;
-                int column_location = posY * w * 2 + ((x + swap_selector) & 0x7) * 4;
-
-                int byte_num = ((y >> 1) & 1) + ((x >> 2) & 2);     // 0,1,2,3
-
-                unswizzled[(y * w) + xx] = pixels[(block_location + column_location + byte_num) / 4];
-            }
-        }
-        return unswizzled;
-    }
-
-
-    int block32[] = new int[]
-            {
-                    0, 1, 4, 5, 16, 17, 20, 21,
-                    2, 3, 6, 7, 18, 19, 22, 23,
-                    8, 9, 12, 13, 24, 25, 28, 29,
-                    10, 11, 14, 15, 26, 27, 30, 31
-            };
-
-
-    int columnWord32[] = new int[]
-            {
-                    0, 1, 4, 5, 8, 9, 12, 13,
-                    2, 3, 6, 7, 10, 11, 14, 15
-            };
-
-    PalEntry[] readTexPSMCT32(int rrw, int rrh, PalEntry[] pixels)
-    {
-        PalEntry[] unswizzled = new PalEntry[pixels.length];
-
-        int dbw = (rrw + 31)/32;
-
-        int idx=0;
-        for (int y = 0; y < rrh; y++) {
-            for (int x = 0; x < rrw; x++) {
-                // quarterpage is 16 pixels wide and 32 pixels high.
-                int quarterpageX = x / 16;
-                int pageY = y / 32;
-                int quarterwidthpage = quarterpageX + pageY * dbw;
-
-                int px = x - (x & ~63);
-                int py = y - (pageY * 32);
-
-                int blockX = px / 8;
-                int blockY = py / 8;
-                int block = block32[blockX + blockY * 8];
-
-                int bx = px - blockX * 8;
-                int by = py - blockY * 8;
-
-                int column = by / 2;
-
-                int cx = bx;
-                int cy = by - column * 2;
-                int cw = columnWord32[cx + cy * 8];
-
-                unswizzled[idx] = pixels[quarterwidthpage * 512 + block * 64 + column * 16 + cw];
-                idx++;
-            }
-        }
-        return unswizzled;
-    }
-
     private PalEntry[] unswizzle8bpp(PalEntry[] pixels, int w, int h)
     {
         PalEntry[] unswizzled = new PalEntry[pixels.length];
@@ -212,6 +153,7 @@ public class TexDecode
 
         return unswizzled;
     }
+
 
     private PalEntry[] readPixels32(byte[] fileData, PalEntry[] palette, int startOffset, int rrw, int rrh, int dbw)
     {
@@ -269,62 +211,4 @@ public class TexDecode
             return argb;
         }
     }
-
-    /*
-
-    Internally, the GE processes textures as 16 bytes by 8 rows blocks (independent of actual pixelformat,
-    so a 32×32 32-bit texture is a 128×32 texture from the swizzlings point of view).
-    When you are not swizzling, this means it will have to do scattered reads from the texture as it moves
-    the block into its texture-cache, which has a big impact on performance.
-    To improve on this, you can re-order your textures into these blocks so that it can
-    fetch one entire block by reading sequentially.
-
-
-    The swizzle function is fairly simple. If you look at the offset into texture like this (bit 0 on the right):
-
-    31                           v lg2(width)        0
-    by...by by by by by  my my my bx...bx  mx mx mx mx
-
-    bx,by are block coords of the 16×8 block within the texture.
-    bx has log2(width)-4 bits, and by has 31-log2(width)-3 bits (ie, all the MSBs).
-    mx,my are the coords within the block.
-
-    The swizzle function rotates the my-bx group left by 3 bits, giving:
-
-    by...by by by by by  bx...bx my my my  mx mx mx mx
-    leaving by and mx unchanged in the offset.
-
-    Unswizzling is identical, except you rotate the my-bx group right by 3 bits.
-
-
-    unsigned swizzle(unsigned offset, unsigned log2_w)
-    {
-        if (log2_w <= 4)
-            return offset;
-
-        unsigned w_mask = (1 << log2_w) - 1;
-
-        unsigned mx = offset & 0xf;
-        unsigned by = offset & (~7 << log2_w);
-        unsigned bx = offset & w_mask & ~0xf;
-        unsigned my = offset & (7 << log2_w);
-
-        return by | (bx << 3) | (my >> (log2_w - 4)) | mx;
-    }
-
-    unsigned unswizzle32bpp(unsigned offset, unsigned log2_w)
-    {
-        if (log2_w <= 4)
-            return offset;
-
-        unsigned w_mask = (1 << log2_w) - 1;
-
-        unsigned mx = offset & 0xf;
-        unsigned by = offset & (~7 << log2_w);
-        unsigned bx = offset & ((w_mask & 0xf) << 7);
-        unsigned my = offset & 0x70;
-
-        return by | (bx >> 3) | (my << (log2_w - 4)) | mx;
-    }
-    */
 }
