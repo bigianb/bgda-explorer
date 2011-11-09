@@ -59,21 +59,9 @@ public class VifDecode
         int numMeshes = fileData[0x12] & 0xFF;
         int offset1 = DataUtil.getLEInt(fileData, 0x24);
         int offsetVerts = DataUtil.getLEInt(fileData, 0x28);
+        int offsetEndVerts = DataUtil.getLEInt(fileData, 0x2C);
 
-        List<Vertex> vertices = readVerts(fileData, offsetVerts);
-
-        List<Vertex> vertices2 = readVerts(fileData, 0x6b0);
-        vertices.addAll(readVerts(fileData, 0xa90));
-        vertices.addAll(readVerts(fileData, 0xe00));
-        vertices.addAll(readVerts(fileData, 0x1190));
-        vertices.addAll(readVerts(fileData, 0x1500));
-        vertices.addAll(readVerts(fileData, 0x1870));
-        vertices.addAll(readVerts(fileData, 0x1BE0));
-        vertices.addAll(readVerts(fileData, 0x1F90));
-        vertices.addAll(readVerts(fileData, 0x2310));
-        vertices.addAll(readVerts(fileData, 0x24D0));
-
-        vertices.addAll(vertices2);
+        List<Vertex> vertices = readVerts(fileData, offsetVerts, offsetEndVerts);
         System.out.println("Read " + vertices.size() + " vertices");
 
         File objFile = new File(outDir, "barrel.obj");
@@ -83,7 +71,7 @@ public class VifDecode
     private void writeObj(List<Vertex> vertices, File objFile) throws IOException
     {
         PrintWriter writer = new PrintWriter(objFile);
-        for (Vertex vertex : vertices){
+        for (Vertex vertex : vertices) {
             writer.write("v ");
             writer.print(vertex.x);
             writer.write(" ");
@@ -92,15 +80,15 @@ public class VifDecode
             writer.print(vertex.z);
             writer.println();
         }
-        int v=1;
+        int v = 1;
         int numVerts = vertices.size();
-        while (v < numVerts-1){
+        while (v < numVerts - 1) {
             writer.write("f ");
             writer.print(v);
             writer.write(" ");
-            writer.print(v+1);
+            writer.print(v + 1);
             writer.write(" ");
-            writer.print(v+2);
+            writer.print(v + 2);
             writer.println();
             ++v;
         }
@@ -114,30 +102,87 @@ public class VifDecode
         public short z;
     }
 
-    private List<Vertex> readVerts(byte[] fileData, int offset)
+    private static final int ITOP_CMD = 4;
+    private static final int MSCAL_CMD = 0x14;
+    private static final int STMASK_CMD = 0x20;
+
+    private List<Vertex> readVerts(byte[] fileData, int offset, int endOffset)
     {
         List<Vertex> vertices = new ArrayList<Vertex>();
 
-        byte id = fileData[offset];
         int i = offset + 8;
 
-        int numVerts = fileData[offset+6] & 0x0ff;
+        while (offset < endOffset) {
+            int vifCommand = fileData[offset + 3] & 0x7f;
+            int numCommand = fileData[offset + 2] & 0xff;
+            int immCommand = DataUtil.getLEShort(fileData, offset);
+            switch (vifCommand) {
+                case ITOP_CMD:
+                    offset += 4;
+                    break;
+                 case MSCAL_CMD:
+                    offset += 4;
+                    break;
+                case STMASK_CMD:
+                    offset += 4;
+                    int stmask = DataUtil.getLEInt(fileData, offset);
+                    System.out.println("STMASK: " + stmask);
+                    offset += 4;
+                    break;
+                default:
+                    if ((vifCommand & 0x60) == 0x60) {
+                        // unpack command
+                        boolean mask = ((vifCommand & 0x10) == 0x10);
+                        int vn = (vifCommand >> 2) & 3;
+                        int vl = vifCommand & 3;
+                        int addr = immCommand & 0x1ff;
+                        boolean flag = (immCommand & 0x8000) == 0x8000;
+                        boolean usn = (immCommand & 0x4000) == 0x4000;
+                        offset += 4;
+                        if (vn == 2 && vl == 1) {
+                            // v3-16
+                            // each vertex is 128 bits, so num is the number of vertices
+                            for (int vnum = 0; vnum < numCommand; ++vnum) {
+                                short x = DataUtil.getLEShort(fileData, offset);
+                                short y = DataUtil.getLEShort(fileData, offset + 2);
+                                short z = DataUtil.getLEShort(fileData, offset + 4);
+                                offset += 6;
 
-        int maxIdx = i + 6*numVerts;
-        while (i < maxIdx){
-            short x = DataUtil.getLEShort(fileData, i);
-            short y = DataUtil.getLEShort(fileData, i+2);
-            short z = DataUtil.getLEShort(fileData, i+4);
-            
-            i += 6;
+                                Vertex vertex = new Vertex();
+                                vertex.x = x;
+                                vertex.y = y;
+                                vertex.z = z;
+                                vertices.add(vertex);
+                            }
+                            offset = (offset + 3) & ~3;
+                        } else if (vn == 2 && vl == 2) {
+                            // v3-8
+                            int numBytes = ((numCommand * 3) + 3) & ~3;
+                            offset += numBytes;
+                        } else if (vn == 3 && vl == 0) {
+                            // v4-32
+                            int numBytes = numCommand * 16;
+                            offset += numBytes;
+                        } else if (vn == 3 && vl == 1) {
+                            // v4-16
+                            int numBytes = numCommand * 8;
+                            offset += numBytes;
+                        } else if (vn == 3 && vl == 2) {
+                            // v4-8
+                            int numBytes = numCommand * 4;
+                            offset += numBytes;
+                        } else {
+                            System.out.println("Unknown vnnl combination: vn=" + vn + ", vl=" + vl);
+                            offset = endOffset;
+                        }
+                    } else {
+                        System.out.println("Unknown command: " + vifCommand);
+                        offset = endOffset;
+                    }
+                    break;
+            }
 
-            Vertex vertex = new Vertex();
-            vertex.x = x;
-            vertex.y = y;
-            vertex.z = z;
-            vertices.add(vertex);
         }
-
         return vertices;
     }
 }
