@@ -38,4 +38,8 @@ public class DataUtil
     public static short getLEShort(byte[] data, int offset) {
         return (short)((data[offset+1] & 0xff) << 8 | (data[offset] & 0xff));
     }
+
+    public static int getLEUShort(byte[] data, int offset) {
+        return ((data[offset+1] & 0xff) << 8 | (data[offset] & 0xff));
+    }
 }

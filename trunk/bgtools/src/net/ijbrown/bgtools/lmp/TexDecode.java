@@ -29,7 +29,7 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA_extracted/chest_large.tex";
+        String filename = "/emu/bgda/BG/DATA_extracted/lever.tex";
 
         String outDir = "/emu/bgda/BG/DATA_extracted/";
 
