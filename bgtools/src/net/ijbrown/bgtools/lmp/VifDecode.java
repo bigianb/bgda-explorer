@@ -26,7 +26,7 @@ public class VifDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA_extracted/barrel.vif";
+        String filename = "/emu/bgda/BG/DATA_extracted/lever.vif";
 
         String outDir = "/emu/bgda/BG/DATA_extracted/";
 
@@ -61,8 +61,12 @@ public class VifDecode
         int offsetVerts = DataUtil.getLEInt(fileData, 0x28);
         int offsetEndVerts = DataUtil.getLEInt(fileData, 0x2C);
 
-        List<Vertex> vertices = readVerts(fileData, offsetVerts, offsetEndVerts);
+        readVerts(fileData, offsetVerts, offsetEndVerts);
         System.out.println("Read " + vertices.size() + " vertices");
+
+        if (gifTag0 != null) {
+            System.out.println(gifTag0.toString());
+        }
 
         File objFile = new File(outDir, "barrel.obj");
         writeObj(vertices, objFile);
@@ -73,11 +77,11 @@ public class VifDecode
         PrintWriter writer = new PrintWriter(objFile);
         for (Vertex vertex : vertices) {
             writer.write("v ");
-            writer.print(vertex.x);
+            writer.print(vertex.x / 100.0);
             writer.write(" ");
-            writer.print(vertex.y);
+            writer.print(vertex.y / 100.0);
             writer.write(" ");
-            writer.print(vertex.z);
+            writer.print(vertex.z / 100.0);
             writer.println();
         }
         int v = 1;
@@ -92,6 +96,27 @@ public class VifDecode
             writer.println();
             ++v;
         }
+
+        for (Face face : faces) {
+            writer.write("# face ");
+            writer.write(HexUtil.formatHexUShort(face.v1));
+            writer.write(" ");
+            writer.write(HexUtil.formatHexUShort(face.v2));
+            writer.write(" ");
+            writer.write(HexUtil.formatHexUShort(face.v3));
+            writer.println();
+        }
+
+        for (ByteVector vec : normals) {
+            writer.write("# n ");
+            writer.print((int) vec.x);
+            writer.write(" ");
+            writer.print((int) vec.y);
+            writer.write(" ");
+            writer.print((int) vec.z);
+            writer.println();
+        }
+
         writer.close();
     }
 
@@ -102,28 +127,65 @@ public class VifDecode
         public short z;
     }
 
+    private class ByteVector
+    {
+        public byte x;
+        public byte y;
+        public byte z;
+    }
+
+    private class Face
+    {
+        public int v1;
+        public int v2;
+        public int v3;
+    }
+
+    GIFTag gifTag0 = null;
+
+    private List<Vertex> vertices = new ArrayList<Vertex>();
+    private List<ByteVector> normals = new ArrayList<ByteVector>();
+    private List<Face> faces = new ArrayList<Face>();
+
+    private static final int NOP_CMD = 0;
+    private static final int STCYCL_CMD = 1;
     private static final int ITOP_CMD = 4;
     private static final int MSCAL_CMD = 0x14;
     private static final int STMASK_CMD = 0x20;
 
-    private List<Vertex> readVerts(byte[] fileData, int offset, int endOffset)
+    private void readVerts(byte[] fileData, int offset, int endOffset)
     {
-        List<Vertex> vertices = new ArrayList<Vertex>();
-
-        int i = offset + 8;
-
         while (offset < endOffset) {
             int vifCommand = fileData[offset + 3] & 0x7f;
             int numCommand = fileData[offset + 2] & 0xff;
             int immCommand = DataUtil.getLEShort(fileData, offset);
             switch (vifCommand) {
-                case ITOP_CMD:
+                case NOP_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
+                    System.out.println("NOP");
                     offset += 4;
                     break;
-                 case MSCAL_CMD:
+                case STCYCL_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
+                    System.out.println("STCYCL: WL: " + (immCommand >> 8) + " CL: " + (immCommand & 0xFF));
+                    offset += 4;
+                    break;
+                case ITOP_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
+                    System.out.println("ITOP: " + immCommand);
+                    offset += 4;
+                    break;
+                case MSCAL_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
+                    System.out.println("MSCAL: " + immCommand);
+
+                    if (gifTag0 != null) {
+                        System.out.println(gifTag0.toString());
+                    }
                     offset += 4;
                     break;
                 case STMASK_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
                     offset += 4;
                     int stmask = DataUtil.getLEInt(fileData, offset);
                     System.out.println("STMASK: " + stmask);
@@ -138,29 +200,72 @@ public class VifDecode
                         int addr = immCommand & 0x1ff;
                         boolean flag = (immCommand & 0x8000) == 0x8000;
                         boolean usn = (immCommand & 0x4000) == 0x4000;
+
+                        System.out.print(HexUtil.formatHex(offset) + " ");
+                        System.out.print("UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr);
+                        System.out.print(", num: " + numCommand);
+                        if (flag) {
+                            System.out.print(", Flag");
+                        }
+                        if (usn) {
+                            System.out.print(", Unsigned");
+                        }
+                        if (mask) {
+                            System.out.print(", Mask");
+                        }
+                        System.out.println("");
                         offset += 4;
-                        if (vn == 2 && vl == 1) {
+                        if (vn == 1 && vl == 1) {
+                            // v2-16
+                            int numBytes = numCommand * 4;
+                            offset += numBytes;
+                        } else if (vn == 2 && vl == 1) {
                             // v3-16
                             // each vertex is 128 bits, so num is the number of vertices
                             for (int vnum = 0; vnum < numCommand; ++vnum) {
-                                short x = DataUtil.getLEShort(fileData, offset);
-                                short y = DataUtil.getLEShort(fileData, offset + 2);
-                                short z = DataUtil.getLEShort(fileData, offset + 4);
-                                offset += 6;
+                                if (!usn) {
+                                    short x = DataUtil.getLEShort(fileData, offset);
+                                    short y = DataUtil.getLEShort(fileData, offset + 2);
+                                    short z = DataUtil.getLEShort(fileData, offset + 4);
+                                    offset += 6;
 
-                                Vertex vertex = new Vertex();
-                                vertex.x = x;
-                                vertex.y = y;
-                                vertex.z = z;
-                                vertices.add(vertex);
+                                    Vertex vertex = new Vertex();
+                                    vertex.x = x;
+                                    vertex.y = y;
+                                    vertex.z = z;
+                                    vertices.add(vertex);
+                                } else {
+                                    int x = DataUtil.getLEUShort(fileData, offset);
+                                    int y = DataUtil.getLEUShort(fileData, offset + 2);
+                                    int z = DataUtil.getLEUShort(fileData, offset + 4);
+                                    offset += 6;
+
+                                    Face face = new Face();
+                                    face.v1 = x;
+                                    face.v2 = y;
+                                    face.v3 = z;
+                                    faces.add(face);
+                                }
                             }
                             offset = (offset + 3) & ~3;
                         } else if (vn == 2 && vl == 2) {
                             // v3-8
+                            int idx = offset;
+                            for (int vnum = 0; vnum < numCommand; ++vnum) {
+                                ByteVector vec = new ByteVector();
+                                vec.x = fileData[idx++];
+                                vec.y = fileData[idx++];
+                                vec.z = fileData[idx++];
+                                normals.add(vec);
+                            }
                             int numBytes = ((numCommand * 3) + 3) & ~3;
                             offset += numBytes;
                         } else if (vn == 3 && vl == 0) {
                             // v4-32
+                            if (1 == numCommand) {
+                                gifTag0 = new GIFTag();
+                                gifTag0.parse(fileData, offset);
+                            }
                             int numBytes = numCommand * 16;
                             offset += numBytes;
                         } else if (vn == 3 && vl == 1) {
@@ -172,7 +277,7 @@ public class VifDecode
                             int numBytes = numCommand * 4;
                             offset += numBytes;
                         } else {
-                            System.out.println("Unknown vnnl combination: vn=" + vn + ", vl=" + vl);
+                            System.out.println("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);
                             offset = endOffset;
                         }
                     } else {
@@ -181,8 +286,6 @@ public class VifDecode
                     }
                     break;
             }
-
         }
-        return vertices;
     }
 }

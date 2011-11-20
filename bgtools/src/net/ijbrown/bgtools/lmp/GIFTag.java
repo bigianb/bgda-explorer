@@ -31,9 +31,23 @@ public class GIFTag
         // bit 32 is bit 0 of next 32
         pre = ((next32 >> (46-32)) & 1) == 1;
         // prim 11 bits 47 - 57
-        prim = ((next32 >> (47 - 32)) & 0x7FF);
+        prim = ((next32 >> (47 - 32)) & 0x3FF);
         flg = ((next32 >> (58 - 32)) & 0x3);
         nreg = ((next32 >> (60 - 32)) & 0xf);
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("nloop: ").append(nloop).append(", ");
+        sb.append("eop: ").append(eop).append(", ");
+        sb.append("pre: ").append(pre).append(", ");
+        sb.append("prim: ").append(HexUtil.formatHex(prim)).append(", ");
+        sb.append("flg: ").append(flg).append(", ");
+        sb.append("nreg: ").append(nreg);
+
+        return sb.toString();
     }
 
     int nloop;
