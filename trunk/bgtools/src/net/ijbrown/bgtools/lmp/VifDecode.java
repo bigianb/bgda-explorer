@@ -26,7 +26,7 @@ public class VifDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA_extracted/lever.vif";
+        String filename = "/emu/bgda/BG/DATA_extracted/barrel.vif";
 
         String outDir = "/emu/bgda/BG/DATA_extracted/";
 
@@ -62,61 +62,63 @@ public class VifDecode
         int offsetEndVerts = DataUtil.getLEInt(fileData, 0x2C);
 
         readVerts(fileData, offsetVerts, offsetEndVerts);
-        System.out.println("Read " + vertices.size() + " vertices");
-
-        if (gifTag0 != null) {
-            System.out.println(gifTag0.toString());
-        }
 
         File objFile = new File(outDir, "barrel.obj");
-        writeObj(vertices, objFile);
+        writeObj(objFile);
     }
 
-    private void writeObj(List<Vertex> vertices, File objFile) throws IOException
+    private void writeObj(File objFile) throws IOException
     {
         PrintWriter writer = new PrintWriter(objFile);
-        for (Vertex vertex : vertices) {
-            writer.write("v ");
-            writer.print(vertex.x / 100.0);
-            writer.write(" ");
-            writer.print(vertex.y / 100.0);
-            writer.write(" ");
-            writer.print(vertex.z / 100.0);
-            writer.println();
-        }
-        int v = 1;
-        int numVerts = vertices.size();
-        while (v < numVerts - 1) {
-            writer.write("f ");
-            writer.print(v);
-            writer.write(" ");
-            writer.print(v + 1);
-            writer.write(" ");
-            writer.print(v + 2);
-            writer.println();
-            ++v;
-        }
 
-        for (Face face : faces) {
-            writer.write("# face ");
-            writer.write(HexUtil.formatHexUShort(face.v1));
-            writer.write(" ");
-            writer.write(HexUtil.formatHexUShort(face.v2));
-            writer.write(" ");
-            writer.write(HexUtil.formatHexUShort(face.v3));
-            writer.println();
-        }
+        int vstart = 1;
+        int chunkNo=1;
+        for (Chunk chunk : chunks) {
+            writer.println("# Chunk " + chunkNo++);
+            writer.println("# GifTag: " + chunk.gifTag0.toString());
+            for (Vertex vertex : chunk.vertices) {
+                writer.write("v ");
+                writer.print(vertex.x / 16.0);
+                writer.write(" ");
+                writer.print(vertex.y / 16.0);
+                writer.write(" ");
+                writer.print(vertex.z / 16.0);
+                writer.println();
+            }
+            int v = 4;
+            int numFaces = chunk.vlocs.size();
+            while (v < numFaces - 1) {
 
-        for (ByteVector vec : normals) {
-            writer.write("# n ");
-            writer.print((int) vec.x);
-            writer.write(" ");
-            writer.print((int) vec.y);
-            writer.write(" ");
-            writer.print((int) vec.z);
-            writer.println();
-        }
+                int vidx1 = vstart + (chunk.vlocs.get(v - 2).v1 & 0xFF) / 3;
+                int vidx2 = vstart + (chunk.vlocs.get(v - 1).v1 & 0xFF) / 3;
+                int vidx3 = vstart + (chunk.vlocs.get(v).v1 & 0xFF) / 3;
 
+                writer.println("# " + chunk.vlocs.get(v));
+
+                int v1raw = chunk.vlocs.get(v).v1;
+                if (v1raw < 3 * chunk.vertices.size()) {
+                    writer.write("f ");
+                    writer.print(vidx1);
+                    writer.write(" ");
+                    writer.print(vidx2);
+                    writer.write(" ");
+                    writer.print(vidx3);
+                    writer.println();
+                }
+                ++v;
+            }
+
+            for (ByteVector vec : chunk.normals) {
+                writer.write("# n ");
+                writer.print((int) vec.x);
+                writer.write(" ");
+                writer.print((int) vec.y);
+                writer.write(" ");
+                writer.print((int) vec.z);
+                writer.println();
+            }
+            vstart += chunk.vertices.size();
+        }
         writer.close();
     }
 
@@ -134,18 +136,29 @@ public class VifDecode
         public byte z;
     }
 
-    private class Face
+    private class VLoc
     {
         public int v1;
         public int v2;
         public int v3;
+
+        @Override
+        public String toString()
+        {
+            return HexUtil.formatHexUShort(v1) + ", " + HexUtil.formatHexUShort(v2) + ", " + HexUtil.formatHexUShort(v3);
+        }
     }
 
-    GIFTag gifTag0 = null;
+    private class Chunk
+    {
+        public GIFTag gifTag0 = null;
+        public List<Vertex> vertices = new ArrayList<Vertex>();
+        public List<ByteVector> normals = new ArrayList<ByteVector>();
+        public List<VLoc> vlocs = new ArrayList<VLoc>();
+    }
 
-    private List<Vertex> vertices = new ArrayList<Vertex>();
-    private List<ByteVector> normals = new ArrayList<ByteVector>();
-    private List<Face> faces = new ArrayList<Face>();
+    private Chunk currentChunk = null;
+    private List<Chunk> chunks = new ArrayList<Chunk>();
 
     private static final int NOP_CMD = 0;
     private static final int STCYCL_CMD = 1;
@@ -155,6 +168,7 @@ public class VifDecode
 
     private void readVerts(byte[] fileData, int offset, int endOffset)
     {
+        currentChunk = new Chunk();
         while (offset < endOffset) {
             int vifCommand = fileData[offset + 3] & 0x7f;
             int numCommand = fileData[offset + 2] & 0xff;
@@ -179,9 +193,9 @@ public class VifDecode
                     System.out.print(HexUtil.formatHex(offset) + " ");
                     System.out.println("MSCAL: " + immCommand);
 
-                    if (gifTag0 != null) {
-                        System.out.println(gifTag0.toString());
-                    }
+                    chunks.add(currentChunk);
+                    currentChunk = new Chunk();
+
                     offset += 4;
                     break;
                 case STMASK_CMD:
@@ -233,18 +247,18 @@ public class VifDecode
                                     vertex.x = x;
                                     vertex.y = y;
                                     vertex.z = z;
-                                    vertices.add(vertex);
+                                    currentChunk.vertices.add(vertex);
                                 } else {
                                     int x = DataUtil.getLEUShort(fileData, offset);
                                     int y = DataUtil.getLEUShort(fileData, offset + 2);
                                     int z = DataUtil.getLEUShort(fileData, offset + 4);
                                     offset += 6;
 
-                                    Face face = new Face();
-                                    face.v1 = x;
-                                    face.v2 = y;
-                                    face.v3 = z;
-                                    faces.add(face);
+                                    VLoc vloc = new VLoc();
+                                    vloc.v1 = x;
+                                    vloc.v2 = y;
+                                    vloc.v3 = z;
+                                    currentChunk.vlocs.add(vloc);
                                 }
                             }
                             offset = (offset + 3) & ~3;
@@ -256,15 +270,15 @@ public class VifDecode
                                 vec.x = fileData[idx++];
                                 vec.y = fileData[idx++];
                                 vec.z = fileData[idx++];
-                                normals.add(vec);
+                                currentChunk.normals.add(vec);
                             }
                             int numBytes = ((numCommand * 3) + 3) & ~3;
                             offset += numBytes;
                         } else if (vn == 3 && vl == 0) {
                             // v4-32
                             if (1 == numCommand) {
-                                gifTag0 = new GIFTag();
-                                gifTag0.parse(fileData, offset);
+                                currentChunk.gifTag0 = new GIFTag();
+                                currentChunk.gifTag0.parse(fileData, offset);
                             }
                             int numBytes = numCommand * 16;
                             offset += numBytes;
