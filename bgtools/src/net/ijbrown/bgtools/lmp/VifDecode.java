@@ -76,6 +76,8 @@ public class VifDecode
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
             writer.println("# GifTag: " + chunk.gifTag0.toString());
+            int[] vstrip = new int[chunk.gifTag0.nloop];
+
             for (Vertex vertex : chunk.vertices) {
                 writer.write("v ");
                 writer.print(vertex.x / 16.0);
@@ -85,18 +87,28 @@ public class VifDecode
                 writer.print(vertex.z / 16.0);
                 writer.println();
             }
-            int v = 4;
-            int numFaces = chunk.vlocs.size();
-            while (v < numFaces - 1) {
+            int numVerts = chunk.vertices.size();
+            for (int v=0; v < numVerts; ++v){
+                int vlocIndx=v+2;
+                int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / 3;
+                int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / 3;
+                vstrip[stripIdx3] = vstrip[stripIdx2];
+                boolean skip2 = (chunk.vlocs.get(vlocIndx).v3 & 0x8000) == 0x8000;
+                if (skip2){
+                    vstrip[stripIdx3] |= 0x8000;
+                }
+                
+                int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / 3;
+                boolean skip = (chunk.vlocs.get(vlocIndx).v1 & 0x8000) == 0x8000;
 
-                int vidx1 = vstart + (chunk.vlocs.get(v - 2).v1 & 0xFF) / 3;
-                int vidx2 = vstart + (chunk.vlocs.get(v - 1).v1 & 0xFF) / 3;
-                int vidx3 = vstart + (chunk.vlocs.get(v).v1 & 0xFF) / 3;
+                vstrip[stripIdx] = skip ? v | 0x8000 : v;
+            }
+            for (int i=2; i<vstrip.length; ++i){
+                int vidx1 = vstart + (vstrip[i-2] & 0xFF);
+                int vidx2 = vstart + (vstrip[i-1] & 0xFF);
+                int vidx3 = vstart + (vstrip[i] & 0xFF);
 
-                writer.println("# " + chunk.vlocs.get(v));
-
-                int v1raw = chunk.vlocs.get(v).v1;
-                if (v1raw < 3 * chunk.vertices.size()) {
+                if ((vstrip[i] & 0x8000) == 0) {
                     writer.write("f ");
                     writer.print(vidx1);
                     writer.write(" ");
@@ -105,7 +117,6 @@ public class VifDecode
                     writer.print(vidx3);
                     writer.println();
                 }
-                ++v;
             }
 
             for (ByteVector vec : chunk.normals) {
