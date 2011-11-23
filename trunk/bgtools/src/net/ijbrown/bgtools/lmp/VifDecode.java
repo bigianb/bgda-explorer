@@ -87,12 +87,13 @@ public class VifDecode
                 writer.print(vertex.z / 16.0);
                 writer.println();
             }
+            int numVlocs = chunk.vlocs.size();
             int numVerts = chunk.vertices.size();
-            for (int v=0; v < numVerts; ++v){
-                int vlocIndx=v+2;
+            for (int vlocIndx=2; vlocIndx < numVlocs; ++vlocIndx){
+                int v=vlocIndx-2;
                 int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / 3;
                 int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / 3;
-                vstrip[stripIdx3] = vstrip[stripIdx2];
+                vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
                 boolean skip2 = (chunk.vlocs.get(vlocIndx).v3 & 0x8000) == 0x8000;
                 if (skip2){
                     vstrip[stripIdx3] |= 0x8000;
@@ -101,7 +102,9 @@ public class VifDecode
                 int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / 3;
                 boolean skip = (chunk.vlocs.get(vlocIndx).v1 & 0x8000) == 0x8000;
 
-                vstrip[stripIdx] = skip ? v | 0x8000 : v;
+                if (v >= 0 && v < numVerts){
+                    vstrip[stripIdx] = skip ? (v | 0x8000) : v;
+                }
             }
             for (int i=2; i<vstrip.length; ++i){
                 int vidx1 = vstart + (vstrip[i-2] & 0xFF);
