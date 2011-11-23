@@ -73,6 +73,8 @@ public class VifDecode
 
         int vstart = 1;
         int chunkNo=1;
+        writer.println("mtllib barrel.mtl");
+        writer.println("usemtl barrel");
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
             writer.println("# GifTag: " + chunk.gifTag0.toString());
@@ -114,22 +116,33 @@ public class VifDecode
                 if ((vstrip[i] & 0x8000) == 0) {
                     writer.write("f ");
                     writer.print(vidx1);
+                    writer.write("/");
+                    writer.print(i-1);
                     writer.write(" ");
                     writer.print(vidx2);
+                    writer.write("/");
+                    writer.print(i);
                     writer.write(" ");
                     writer.print(vidx3);
-                    writer.println();
+                    writer.write("/");
+                    writer.println(i+1);
                 }
             }
 
+            for (UV uv : chunk.uvs){
+                writer.write("vt ");
+                writer.print(uv.u / 16);
+                writer.write(" ");
+                writer.println(uv.v / 16);
+            }
+
             for (ByteVector vec : chunk.normals) {
-                writer.write("# n ");
+                writer.write("vn ");
                 writer.print((int) vec.x);
                 writer.write(" ");
                 writer.print((int) vec.y);
                 writer.write(" ");
-                writer.print((int) vec.z);
-                writer.println();
+                writer.println((int) vec.z);
             }
             vstart += chunk.vertices.size();
         }
@@ -163,15 +176,27 @@ public class VifDecode
         }
     }
 
+    private class UV
+    {
+        public UV(short u, short v){
+            this.u = u;
+            this.v = v;
+        }
+        public short u;
+        public short v;
+    }
+
     private class Chunk
     {
         public GIFTag gifTag0 = null;
         public List<Vertex> vertices = new ArrayList<Vertex>();
         public List<ByteVector> normals = new ArrayList<ByteVector>();
         public List<VLoc> vlocs = new ArrayList<VLoc>();
+        public List<UV> uvs = new ArrayList<UV>();
     }
 
     private Chunk currentChunk = null;
+    private Chunk previousChunk = null;
     private List<Chunk> chunks = new ArrayList<Chunk>();
 
     private static final int NOP_CMD = 0;
@@ -208,6 +233,7 @@ public class VifDecode
                     System.out.println("MSCAL: " + immCommand);
 
                     chunks.add(currentChunk);
+                    previousChunk = currentChunk;
                     currentChunk = new Chunk();
 
                     offset += 4;
@@ -245,8 +271,18 @@ public class VifDecode
                         offset += 4;
                         if (vn == 1 && vl == 1) {
                             // v2-16
-                            int numBytes = numCommand * 4;
-                            offset += numBytes;
+                            // I don't know why but the UVs come after the MSCAL instruction.
+                            if (previousChunk != null){
+                                for (int uvnum = 0; uvnum < numCommand; ++uvnum) {
+                                    short u = DataUtil.getLEShort(fileData, offset);
+                                    short v = DataUtil.getLEShort(fileData, offset + 2);
+                                    previousChunk.uvs.add(new UV(u, v));
+                                    offset += 4;
+                                }
+                            } else {
+                                int numBytes = numCommand * 4;
+                                offset += numBytes;
+                            }
                         } else if (vn == 2 && vl == 1) {
                             // v3-16
                             // each vertex is 128 bits, so num is the number of vertices
