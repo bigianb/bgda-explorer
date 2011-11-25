@@ -26,20 +26,20 @@ public class VifDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA_extracted/barrel.vif";
-
         String outDir = "/emu/bgda/BG/DATA_extracted/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
         VifDecode obj = new VifDecode();
-        obj.extract(filename, outDirFile);
+//        obj.extract("barrel", outDirFile, 264, 128);
+//        obj.extract("snowflag", outDirFile, 32, 128);
+        obj.extract("lever", outDirFile, 16, 128);
     }
 
-    private void extract(String filename, File outDir) throws IOException
+    private void extract(String name, File outDir, int texw, int texh) throws IOException
     {
-        File file = new File(filename);
+        File file = new File(outDir, name + ".vif");
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
 
         int fileLength = (int) file.length();
@@ -63,18 +63,29 @@ public class VifDecode
 
         readVerts(fileData, offsetVerts, offsetEndVerts);
 
-        File objFile = new File(outDir, "barrel.obj");
-        writeObj(objFile);
+        writeObj(name, outDir, texw, texh, 128.0);
     }
 
-    private void writeObj(File objFile) throws IOException
+    private void writeMtlFile(File mtlFile, String name) throws IOException
     {
+        PrintWriter writer = new PrintWriter(mtlFile);
+        writer.println("newmtl " + name);
+        writer.println("map_Ka "+name+".tex.png");
+        writer.println("map_Kd "+name+".tex.png");
+        writer.close();
+    }
+
+    private void writeObj(String name, File dir, double texWidth, double texHeight, double scale) throws IOException
+    {
+        writeMtlFile(new File(dir, name+".mtl"), name);
+     
+        File objFile = new File(dir, name + ".obj");
         PrintWriter writer = new PrintWriter(objFile);
 
         int vstart = 1;
-        int chunkNo=1;
-        writer.println("mtllib barrel.mtl");
-        writer.println("usemtl barrel");
+        int chunkNo = 1;
+        writer.println("mtllib " + name + ".mtl");
+        writer.println("usemtl " + name);
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
             writer.println("# GifTag: " + chunk.gifTag0.toString());
@@ -82,58 +93,72 @@ public class VifDecode
 
             for (Vertex vertex : chunk.vertices) {
                 writer.write("v ");
-                writer.print(vertex.x / 16.0);
+                writer.print(vertex.x / scale);
                 writer.write(" ");
-                writer.print(vertex.y / 16.0);
+                writer.print(vertex.y / scale);
                 writer.write(" ");
-                writer.print(vertex.z / 16.0);
+                writer.print(vertex.z / scale);
                 writer.println();
             }
             int numVlocs = chunk.vlocs.size();
             int numVerts = chunk.vertices.size();
-            for (int vlocIndx=2; vlocIndx < numVlocs; ++vlocIndx){
-                int v=vlocIndx-2;
+            for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
+                int v = vlocIndx - 2;
                 int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / 3;
                 int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / 3;
                 vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
                 boolean skip2 = (chunk.vlocs.get(vlocIndx).v3 & 0x8000) == 0x8000;
-                if (skip2){
+                if (skip2) {
                     vstrip[stripIdx3] |= 0x8000;
                 }
-                
+
                 int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / 3;
                 boolean skip = (chunk.vlocs.get(vlocIndx).v1 & 0x8000) == 0x8000;
 
-                if (v >= 0 && v < numVerts){
+                if (v >= 0 && v < numVerts) {
                     vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                 }
             }
-            for (int i=2; i<vstrip.length; ++i){
-                int vidx1 = vstart + (vstrip[i-2] & 0xFF);
-                int vidx2 = vstart + (vstrip[i-1] & 0xFF);
+            for (int i = 2; i < vstrip.length; ++i) {
+                int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
+                int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
                 int vidx3 = vstart + (vstrip[i] & 0xFF);
+
+                int uv1 = i - 1;
+                int uv2 = i;
+
+                // Flip the faces to keep the winding rule consistent.
+                if ((i & 1) == 1) {
+                    int temp = uv1;
+                    uv1 = uv2;
+                    uv2 = temp;
+
+                    temp = vidx1;
+                    vidx1 = vidx2;
+                    vidx2 = temp;
+                }
 
                 if ((vstrip[i] & 0x8000) == 0) {
                     writer.write("f ");
                     writer.print(vidx1);
                     writer.write("/");
-                    writer.print(i-1);
+                    writer.print(uv1);
                     writer.write(" ");
                     writer.print(vidx2);
                     writer.write("/");
-                    writer.print(i);
+                    writer.print(uv2);
                     writer.write(" ");
                     writer.print(vidx3);
                     writer.write("/");
-                    writer.println(i+1);
+                    writer.println(i + 1);
                 }
             }
 
-            for (UV uv : chunk.uvs){
+            for (UV uv : chunk.uvs) {
                 writer.write("vt ");
-                writer.print(uv.u / 16);
+                writer.print(uv.u / 16.0 / texWidth);
                 writer.write(" ");
-                writer.println(uv.v / 16);
+                writer.println(uv.v / 16.0 / texHeight);
             }
 
             for (ByteVector vec : chunk.normals) {
@@ -178,10 +203,12 @@ public class VifDecode
 
     private class UV
     {
-        public UV(short u, short v){
+        public UV(short u, short v)
+        {
             this.u = u;
             this.v = v;
         }
+
         public short u;
         public short v;
     }
@@ -272,7 +299,7 @@ public class VifDecode
                         if (vn == 1 && vl == 1) {
                             // v2-16
                             // I don't know why but the UVs come after the MSCAL instruction.
-                            if (previousChunk != null){
+                            if (previousChunk != null) {
                                 for (int uvnum = 0; uvnum < numCommand; ++uvnum) {
                                     short u = DataUtil.getLEShort(fileData, offset);
                                     short v = DataUtil.getLEShort(fileData, offset + 2);
