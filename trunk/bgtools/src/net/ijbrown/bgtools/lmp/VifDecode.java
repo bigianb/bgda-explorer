@@ -16,6 +16,7 @@
 package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +34,12 @@ public class VifDecode
 
         VifDecode obj = new VifDecode();
 //        obj.extract("barrel", outDirFile, 264, 128);
+        obj = new VifDecode();
 //        obj.extract("snowflag", outDirFile, 32, 128);
-        obj.extract("lever", outDirFile, 16, 128);
+        obj = new VifDecode();
+//        obj.extract("lever", outDirFile, 16, 128);
+        obj = new VifDecode();
+        obj.extract("chest_large", outDirFile, 16, 128);
     }
 
     private void extract(String name, File outDir, int texw, int texh) throws IOException
@@ -70,15 +75,16 @@ public class VifDecode
     {
         PrintWriter writer = new PrintWriter(mtlFile);
         writer.println("newmtl " + name);
-        writer.println("map_Ka "+name+".tex.png");
-        writer.println("map_Kd "+name+".tex.png");
+        writer.println("map_Kd " + name + ".tex.png");
         writer.close();
     }
 
     private void writeObj(String name, File dir, double texWidth, double texHeight, double scale) throws IOException
     {
-        writeMtlFile(new File(dir, name+".mtl"), name);
-     
+        DecimalFormat df = new DecimalFormat("0.0000");
+
+        writeMtlFile(new File(dir, name + ".mtl"), name);
+
         File objFile = new File(dir, name + ".obj");
         PrintWriter writer = new PrintWriter(objFile);
 
@@ -89,15 +95,18 @@ public class VifDecode
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
             writer.println("# GifTag: " + chunk.gifTag0.toString());
+            if (chunk.uvs.size() != chunk.gifTag0.nloop) {
+                throw new RuntimeException("Expected " + chunk.gifTag0.nloop + " uvs but found " + chunk.uvs.size());
+            }
             int[] vstrip = new int[chunk.gifTag0.nloop];
 
             for (Vertex vertex : chunk.vertices) {
                 writer.write("v ");
-                writer.print(vertex.x / scale);
+                writer.print(df.format(vertex.x / scale));
                 writer.write(" ");
-                writer.print(vertex.y / scale);
+                writer.print(df.format(vertex.y / scale));
                 writer.write(" ");
-                writer.print(vertex.z / scale);
+                writer.print(df.format(vertex.z / scale));
                 writer.println();
             }
             int numVlocs = chunk.vlocs.size();
@@ -106,29 +115,34 @@ public class VifDecode
                 int v = vlocIndx - 2;
                 int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / 3;
                 int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / 3;
-                vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
-                boolean skip2 = (chunk.vlocs.get(vlocIndx).v3 & 0x8000) == 0x8000;
-                if (skip2) {
-                    vstrip[stripIdx3] |= 0x8000;
-                }
+                if (stripIdx3 < vstrip.length && stripIdx2 < vstrip.length) {
+                    vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
 
+                    boolean skip2 = (chunk.vlocs.get(vlocIndx).v3 & 0x8000) == 0x8000;
+                    if (skip2) {
+                        vstrip[stripIdx3] |= 0x8000;
+                    }
+                }
                 int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / 3;
                 boolean skip = (chunk.vlocs.get(vlocIndx).v1 & 0x8000) == 0x8000;
 
-                if (v >= 0 && v < numVerts) {
+                if (v >= 0 && v < numVerts && stripIdx < vstrip.length) {
                     vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                 }
             }
+
+            int triIdx = 0;
             for (int i = 2; i < vstrip.length; ++i) {
                 int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
                 int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
                 int vidx3 = vstart + (vstrip[i] & 0xFF);
 
+                // uv indices are 1 based.
                 int uv1 = i - 1;
                 int uv2 = i;
 
-                // Flip the faces to keep the winding rule consistent.
-                if ((i & 1) == 1) {
+                // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
+                if ((triIdx & 1) == 1) {
                     int temp = uv1;
                     uv1 = uv2;
                     uv2 = temp;
@@ -151,14 +165,18 @@ public class VifDecode
                     writer.print(vidx3);
                     writer.write("/");
                     writer.println(i + 1);
+                    ++triIdx;
+                } else {
+                    triIdx = 0;
                 }
             }
 
+
             for (UV uv : chunk.uvs) {
                 writer.write("vt ");
-                writer.print(uv.u / 16.0 / texWidth);
+                writer.print(df.format(uv.u / (16.0 * texWidth)));
                 writer.write(" ");
-                writer.println(uv.v / 16.0 / texHeight);
+                writer.println(df.format(1.0 - uv.v / (16.0 * texHeight)));
             }
 
             for (ByteVector vec : chunk.normals) {
@@ -216,6 +234,7 @@ public class VifDecode
     private class Chunk
     {
         public GIFTag gifTag0 = null;
+        public GIFTag gifTag1 = null;
         public List<Vertex> vertices = new ArrayList<Vertex>();
         public List<ByteVector> normals = new ArrayList<ByteVector>();
         public List<VLoc> vlocs = new ArrayList<VLoc>();
@@ -258,7 +277,9 @@ public class VifDecode
                 case MSCAL_CMD:
                     System.out.print(HexUtil.formatHex(offset) + " ");
                     System.out.println("MSCAL: " + immCommand);
-
+                    if (immCommand != 66){
+                        System.out.println("**** Microcode " + immCommand + " not supported");
+                    }
                     chunks.add(currentChunk);
                     previousChunk = currentChunk;
                     currentChunk = new Chunk();
@@ -356,6 +377,11 @@ public class VifDecode
                             if (1 == numCommand) {
                                 currentChunk.gifTag0 = new GIFTag();
                                 currentChunk.gifTag0.parse(fileData, offset);
+                            } else if (2 == numCommand) {
+                                currentChunk.gifTag0 = new GIFTag();
+                                currentChunk.gifTag0.parse(fileData, offset);
+                                currentChunk.gifTag1 = new GIFTag();
+                                currentChunk.gifTag1.parse(fileData, offset + 16);
                             }
                             int numBytes = numCommand * 16;
                             offset += numBytes;
