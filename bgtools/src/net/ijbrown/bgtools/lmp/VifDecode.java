@@ -33,13 +33,13 @@ public class VifDecode
         outDirFile.mkdirs();
 
         VifDecode obj = new VifDecode();
-//        obj.extract("barrel", outDirFile, 264, 128);
+        obj.extract("barrel", outDirFile, 264, 128);
         obj = new VifDecode();
-//        obj.extract("snowflag", outDirFile, 32, 128);
+        obj.extract("snowflag", outDirFile, 32, 128);
         obj = new VifDecode();
-//        obj.extract("lever", outDirFile, 16, 128);
+        obj.extract("lever", outDirFile, 16, 128);
         obj = new VifDecode();
-        obj.extract("chest_large", outDirFile, 16, 128);
+//        obj.extract("chest_large", outDirFile, 16, 128);
     }
 
     private void extract(String name, File outDir, int texw, int texh) throws IOException
@@ -89,6 +89,7 @@ public class VifDecode
         PrintWriter writer = new PrintWriter(objFile);
 
         int vstart = 1;
+        int uvstart = 1;
         int chunkNo = 1;
         writer.println("mtllib " + name + ".mtl");
         writer.println("usemtl " + name);
@@ -137,9 +138,8 @@ public class VifDecode
                 int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
                 int vidx3 = vstart + (vstrip[i] & 0xFF);
 
-                // uv indices are 1 based.
-                int uv1 = i - 1;
-                int uv2 = i;
+                int uv1 = i - 2;
+                int uv2 = i - 1;
 
                 // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
                 if ((triIdx & 1) == 1) {
@@ -156,15 +156,15 @@ public class VifDecode
                     writer.write("f ");
                     writer.print(vidx1);
                     writer.write("/");
-                    writer.print(uv1);
+                    writer.print(uvstart + uv1);
                     writer.write(" ");
                     writer.print(vidx2);
                     writer.write("/");
-                    writer.print(uv2);
+                    writer.print(uvstart + uv2);
                     writer.write(" ");
                     writer.print(vidx3);
                     writer.write("/");
-                    writer.println(i + 1);
+                    writer.println(uvstart + i);
                     ++triIdx;
                 } else {
                     triIdx = 0;
@@ -188,6 +188,7 @@ public class VifDecode
                 writer.println((int) vec.z);
             }
             vstart += chunk.vertices.size();
+            uvstart += chunk.uvs.size();
         }
         writer.close();
     }
