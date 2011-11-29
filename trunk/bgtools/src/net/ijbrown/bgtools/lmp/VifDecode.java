@@ -39,7 +39,7 @@ public class VifDecode
         obj = new VifDecode();
         obj.extract("lever", outDirFile, 16, 128);
         obj = new VifDecode();
-//        obj.extract("chest_large", outDirFile, 16, 128);
+        obj.extract("chest_large", outDirFile, 16, 128);
     }
 
     private void extract(String name, File outDir, int texw, int texh) throws IOException
@@ -96,6 +96,11 @@ public class VifDecode
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
             writer.println("# GifTag: " + chunk.gifTag0.toString());
+            if (chunk.gifTag1 != null){
+                writer.println("# GifTag1: " + chunk.gifTag1.toString());
+            }
+
+            int regsPerVertex = chunk.gifTag0.nreg;
             if (chunk.uvs.size() != chunk.gifTag0.nloop) {
                 throw new RuntimeException("Expected " + chunk.gifTag0.nloop + " uvs but found " + chunk.uvs.size());
             }
@@ -114,8 +119,8 @@ public class VifDecode
             int numVerts = chunk.vertices.size();
             for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
                 int v = vlocIndx - 2;
-                int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / 3;
-                int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / 3;
+                int stripIdx2 = (chunk.vlocs.get(vlocIndx).v2 & 0xFF) / regsPerVertex;
+                int stripIdx3 = (chunk.vlocs.get(vlocIndx).v3 & 0xFF) / regsPerVertex;
                 if (stripIdx3 < vstrip.length && stripIdx2 < vstrip.length) {
                     vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
 
@@ -124,7 +129,7 @@ public class VifDecode
                         vstrip[stripIdx3] |= 0x8000;
                     }
                 }
-                int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / 3;
+                int stripIdx = (chunk.vlocs.get(vlocIndx).v1 & 0xFF) / regsPerVertex;
                 boolean skip = (chunk.vlocs.get(vlocIndx).v1 & 0x8000) == 0x8000;
 
                 if (v >= 0 && v < numVerts && stripIdx < vstrip.length) {
@@ -234,6 +239,7 @@ public class VifDecode
 
     private class Chunk
     {
+        public int mscalID=0;
         public GIFTag gifTag0 = null;
         public GIFTag gifTag1 = null;
         public List<Vertex> vertices = new ArrayList<Vertex>();
@@ -278,9 +284,10 @@ public class VifDecode
                 case MSCAL_CMD:
                     System.out.print(HexUtil.formatHex(offset) + " ");
                     System.out.println("MSCAL: " + immCommand);
-                    if (immCommand != 66){
+                    if (immCommand != 66 && immCommand != 68){
                         System.out.println("**** Microcode " + immCommand + " not supported");
                     }
+                    currentChunk.mscalID = immCommand;
                     chunks.add(currentChunk);
                     previousChunk = currentChunk;
                     currentChunk = new Chunk();
