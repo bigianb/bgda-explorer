@@ -26,14 +26,26 @@ public class GIFTag
         nloop = low32 & 0x7FFF;
         eop = (low32 & 0x8000) == 0x8000;
 
-        int next32 = DataUtil.getLEInt(data, idx+4);
+        int next32 = DataUtil.getLEInt(data, idx + 4);
 
         // bit 32 is bit 0 of next 32
-        pre = ((next32 >> (46-32)) & 1) == 1;
+        pre = ((next32 >> (46 - 32)) & 1) == 1;
         // prim 11 bits 47 - 57
         prim = ((next32 >> (47 - 32)) & 0x3FF);
         flg = ((next32 >> (58 - 32)) & 0x3);
         nreg = ((next32 >> (60 - 32)) & 0xf);
+
+        if (0 == nreg){
+            nreg = 16;
+        }
+        int regs64 = DataUtil.getLEInt(data, idx + 8);
+        int regs96 = DataUtil.getLEInt(data, idx + 12);
+
+        regs = new int[nreg];
+        for (int reg=0; reg < nreg; ++reg){
+            int rgs = reg > 7 ? regs96 : regs64;
+            regs[reg] = (rgs >> ((reg & 7) * 4)) & 0x0f;
+        }
     }
 
     @Override
@@ -44,10 +56,34 @@ public class GIFTag
         sb.append("eop: ").append(eop).append(", ");
         sb.append("pre: ").append(pre).append(", ");
         sb.append("prim: ").append(HexUtil.formatHex(prim)).append(", ");
-        sb.append("flg: ").append(flg).append(", ");
-        sb.append("nreg: ").append(nreg);
+        sb.append("flg: ").append(flagString()).append(", ");
+        sb.append("nreg: ").append(nreg).append(", ");
+        sb.append("regs: ");
+        for (int r=0; r<nreg; ++r){
+            sb.append(regs[r]);
+            if (r != nreg){
+                sb.append(", ");
+            }
+        }
 
         return sb.toString();
+    }
+
+    public String flagString()
+    {
+        switch (flg) {
+            case 0:
+                return "PACKED";
+            case 1:
+                return "REGLIST";
+            case 2:
+                return "IMAGE";
+            case 3:
+                return "DISABLE";
+            default:
+                return "ERROR";
+
+        }
     }
 
     int nloop;
@@ -56,4 +92,5 @@ public class GIFTag
     int prim;
     int flg;
     int nreg;
+    int regs[];
 }

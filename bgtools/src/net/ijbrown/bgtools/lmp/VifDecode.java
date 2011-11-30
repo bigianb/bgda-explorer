@@ -42,6 +42,8 @@ public class VifDecode
         obj.extract("chest_large", outDirFile, 16, 128);
         obj = new VifDecode();
         obj.extract("w_bands", outDirFile, 214, 150);
+        obj = new VifDecode();
+        obj.extract("book", outDirFile, 169, 64);
     }
 
     private void extract(String name, File outDir, int texw, int texh) throws IOException

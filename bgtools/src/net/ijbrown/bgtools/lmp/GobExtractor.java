@@ -18,27 +18,31 @@ package net.ijbrown.bgtools.lmp;
 import java.io.*;
 
 /**
- * extracts files from a .lmp file.
+ * Decodes a GOB file.
  */
-public class LmpExtractor {
-    
+public class GobExtractor
+{
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA/lever.lmp";
-
         String outDir = "/emu/bgda/BG/DATA_extracted/";
+        String inDir = "/emu/bgda/BG/DATA/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
-        LmpExtractor obj = new LmpExtractor();
-        obj.extractAll(filename, outDirFile);
+        GobExtractor obj = new GobExtractor();
+        obj.extract("test", outDirFile, new File(inDir));
+        obj.extract("tavern", outDirFile, new File(inDir));
+        obj.extract("smlcave1", outDirFile, new File(inDir));
     }
 
-    private void extractAll(String filename, File outDir) throws IOException
+    private void extract(String name, File outRoot, File inDir) throws IOException
     {
-        File file = new File(filename);
+        File file = new File(inDir, name + ".gob");
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
+
+        File outDir = new File(outRoot, name);
+        outDir.mkdirs();
 
         int fileLength = (int) file.length();
         byte[] fileData = new byte[fileLength];
@@ -53,30 +57,20 @@ public class LmpExtractor {
             remaining -= read;
             offset += read;
         }
-        extractAll(fileData, 0, outDir);
-    }
 
-    public void extractAll(byte[] fileData, int fileStartOffset, File outDir) throws IOException
-    {
-        int numFiles = DataUtil.getLEInt(fileData, fileStartOffset);
-        System.out.println("LMP contains " + numFiles + " Files.");
+        offset=0;
+        String lmpName = DataUtil.collectString(fileData, offset);
+        LmpExtractor lmpExtractor = new LmpExtractor();
+        while (!lmpName.isEmpty()){
+            System.out.println("Extracting " + lmpName + " from " + file.getName());
+            File lmpOutputDir = new File(outDir, lmpName.replace('.', '_'));
+            lmpOutputDir.mkdir();
+            int lmpDataOffset = DataUtil.getLEInt(fileData, offset + 0x20);
+            lmpExtractor.extractAll(fileData, lmpDataOffset, lmpOutputDir);
 
-        for (int fileNo=0; fileNo < numFiles; ++fileNo){
-            int headerOffset = fileStartOffset + 4 + fileNo * 0x40;
-            String subfileName = DataUtil.collectString(fileData, headerOffset);
-
-            int subOffset = DataUtil.getLEInt(fileData, headerOffset + 0x38);
-            int subLen = DataUtil.getLEInt(fileData, headerOffset + 0x3C);
-
-            System.out.println("Extracting: " + subfileName + ", offset=" + subOffset + ", length=" + subLen);
-
-            File outFile = new File(outDir, subfileName);
-            BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(outFile));
-            os.write(fileData, fileStartOffset + subOffset, subLen);
-            os.close();
+            offset += 0x28;
+            lmpName = DataUtil.collectString(fileData, offset);
         }
-
     }
-
 
 }
