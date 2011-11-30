@@ -40,6 +40,8 @@ public class VifDecode
         obj.extract("lever", outDirFile, 16, 128);
         obj = new VifDecode();
         obj.extract("chest_large", outDirFile, 16, 128);
+        obj = new VifDecode();
+        obj.extract("w_bands", outDirFile, 214, 150);
     }
 
     private void extract(String name, File outDir, int texw, int texh) throws IOException
@@ -137,6 +139,22 @@ public class VifDecode
                 }
             }
 
+            for (UV uv : chunk.uvs) {
+                writer.write("vt ");
+                writer.print(df.format(uv.u / (16.0 * texWidth)));
+                writer.write(" ");
+                writer.println(df.format(1.0 - uv.v / (16.0 * texHeight)));
+            }
+
+            for (ByteVector vec : chunk.normals) {
+                writer.write("vn ");
+                writer.print(df.format(vec.x / 127.0));
+                writer.write(" ");
+                writer.print(df.format(vec.y / 127.0));
+                writer.write(" ");
+                writer.println(df.format(vec.z / 127.0));
+            }
+
             int triIdx = 0;
             for (int i = 2; i < vstrip.length; ++i) {
                 int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
@@ -162,14 +180,20 @@ public class VifDecode
                     writer.print(vidx1);
                     writer.write("/");
                     writer.print(uvstart + uv1);
+                    writer.write("/");
+                    writer.print(vidx1);
                     writer.write(" ");
                     writer.print(vidx2);
                     writer.write("/");
                     writer.print(uvstart + uv2);
+                    writer.write("/");
+                    writer.print(vidx2);
                     writer.write(" ");
                     writer.print(vidx3);
                     writer.write("/");
-                    writer.println(uvstart + i);
+                    writer.print(uvstart + i);
+                    writer.write("/");
+                    writer.println(vidx3);
                     ++triIdx;
                 } else {
                     triIdx = 0;
@@ -177,21 +201,7 @@ public class VifDecode
             }
 
 
-            for (UV uv : chunk.uvs) {
-                writer.write("vt ");
-                writer.print(df.format(uv.u / (16.0 * texWidth)));
-                writer.write(" ");
-                writer.println(df.format(1.0 - uv.v / (16.0 * texHeight)));
-            }
 
-            for (ByteVector vec : chunk.normals) {
-                writer.write("vn ");
-                writer.print((int) vec.x);
-                writer.write(" ");
-                writer.print((int) vec.y);
-                writer.write(" ");
-                writer.println((int) vec.z);
-            }
             vstart += chunk.vertices.size();
             uvstart += chunk.uvs.size();
         }
