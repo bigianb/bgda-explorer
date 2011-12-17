@@ -31,6 +31,11 @@ public class DataUtil
         return s;
     }
 
+    public static float getLEFloat(byte[] data, int offset) {
+        int i = getLEInt(data, offset);
+        return Float.intBitsToFloat(i);
+    }
+
     public static int getLEInt(byte[] data, int offset) {
         return data[offset+3] << 24 | (data[offset + 2] & 0xff) << 16 | (data[offset + 1] & 0xff) << 8 | (data[offset] & 0xff);
     }
