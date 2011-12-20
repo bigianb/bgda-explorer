@@ -15,14 +15,12 @@
 */
 package net.ijbrown.bgtools.lmp;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 
 /**
- * Decodes an Objects.ob file.
+ * Decodes an xxx.world file.
  */
-public class ObjectsDecode
+public class WorldDecode
 {
     public static void main(String[] args) throws IOException
     {
@@ -33,10 +31,10 @@ public class ObjectsDecode
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
-        ObjectsDecode obj = new ObjectsDecode();
-        obj.read("objects.ob", outDirFile);
+        WorldDecode obj = new WorldDecode();
+        obj.read("cellar1.world", outDirFile);
         String txt = obj.disassemble();
-        obj.writeFile("objects.ob.txt", outDirFile, txt);
+        obj.writeFile("cellar1.world.txt", outDirFile, txt);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -73,54 +71,61 @@ public class ObjectsDecode
     private String disassemble()
     {
         StringBuilder sb = new StringBuilder();
-        int numObjs = DataUtil.getLEShort(fileData, 0);
-        int flags = DataUtil.getLEUShort(fileData, 2);
-        int stringOffset = DataUtil.getLEInt(fileData, 4);
 
-        sb.append("Flags: ").append(flags);
-        sb.append("\r\n");
-        sb.append("\r\n");
-        int objOffset=8;
-        // object data starts at offset 8
-        for (int objNum=0; objNum<numObjs; ++objNum){
-            sb.append("Object ").append(objNum).append("\r\n");
+        int numElements = DataUtil.getLEInt(fileData, 0);
+        sb.append("Num Elements: ").append(HexUtil.formatHex(numElements)).append("\r\n");
 
-            // If >=0, this is the index into the string table.
-            int strIdx = DataUtil.getLEInt(fileData, objOffset);
-            String name = Integer.toString(strIdx);
-            if (strIdx >= 0){
-                name = DataUtil.collectString(fileData, stringOffset + strIdx);
+
+        int offset4 = DataUtil.getLEInt(fileData, 0x4);
+        sb.append("Offset4: ").append(HexUtil.formatHex(offset4)).append("\r\n");
+
+        sb.append("\r\n");
+
+        int rows = DataUtil.getLEInt(fileData, 0x10);
+        int cols = DataUtil.getLEInt(fileData,0x14);
+
+        sb.append("Rows: ").append(rows).append("\r\n");
+        sb.append("Cols: ").append(cols).append("\r\n");
+
+        int offset18 = DataUtil.getLEInt(fileData, 0x18);
+        sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n");
+        // This is an array of 4 byte offsets
+        // Each offset points to a -1 terminated array of shorts
+
+        sb.append("\r\n");
+
+        int elementBase = DataUtil.getLEInt(fileData, 0x24);
+        sb.append("Element Base: ").append(HexUtil.formatHex(elementBase)).append("\r\n");
+
+        sb.append("\r\n");
+                
+
+        int rows1 = DataUtil.getLEInt(fileData, 0x30);
+        int cols1 = DataUtil.getLEInt(fileData,0x34);
+
+        sb.append("Rows1: ").append(rows1).append("\r\n");
+        sb.append("Cols1: ").append(cols1).append("\r\n");
+        int offset38 = DataUtil.getLEInt(fileData, 0x38);
+        sb.append("Offset38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
+
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+        sb.append("Offsets array \r\n \r\n");
+        for (int i=0; i<rows*cols; ++i){
+            int off = DataUtil.getLEInt(fileData, offset18 + i*4);
+            sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
+
+            int u = DataUtil.getLEShort(fileData, off);
+            while (u >= 0){
+                sb.append(u);
+                off += 2;
+                u = DataUtil.getLEShort(fileData, off);
+                if (u >= 0){
+                    sb.append(", ");
+                }
             }
-            sb.append("    name: ").append(name).append("\r\n");
-
-            int objLen = DataUtil.getLEUShort(fileData, objOffset+4);
-            sb.append("    Len: ").append(objLen).append("\r\n");
-
-            int i6 = DataUtil.getLEUShort(fileData, objOffset+6);
-            sb.append("    i6: ").append(i6).append("\r\n");
-
-            float f1 = DataUtil.getLEFloat(fileData, objOffset + 8);
-            float f2 = DataUtil.getLEFloat(fileData, objOffset + 12);
-            float f3 = DataUtil.getLEFloat(fileData, objOffset + 16);
-
-            sb.append("    Floats: ").append(f1).append(", ").append(f2).append(", ").append(f3).append("\r\n");
-
-            int i20 = DataUtil.getLEInt(fileData, objOffset + 20);
-            sb.append("    i20: ").append(i20).append("\r\n");
 
             sb.append("\r\n");
-            objOffset += objLen;
-        }
-
-        int off = stringOffset;
-        while (off < fileLength){
-            String s = "";
-            while (fileData[off] != 0){
-                s += (char)fileData[off];
-                ++off;
-            }
-            sb.append(s).append("\r\n");
-            ++off;
         }
 
         return sb.toString();
