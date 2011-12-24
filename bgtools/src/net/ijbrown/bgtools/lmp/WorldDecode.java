@@ -88,9 +88,19 @@ public class WorldDecode
         sb.append("Cols: ").append(cols).append("\r\n");
 
         int offset18 = DataUtil.getLEInt(fileData, 0x18);
-        sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n");
+        sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n\r\n");
         // This is an array of 4 byte offsets
         // Each offset points to a -1 terminated array of shorts
+
+        int count1c = DataUtil.getLEInt(fileData, 0x1C);
+        sb.append("Count1c: ").append(HexUtil.formatHex(count1c)).append("\r\n");
+
+
+        int offset20 = DataUtil.getLEInt(fileData, 0x20);
+        sb.append("Offset20: ").append(HexUtil.formatHex(offset20)).append("\r\n");
+
+        // Offset 20 points to Count1C elements, each 1c bytes in length
+        // member 0x0c in each element is an offset.
 
         sb.append("\r\n");
 
@@ -107,10 +117,16 @@ public class WorldDecode
         sb.append("Cols1: ").append(cols1).append("\r\n");
         int offset38 = DataUtil.getLEInt(fileData, 0x38);
         sb.append("Offset38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
+        int offset4c = DataUtil.getLEInt(fileData, 0x4c);
+        sb.append("Offset4c: ").append(HexUtil.formatHex(offset4c)).append("\r\n");
+        int offset54 = DataUtil.getLEInt(fileData, 0x54);
+        sb.append("Offset54: ").append(HexUtil.formatHex(offset54)).append("\r\n");
+        int offset64 = DataUtil.getLEInt(fileData, 0x64);
+        sb.append("Offset64: ").append(HexUtil.formatHex(offset64)).append("\r\n");
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
-        sb.append("Offsets array \r\n \r\n");
+        sb.append("Offsets (18) array \r\n \r\n");
         for (int i=0; i<rows*cols; ++i){
             int off = DataUtil.getLEInt(fileData, offset18 + i*4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
@@ -127,6 +143,33 @@ public class WorldDecode
 
             sb.append("\r\n");
         }
+
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+        sb.append("Elements (20) array - ").append(count1c).append(" elements\r\n \r\n");
+        for (int i=0; i<count1c; ++i)
+        {
+            int off = offset20 + i*0x1c;
+            sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
+            sb.append("    0x0c: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x0c))).append("\r\n");
+            sb.append("}\r\n");
+        }
+
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+        sb.append("Elements (24) array - ").append(numElements).append(" elements\r\n \r\n");
+        for (int i=0; i<numElements; ++i)
+        {
+            int off = elementBase + i*0x38;
+            sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
+            sb.append("    0x00: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off))).append("\r\n");
+            sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+4))).append("\r\n");
+            int member30 = DataUtil.getLEUShort(fileData, off+0x30);
+            // test 0x800 for a flag.
+            sb.append("    0x30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
+            sb.append("}\r\n");
+        }
+
 
         return sb.toString();
     }
