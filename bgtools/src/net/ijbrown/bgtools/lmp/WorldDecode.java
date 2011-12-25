@@ -24,7 +24,7 @@ public class WorldDecode
 {
     public static void main(String[] args) throws IOException
     {
-//        String outDir = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
+        String outDirTest = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
 //        String outDir = "/emu/bgda/BG/DATA_extracted/tavern/tavern_lmp/";
         String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
 
@@ -35,6 +35,14 @@ public class WorldDecode
         obj.read("cellar1.world", outDirFile);
         String txt = obj.disassemble();
         obj.writeFile("cellar1.world.txt", outDirFile, txt);
+
+        outDirFile = new File(outDirTest);
+        obj = new WorldDecode();
+        obj.read("test.world", outDirFile);
+        txt = obj.disassemble();
+        obj.writeFile("test.world.txt", outDirFile, txt);
+
+        obj.extractTexture("test.world.png", outDirFile);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -66,6 +74,13 @@ public class WorldDecode
             remaining -= read;
             offset += read;
         }
+    }
+
+    private void extractTexture(String outputFilename, File outDirFile) throws IOException
+    {
+        int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
+        TexDecode texDecode = new TexDecode();
+        texDecode.extract(outDirFile, fileData, offsetTex6c, outputFilename);
     }
 
     private String disassemble()
@@ -123,6 +138,11 @@ public class WorldDecode
         sb.append("Offset54: ").append(HexUtil.formatHex(offset54)).append("\r\n");
         int offset64 = DataUtil.getLEInt(fileData, 0x64);
         sb.append("Offset64: ").append(HexUtil.formatHex(offset64)).append("\r\n");
+
+        int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
+        sb.append("Offset Tex 6c: ").append(HexUtil.formatHex(offsetTex6c)).append("\r\n");
+
+
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
