@@ -35,6 +35,7 @@ public class WorldDecode
         obj.read("cellar1.world", outDirFile);
         String txt = obj.disassemble();
         obj.writeFile("cellar1.world.txt", outDirFile, txt);
+//        obj.extractTexture("cellar1.world.png", outDirFile);
 
         outDirFile = new File(outDirTest);
         obj = new WorldDecode();

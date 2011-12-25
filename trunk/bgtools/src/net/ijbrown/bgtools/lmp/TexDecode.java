@@ -111,14 +111,21 @@ public class TexDecode
             GIFTag gifTag3 = new GIFTag();
             gifTag2.parse(fileData, curIdx);
 
-            int rrw = DataUtil.getLEShort(fileData, curIdx + 0x30);
-            int rrh = DataUtil.getLEShort(fileData, curIdx + 0x34);
+            int dimOffset = 0x30;
+            if (palLen == 64){
+                dimOffset = 0x20;
+            }
+
+            int rrw = DataUtil.getLEShort(fileData, curIdx + dimOffset);
+            int rrh = DataUtil.getLEShort(fileData, curIdx + dimOffset + 4);
 
             pixels = readPixels32(fileData, palette, curIdx + 0x70, rrw, rrh, rrw);
 
-            pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
+            if (palLen != 64){
+                pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
+                sourcew = rrw * 2;
+            }
 
-            sourcew = rrw * 2;
         } else if (gifTag.nloop == 3) {
             GIFTag gifTag2 = new GIFTag();
             gifTag2.parse(fileData, startOffset + 0xC0);
@@ -214,17 +221,15 @@ public class TexDecode
             }
             return pixels;
         } else {
-            int numDestBytes = rrh * dbw * 4;
-            int widthBytes = dbw * 4;
+            int widthBytes = (dbw + 1) & ~1;
+            int numDestBytes = rrh * widthBytes;
             PalEntry[] pixels = new PalEntry[numDestBytes];
             int idx = startOffset;
             for (int y = 0; y < rrh; ++y) {
                 for (int x = 0; x < rrw; ++x) {
-                    int destIdx = y * widthBytes + x * 4;
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx] = palette[fileData[idx++] & 0xFF];
+                    int destIdx = y * widthBytes + x / 2;
+                    pixels[destIdx++] = palette[fileData[idx] >> 4 & 0x0F];
+                    pixels[destIdx] = palette[fileData[idx++] & 0x0F];
                 }
             }
             return pixels;
