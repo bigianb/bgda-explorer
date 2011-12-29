@@ -93,7 +93,10 @@ public class WorldDecode
 
 
         int offset4 = DataUtil.getLEInt(fileData, 0x4);
-        sb.append("Offset4: ").append(HexUtil.formatHex(offset4)).append("\r\n");
+        sb.append("Offset4:  ").append(HexUtil.formatHex(offset4)).append("\r\n");
+
+        sb.append("world.08: ").append((DataUtil.getLEInt(fileData, 0x08))).append("\r\n");
+        sb.append("world.0C: ").append((DataUtil.getLEInt(fileData, 0x0C))).append("\r\n");
 
         sb.append("\r\n");
 
@@ -124,7 +127,10 @@ public class WorldDecode
         sb.append("Element Base: ").append(HexUtil.formatHex(elementBase)).append("\r\n");
 
         sb.append("\r\n");
-                
+
+        sb.append("world.28: ").append((DataUtil.getLEInt(fileData, 0x28))).append("\r\n");
+        sb.append("world.2C: ").append((DataUtil.getLEInt(fileData, 0x2C))).append("\r\n");
+
 
         int rows1 = DataUtil.getLEInt(fileData, 0x30);
         int cols1 = DataUtil.getLEInt(fileData,0x34);
@@ -133,12 +139,32 @@ public class WorldDecode
         sb.append("Cols1: ").append(cols1).append("\r\n");
         int offset38 = DataUtil.getLEInt(fileData, 0x38);
         sb.append("Offset38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
+
+        sb.append("world.3C: ").append(DataUtil.getLEInt(fileData, 0x3C)).append("\r\n");
+        sb.append("world.40: ").append(DataUtil.getLEInt(fileData, 0x40)).append("\r\n");
+        sb.append("world.44: ").append(DataUtil.getLEInt(fileData, 0x44)).append("\r\n");
+        sb.append("world.48: ").append(DataUtil.getLEInt(fileData, 0x48)).append("\r\n");
+
         int offset4c = DataUtil.getLEInt(fileData, 0x4c);
         sb.append("Offset4c: ").append(HexUtil.formatHex(offset4c)).append("\r\n");
+
+        int len50 = DataUtil.getLEInt(fileData, 0x50);
+        sb.append("Len50: ").append(HexUtil.formatHex(len50)).append("\r\n");
         int offset54 = DataUtil.getLEInt(fileData, 0x54);
         sb.append("Offset54: ").append(HexUtil.formatHex(offset54)).append("\r\n");
+
+        sb.append("world.58: ").append(DataUtil.getLEInt(fileData, 0x58)).append("\r\n");
+        sb.append("world.5c: ").append(DataUtil.getLEInt(fileData, 0x5C)).append("\r\n");
+              
+        int offset60 = DataUtil.getLEInt(fileData, 0x60);
+        sb.append("Offset60: ").append(HexUtil.formatHex(offset60)).append("\r\n");
         int offset64 = DataUtil.getLEInt(fileData, 0x64);
         sb.append("Offset64: ").append(HexUtil.formatHex(offset64)).append("\r\n");
+
+        float offset68 = DataUtil.getLEFloat(fileData, 0x68);
+        sb.append("Offset68: ").append(offset68).append("\r\n");
+
+        sb.append("0x44700000 = ").append(Float.intBitsToFloat(0x44700000)).append("\r\n");
 
         int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
         sb.append("Offset Tex 6c: ").append(HexUtil.formatHex(offsetTex6c)).append("\r\n");
@@ -147,7 +173,7 @@ public class WorldDecode
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
-        sb.append("Offsets (18) array \r\n \r\n");
+        sb.append("Offsets (18) array. Each index points to an entry in array 20.\r\n \r\n");
         for (int i=0; i<rows*cols; ++i){
             int off = DataUtil.getLEInt(fileData, offset18 + i*4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
@@ -172,7 +198,21 @@ public class WorldDecode
         {
             int off = offset20 + i*0x1c;
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
+            sb.append("    0x00: ").append(DataUtil.getLEShort(fileData, off+0x00)).append("\r\n");
+            sb.append("    0x02: ").append(DataUtil.getLEShort(fileData, off+0x02)).append("\r\n");
+            sb.append("    0x04: ").append(DataUtil.getLEShort(fileData, off+0x04)).append("\r\n");
+            sb.append("    0x06: ").append(DataUtil.getLEShort(fileData, off+0x06)).append("\r\n");
+            sb.append("    0x08: ").append(DataUtil.getLEInt(fileData, off+0x08)).append("\r\n");
+
+            // This points to an object - possibly a terrain patch / height map
+            // offset 8 and C of it specify rows and cols. 16 bit values start at offset 14.
+            // There are rows * cols values.
+
             sb.append("    0x0c: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x0c))).append("\r\n");
+            sb.append("    0x10: ").append(DataUtil.getLEShort(fileData, off+0x10)).append("\r\n");
+            sb.append("    0x12: ").append(DataUtil.getLEShort(fileData, off+0x12)).append("\r\n");
+            sb.append("    0x14: ").append(DataUtil.getLEShort(fileData, off+0x14)).append("\r\n");
+            sb.append("    0x16: ").append(DataUtil.getLEShort(fileData, off+0x16)).append("\r\n");
             sb.append("}\r\n");
         }
 
