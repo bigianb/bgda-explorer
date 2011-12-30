@@ -16,6 +16,8 @@
 package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Decodes an xxx.world file.
@@ -191,6 +193,8 @@ public class WorldDecode
             sb.append("\r\n");
         }
 
+        List<Integer> linkedObjects = new ArrayList<Integer>();
+
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Elements (20) array - ").append(count1c).append(" elements\r\n \r\n");
@@ -208,12 +212,24 @@ public class WorldDecode
             // offset 8 and C of it specify rows and cols. 16 bit values start at offset 14.
             // There are rows * cols values.
 
-            sb.append("    0x0c: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x0c))).append("\r\n");
+            int linkedObjectOffset = DataUtil.getLEInt(fileData, off + 0x0c);
+            if (!linkedObjects.contains(linkedObjectOffset)){
+                linkedObjects.add(linkedObjectOffset);
+            }
+            sb.append("    0x0c: ").append(HexUtil.formatHex(linkedObjectOffset)).append("\r\n");
             sb.append("    0x10: ").append(DataUtil.getLEShort(fileData, off+0x10)).append("\r\n");
             sb.append("    0x12: ").append(DataUtil.getLEShort(fileData, off+0x12)).append("\r\n");
             sb.append("    0x14: ").append(DataUtil.getLEShort(fileData, off+0x14)).append("\r\n");
             sb.append("    0x16: ").append(DataUtil.getLEShort(fileData, off+0x16)).append("\r\n");
             sb.append("}\r\n");
+        }
+
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+
+        sb.append("Found the following linked objects...").append("\r\n\r\n");
+        for (int offset : linkedObjects){
+            sb.append(HexUtil.formatHex(offset)).append("\r\n");
         }
 
         sb.append("-----------------------------------------------------\r\n");
