@@ -102,11 +102,11 @@ public class WorldDecode
 
         sb.append("\r\n");
 
-        int rows = DataUtil.getLEInt(fileData, 0x10);
-        int cols = DataUtil.getLEInt(fileData,0x14);
+        int cols = DataUtil.getLEInt(fileData,0x10);
+        int rows = DataUtil.getLEInt(fileData, 0x14);
 
-        sb.append("Rows: ").append(rows).append("\r\n");
         sb.append("Cols: ").append(cols).append("\r\n");
+        sb.append("Rows: ").append(rows).append("\r\n");
 
         int offset18 = DataUtil.getLEInt(fileData, 0x18);
         sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n\r\n");
@@ -134,13 +134,13 @@ public class WorldDecode
         sb.append("world.2C: ").append((DataUtil.getLEInt(fileData, 0x2C))).append("\r\n");
 
 
-        int rows1 = DataUtil.getLEInt(fileData, 0x30);
-        int cols1 = DataUtil.getLEInt(fileData,0x34);
+        int cols_38 = DataUtil.getLEInt(fileData, 0x30);
+        int rows_38 = DataUtil.getLEInt(fileData,0x34);
 
-        sb.append("Rows1: ").append(rows1).append("\r\n");
-        sb.append("Cols1: ").append(cols1).append("\r\n");
+        sb.append("Cols.38: ").append(cols_38).append("\r\n");
+        sb.append("Rows.38: ").append(rows_38).append("\r\n");
         int offset38 = DataUtil.getLEInt(fileData, 0x38);
-        sb.append("Offset38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
+        sb.append("Offset.38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
 
         sb.append("world.3C: ").append(DataUtil.getLEInt(fileData, 0x3C)).append("\r\n");
         sb.append("world.40: ").append(DataUtil.getLEInt(fileData, 0x40)).append("\r\n");
@@ -268,17 +268,29 @@ public class WorldDecode
             sb.append("    0x1C: ").append(DataUtil.getLEFloat(fileData, off+0x1C)).append("\r\n");
             sb.append("    0x20: ").append(DataUtil.getLEFloat(fileData, off+0x20)).append("\r\n");
             sb.append("    0x24: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x24))).append("\r\n");
-            sb.append("    0x28: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x28))).append("\r\n");
-            sb.append("    0x2A: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2A))).append("\r\n");
-            sb.append("    0x2C: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2C))).append("\r\n");
-            sb.append("    0x2E: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2E))).append("\r\n");
+            sb.append("    0x28: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x28))).append("\r\n");
+            sb.append("    0x2A: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2A))).append("\r\n");
+            sb.append("    0x2C: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2C))).append("\r\n");
+            sb.append("    0x2E: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2E))).append("\r\n");
             int member30 = DataUtil.getLEUShort(fileData, off+0x30);
             // test 0x800 for a flag.
             sb.append("    0x30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
-            sb.append("    0x32: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x32))).append("\r\n");
+            sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x32))).append("\r\n");
+            sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x34))).append("\r\n");
             sb.append("}\r\n");
         }
-
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+        sb.append("Elements (38) array - ").append(numElements).append(" elements\r\n \r\n");
+        // points to an array of 16 bit values, each of which is actually an unsigned byte.
+        for (int y = 0; y < rows_38; ++y){
+            for (int x=0; x < cols_38; ++x){
+                int val = DataUtil.getLEUShort(fileData, offset38 + 2 * (y*cols_38 + x));
+                val &= 0xFF;
+                sb.append(HexUtil.formatHexByte(val)).append(" ");
+            }
+            sb.append("\r\n");
+        }
 
         return sb.toString();
     }
