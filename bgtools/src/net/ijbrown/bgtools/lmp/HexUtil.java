@@ -17,6 +17,18 @@ public class HexUtil
         return s+s2;
     }
 
+    public static String formatHexByte(int num)
+    {
+        String s = "0x";
+        String s2 = Integer.toHexString(num & 0xFF);
+        int pad = 2 - s2.length();
+        while (pad > 0){
+            s += '0';
+            --pad;
+        }
+        return s+s2;
+    }
+
     public static String formatHexShort(int num)
     {
         short signed = (short)num;
@@ -53,4 +65,5 @@ public class HexUtil
         }
         return s+s2;
     }
+
 }
