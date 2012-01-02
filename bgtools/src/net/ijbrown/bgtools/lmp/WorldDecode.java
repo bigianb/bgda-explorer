@@ -229,7 +229,26 @@ public class WorldDecode
 
         sb.append("Found the following linked objects...").append("\r\n\r\n");
         for (int offset : linkedObjects){
-            sb.append(HexUtil.formatHex(offset)).append("\r\n");
+            sb.append("Offset: ").append(HexUtil.formatHex(offset)).append("\r\n");
+
+            sb.append(" 0x00: ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
+            sb.append(" 0x04: ").append(DataUtil.getLEInt(fileData, offset+4)).append("\r\n");
+
+            int patchWidth = DataUtil.getLEInt(fileData, offset+0x08);
+            int patchHeight = DataUtil.getLEInt(fileData, offset+0x0C);
+
+            sb.append(" Dimensions=").append(patchWidth).append(" x ").append(patchHeight).append("\r\n\r\n");
+
+            sb.append(" 0x10: ").append(DataUtil.getLEShort(fileData, offset+0x10)).append("\r\n");
+            sb.append(" 0x12: ").append(DataUtil.getLEShort(fileData, offset+0x12)).append("\r\n");
+                      
+            for (int y=0; y<patchHeight; ++y){
+                for (int x=0; x<patchWidth; ++x){
+                    int i = y*patchWidth+x;
+                    sb.append(DataUtil.getLEShort(fileData, offset+0x14+i*2)).append("\r\n");
+                }
+                sb.append("--\r\n");
+            }
         }
 
         sb.append("-----------------------------------------------------\r\n");
@@ -241,9 +260,22 @@ public class WorldDecode
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
             sb.append("    0x00: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off))).append("\r\n");
             sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+4))).append("\r\n");
+            sb.append("    0x08: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+8))).append("\r\n");
+            sb.append("    0x0C: ").append(DataUtil.getLEFloat(fileData, off+0x0C)).append("\r\n");
+            sb.append("    0x10: ").append(DataUtil.getLEFloat(fileData, off+0x10)).append("\r\n");
+            sb.append("    0x14: ").append(DataUtil.getLEFloat(fileData, off+0x14)).append("\r\n");
+            sb.append("    0x18: ").append(DataUtil.getLEFloat(fileData, off+0x18)).append("\r\n");
+            sb.append("    0x1C: ").append(DataUtil.getLEFloat(fileData, off+0x1C)).append("\r\n");
+            sb.append("    0x20: ").append(DataUtil.getLEFloat(fileData, off+0x20)).append("\r\n");
+            sb.append("    0x24: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x24))).append("\r\n");
+            sb.append("    0x28: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x28))).append("\r\n");
+            sb.append("    0x2A: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2A))).append("\r\n");
+            sb.append("    0x2C: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2C))).append("\r\n");
+            sb.append("    0x2E: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x2E))).append("\r\n");
             int member30 = DataUtil.getLEUShort(fileData, off+0x30);
             // test 0x800 for a flag.
             sb.append("    0x30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
+            sb.append("    0x32: ").append(HexUtil.formatHex(DataUtil.getLEShort(fileData, off+0x32))).append("\r\n");
             sb.append("}\r\n");
         }
 
