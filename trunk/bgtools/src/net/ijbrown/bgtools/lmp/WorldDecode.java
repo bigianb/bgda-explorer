@@ -17,6 +17,7 @@ package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -35,14 +36,15 @@ public class WorldDecode
 
         WorldDecode obj = new WorldDecode();
         obj.read("cellar1.world", outDirFile);
-        String txt = obj.disassemble();
+        String txt;
+        txt = obj.disassemble(outDirFile);
         obj.writeFile("cellar1.world.txt", outDirFile, txt);
 //        obj.extractTexture("cellar1.world.png", outDirFile);
 
         outDirFile = new File(outDirTest);
         obj = new WorldDecode();
         obj.read("test.world", outDirFile);
-        txt = obj.disassemble();
+        txt = obj.disassemble(outDirFile);
         obj.writeFile("test.world.txt", outDirFile, txt);
 
         obj.extractTexture("test.world.png", outDirFile);
@@ -86,7 +88,7 @@ public class WorldDecode
         texDecode.extract(outDirFile, fileData, offsetTex6c, outputFilename);
     }
 
-    private String disassemble()
+    private String disassemble(File outDirFile)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -251,6 +253,10 @@ public class WorldDecode
             }
         }
 
+
+        List<Integer> meshOffsets = new ArrayList<Integer>();
+        List<Integer> meshLengths = new ArrayList<Integer>();
+
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Elements (24) array - ").append(numElements).append(" elements\r\n \r\n");
@@ -258,9 +264,15 @@ public class WorldDecode
         {
             int off = elementBase + i*0x38;
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
-            sb.append("    0x00: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off))).append("\r\n");
+            // offset 0 points to a vif mesh object. Mesh data starts at offset 0x20.
+            int meshOffset = DataUtil.getLEInt(fileData, off);
+
+            sb.append("    0x00: ").append(HexUtil.formatHex(meshOffset)).append("\r\n");
             sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+4))).append("\r\n");
-            sb.append("    0x08: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+8))).append("\r\n");
+
+            // in 16 byte units
+            int meshDataLen = DataUtil.getLEInt(fileData, off + 8);
+            sb.append("    0x08: ").append(HexUtil.formatHex(meshDataLen)).append("\r\n");
             sb.append("    0x0C: ").append(DataUtil.getLEFloat(fileData, off+0x0C)).append("\r\n");
             sb.append("    0x10: ").append(DataUtil.getLEFloat(fileData, off+0x10)).append("\r\n");
             sb.append("    0x14: ").append(DataUtil.getLEFloat(fileData, off+0x14)).append("\r\n");
@@ -278,6 +290,28 @@ public class WorldDecode
             sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x32))).append("\r\n");
             sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x34))).append("\r\n");
             sb.append("}\r\n");
+
+            if (!meshOffsets.contains(meshOffset)){
+                meshOffsets.add(meshOffset);
+                meshLengths.add(meshDataLen);
+            }
+
+        }
+
+        Iterator<Integer> it = meshLengths.iterator();
+        for(int meshOffset : meshOffsets){
+            Integer len = it.next();
+            VifDecode vifDecode = new VifDecode();
+            String meshName = new String(HexUtil.formatHex(meshOffset)+"_mesh");
+
+            try {
+                byte nregs = fileData[meshOffset+0x10];
+                int startOffset = (nregs+2) * 0x10;
+                vifDecode.readVerts(fileData, meshOffset+startOffset, meshOffset+len*0x10);
+                vifDecode.writeObj(meshName, outDirFile, 10, 10, 128.0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");

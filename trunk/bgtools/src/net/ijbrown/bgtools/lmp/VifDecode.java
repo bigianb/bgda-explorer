@@ -46,7 +46,7 @@ public class VifDecode
         obj.extract("book", outDirFile, 169, 64);
     }
 
-    private void extract(String name, File outDir, int texw, int texh) throws IOException
+    public void extract(String name, File outDir, int texw, int texh) throws IOException
     {
         File file = new File(outDir, name + ".vif");
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
@@ -83,7 +83,7 @@ public class VifDecode
         writer.close();
     }
 
-    private void writeObj(String name, File dir, double texWidth, double texHeight, double scale) throws IOException
+    public void writeObj(String name, File dir, double texWidth, double texHeight, double scale) throws IOException
     {
         DecimalFormat df = new DecimalFormat("0.0000");
 
@@ -267,10 +267,11 @@ public class VifDecode
     private static final int NOP_CMD = 0;
     private static final int STCYCL_CMD = 1;
     private static final int ITOP_CMD = 4;
+    private static final int STMOD_CMD = 5;
     private static final int MSCAL_CMD = 0x14;
     private static final int STMASK_CMD = 0x20;
 
-    private void readVerts(byte[] fileData, int offset, int endOffset)
+    public void readVerts(byte[] fileData, int offset, int endOffset)
     {
         currentChunk = new Chunk();
         while (offset < endOffset) {
@@ -291,6 +292,11 @@ public class VifDecode
                 case ITOP_CMD:
                     System.out.print(HexUtil.formatHex(offset) + " ");
                     System.out.println("ITOP: " + immCommand);
+                    offset += 4;
+                    break;
+                case STMOD_CMD:
+                    System.out.print(HexUtil.formatHex(offset) + " ");
+                    System.out.println("STMOD: " + immCommand);
                     offset += 4;
                     break;
                 case MSCAL_CMD:
