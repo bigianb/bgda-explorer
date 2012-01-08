@@ -84,6 +84,7 @@ public class TexDecode
         int finalw = DataUtil.getLEShort(fileData, startOffset);
         int finalh = DataUtil.getLEShort(fileData, startOffset + 2);
         int sourcew = finalw;
+        int sourceh = finalh;
         PalEntry[] pixels = null;
 
         int curIdx = 0x80 + startOffset;
@@ -109,7 +110,7 @@ public class TexDecode
             curIdx += (palLen + 0x10);
 
             GIFTag gifTag3 = new GIFTag();
-            gifTag2.parse(fileData, curIdx);
+            gifTag3.parse(fileData, curIdx);
 
             int dimOffset = 0x30;
             if (palLen == 64){
@@ -124,6 +125,10 @@ public class TexDecode
             if (palLen != 64){
                 pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
                 sourcew = rrw * 2;
+                sourceh = rrh * 2;
+            } else {
+                sourcew = rrw;
+                sourceh = rrh;
             }
 
         } else if (gifTag.nloop == 3) {
@@ -138,8 +143,8 @@ public class TexDecode
         }
         if (finalw != 0 && pixels != null) {
             BufferedImage image = new BufferedImage(finalw, finalh, BufferedImage.TYPE_INT_ARGB);
-            for (int y = 0; y < finalh; ++y) {
-                for (int x = 0; x < finalw; ++x) {
+            for (int y = 0; y < sourceh; ++y) {
+                for (int x = 0; x < sourcew; ++x) {
                     PalEntry pixel = pixels[y * sourcew + x];
                     if (pixel != null) {
                         image.setRGB(x, y, pixel.argb());
@@ -221,15 +226,19 @@ public class TexDecode
             }
             return pixels;
         } else {
-            int widthBytes = (dbw + 1) & ~1;
-            int numDestBytes = rrh * widthBytes;
+            int numDestBytes = rrh * dbw;
             PalEntry[] pixels = new PalEntry[numDestBytes];
             int idx = startOffset;
+            boolean lowbit=false;
             for (int y = 0; y < rrh; ++y) {
                 for (int x = 0; x < rrw; ++x) {
-                    int destIdx = y * widthBytes + x / 2;
-                    pixels[destIdx++] = palette[fileData[idx] >> 4 & 0x0F];
-                    pixels[destIdx] = palette[fileData[idx++] & 0x0F];
+                    int destIdx = y * dbw + x;
+                    if (!lowbit){
+                        pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
+                    } else {
+                        pixels[destIdx] = palette[fileData[idx++] & 0x0F];
+                    }
+                    lowbit = !lowbit;
                 }
             }
             return pixels;

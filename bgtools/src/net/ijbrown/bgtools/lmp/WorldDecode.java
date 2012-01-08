@@ -39,7 +39,7 @@ public class WorldDecode
         String txt;
         txt = obj.disassemble(outDirFile);
         obj.writeFile("cellar1.world.txt", outDirFile, txt);
-//        obj.extractTexture("cellar1.world.png", outDirFile);
+        obj.extractTexture("cellar1.world.png", outDirFile);
 
         outDirFile = new File(outDirTest);
         obj = new WorldDecode();
@@ -107,8 +107,8 @@ public class WorldDecode
         int cols = DataUtil.getLEInt(fileData,0x10);
         int rows = DataUtil.getLEInt(fileData, 0x14);
 
-        sb.append("Cols: ").append(cols).append("\r\n");
-        sb.append("Rows: ").append(rows).append("\r\n");
+        sb.append("Cols (world.10): ").append(cols).append("\r\n");
+        sb.append("Rows (world.14): ").append(rows).append("\r\n");
 
         int offset18 = DataUtil.getLEInt(fileData, 0x18);
         sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n\r\n");
@@ -128,7 +128,7 @@ public class WorldDecode
         sb.append("\r\n");
 
         int elementBase = DataUtil.getLEInt(fileData, 0x24);
-        sb.append("Element Base: ").append(HexUtil.formatHex(elementBase)).append("\r\n");
+        sb.append("Element Base (world.24): ").append(HexUtil.formatHex(elementBase)).append("\r\n");
 
         sb.append("\r\n");
 
@@ -139,8 +139,8 @@ public class WorldDecode
         int cols_38 = DataUtil.getLEInt(fileData, 0x30);
         int rows_38 = DataUtil.getLEInt(fileData,0x34);
 
-        sb.append("Cols.38: ").append(cols_38).append("\r\n");
-        sb.append("Rows.38: ").append(rows_38).append("\r\n");
+        sb.append("Cols.38 (world.30): ").append(cols_38).append("\r\n");
+        sb.append("Rows.38 (world.34): ").append(rows_38).append("\r\n");
         int offset38 = DataUtil.getLEInt(fileData, 0x38);
         sb.append("Offset.38: ").append(HexUtil.formatHex(offset38)).append("\r\n");
 
