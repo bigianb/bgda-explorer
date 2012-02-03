@@ -163,7 +163,8 @@ public class WorldDecode
         int offset60 = DataUtil.getLEInt(fileData, 0x60);
         sb.append("Offset60: ").append(HexUtil.formatHex(offset60)).append("\r\n");
         int offset64 = DataUtil.getLEInt(fileData, 0x64);
-        sb.append("Offset64: ").append(HexUtil.formatHex(offset64)).append("\r\n");
+        // see 142ea8
+        sb.append("world.64 (offsets into level.tex): ").append(HexUtil.formatHex(offset64)).append("\r\n");
 
         float offset68 = DataUtil.getLEFloat(fileData, 0x68);
         sb.append("Offset68: ").append(offset68).append("\r\n");
@@ -279,6 +280,7 @@ public class WorldDecode
             sb.append("    0x18: ").append(DataUtil.getLEFloat(fileData, off+0x18)).append("\r\n");
             sb.append("    0x1C: ").append(DataUtil.getLEFloat(fileData, off+0x1C)).append("\r\n");
             sb.append("    0x20: ").append(DataUtil.getLEFloat(fileData, off+0x20)).append("\r\n");
+            // Chunk in texture
             sb.append("    0x24: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x24))).append("\r\n");
             sb.append("    0x28: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x28))).append("\r\n");
             sb.append("    0x2A: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2A))).append("\r\n");
