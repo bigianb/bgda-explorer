@@ -94,6 +94,32 @@ public class LevelTexDecode
         sb.append("Pal Offset:  ").append(HexUtil.formatHex(palOffset)).append("\r\n");
         sb.append("\r\n");
 
+        for (int i=4; i < 64; i+= 4){
+            int iOff = headerOffset10 + i;
+            int val = DataUtil.getLEInt(fileData, iOff);
+            sb.append(HexUtil.formatHex(iOff)).append(": ").append(HexUtil.formatHex(val));
+            if (i > 4){
+                for (int j=0; j<16; j += 4){
+                    int jOff = val + offset + j;
+                    int jval = DataUtil.getLEUShort(fileData, jOff);
+                    sb.append("; ").append(HexUtil.formatHexUShort(jval));
+                    jval = DataUtil.getLEUShort(fileData, jOff + 2);
+                    sb.append(", ").append(HexUtil.formatHexUShort(jval));
+                }
+            }
+            sb.append("\r\n");
+        }
+
+        int c00 = DataUtil.getLEInt(fileData, palOffset + 0xc00);
+        sb.append("$c00:  ").append(HexUtil.formatHex(c00)).append("\r\n");
+        sb.append("\r\n");
+
+        int c04_offset = palOffset + 0xc04;
+        sb.append("$c04 offset:  ").append(HexUtil.formatHex(c04_offset)).append("\r\n");
+
+        int bf84 = c04_offset + c00 * 2;
+        sb.append("bf84:  ").append(HexUtil.formatHex(bf84)).append("\r\n");
+
         int p = headerOffset10+4;
         while (fileData[p] != -1){
             sb.append("x0: ").append(fileData[p]).append("\r\n");
