@@ -92,47 +92,159 @@ public class LevelTexDecode
         int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
 
         sb.append("Pal Offset:  ").append(HexUtil.formatHex(palOffset)).append("\r\n");
-        sb.append("\r\n");
+        sb.append("Palette:");
 
-        for (int i=4; i < 64; i+= 4){
-            int iOff = headerOffset10 + i;
-            int val = DataUtil.getLEInt(fileData, iOff);
-            sb.append(HexUtil.formatHex(iOff)).append(": ").append(HexUtil.formatHex(val));
-            if (i > 4){
-                for (int j=0; j<16; j += 4){
-                    int jOff = val + offset + j;
-                    int jval = DataUtil.getLEUShort(fileData, jOff);
-                    sb.append("; ").append(HexUtil.formatHexUShort(jval));
-                    jval = DataUtil.getLEUShort(fileData, jOff + 2);
-                    sb.append(", ").append(HexUtil.formatHexUShort(jval));
-                }
+        for (int i=0; i < 0x400; i += 4)
+        {
+            int off = i + palOffset;
+            int val = DataUtil.getLEInt(fileData, off);
+            if ((i & 0x1f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
             }
-            sb.append("\r\n");
+            sb.append(HexUtil.formatHex(val));
         }
+        sb.append("\r\n");
+        sb.append("\r\nUnknown:");
+        for (int i=0; i < 0x800; i += 4)
+        {
+            int off = i + palOffset + 0x400;
+            int val = DataUtil.getLEInt(fileData, off);
+            if ((i & 0x1f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
+            }
+            sb.append(HexUtil.formatHex(val));
+        }
+        sb.append("\r\n\r\n");
 
         int c00 = DataUtil.getLEInt(fileData, palOffset + 0xc00);
-        sb.append("$c00:  ").append(HexUtil.formatHex(c00)).append("\r\n");
+        sb.append(HexUtil.formatHex(palOffset + 0xc00)).append(": ").append("pal + 0xc00:  ").append(HexUtil.formatHex(c00)).append("\r\n");
         sb.append("\r\n");
 
         int c04_offset = palOffset + 0xc04;
-        sb.append("$c04 offset:  ").append(HexUtil.formatHex(c04_offset)).append("\r\n");
+        sb.append("pal + 0xc04:  ").append(HexUtil.formatHex(c04_offset));
 
+        for (int i=0; i < c00*2; i += 2)
+        {
+            int off = i + c04_offset;
+            int val = DataUtil.getLEUShort(fileData, off);
+            if ((i & 0x0f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
+            }
+            sb.append(HexUtil.formatHexUShort(val));
+        }
+
+        sb.append("\r\n");
         int bf84 = c04_offset + c00 * 2;
         sb.append("bf84:  ").append(HexUtil.formatHex(bf84)).append("\r\n");
 
+        for (int i=0; i < 0x48; i += 4)
+        {
+            int off = i + c04_offset + c00 * 2;
+            int val = DataUtil.getLEInt(fileData, off);
+            if ((i & 0x0f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
+            }
+            sb.append(HexUtil.formatHex(val));
+        }
+        sb.append("\r\n");
+
+        for (int i=0; i < 0x44; i += 4)
+        {
+            int off = i + c04_offset + c00 * 2 + 0x48;
+            int val = DataUtil.getLEInt(fileData, off);
+            if ((i & 0x0f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
+            }
+            sb.append(HexUtil.formatHex(val));
+        }
+        sb.append("\r\n").append("\r\n");
+
+        for (int i=0; i < 0x400; i += 2)
+        {
+            int off = i + c04_offset + c00 * 2 + 0x48 + 0x44;
+            int val = DataUtil.getLEUShort(fileData, off);
+            if ((i & 0x0f) == 0){
+                sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
+            } else {
+                sb.append(", ");
+            }
+            sb.append(HexUtil.formatHexUShort(val));
+        }
+
+        sb.append("\r\n").append("\r\n");
+        
         int p = headerOffset10+4;
         while (fileData[p] != -1){
-            sb.append("x0: ").append(fileData[p]).append("\r\n");
-            sb.append("y0: ").append(fileData[p+1]).append("\r\n");
-            sb.append("x1: ").append(fileData[p+2]).append("\r\n");
-            sb.append("y1: ").append(fileData[p+3]).append("\r\n");
+            sb.append(HexUtil.formatHex(p)).append(": x0, y0, x1, y1, p: ").append(fileData[p]).append(", ");
+            sb.append(fileData[p+1]).append(", ");
+            sb.append(fileData[p+2]).append(", ");
+            sb.append(fileData[p+3]).append(", ");
 
             int poff =  DataUtil.getLEInt(fileData, p+4) + offset;
-            sb.append("p: ").append(HexUtil.formatHex(poff)).append("\r\n\r\n");
+            sb.append(HexUtil.formatHex(poff)).append("\r\n");
 
             p += 8;
         }
+
+        sb.append("\r\nDecoded tuples:\r\n");
+        Tuple[] tuples = decode(palOffset);
+        int i=0;
+        for (Tuple tuple : tuples){
+            sb.append(i++).append(": ").append(tuple.a).append(", ").append(tuple.b).append("\r\n");
+        }
+
         return sb.toString();
+    }
+
+    class Tuple
+    {
+        public short a;
+        public short b;
+    }
+
+    public Tuple[] decode(int palOffset)
+    {
+        Tuple[] out = new Tuple[256];
+
+        int len = DataUtil.getLEInt(fileData, palOffset+0xc00);
+        int bitValOffset = palOffset + 0x0c04 + 2 * len + 0x48;
+        int lookupOffset = palOffset + 0x0c04 + 2 * len;
+
+
+        for (int i=0; i<256; ++i){
+            int bit=1;
+            int a = i >> (8-bit);
+            int v = DataUtil.getLEInt(fileData, bitValOffset + bit*4);
+            if (v < a){
+                do {
+                    ++bit;
+                    if (bit > 8){
+                        break;
+                    }
+                    a = i >> (8-bit);
+                    v = DataUtil.getLEInt(fileData, bitValOffset + bit*4);
+                } while (v < a);
+            }
+            out[i] = new Tuple();
+            if (bit <= 8){
+                int val = DataUtil.getLEInt(fileData, lookupOffset + bit*4);
+                int c04Index = a + val;
+                out[i].a = DataUtil.getLEShort(fileData, palOffset + 0x0c04 + c04Index * 2 );
+                out[i].b = (short)bit;
+            }
+        }
+
+        return out;
     }
 
 }
