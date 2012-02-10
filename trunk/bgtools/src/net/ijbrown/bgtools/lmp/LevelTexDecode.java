@@ -16,9 +16,6 @@
 package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Decodes an worldname.tex file.
@@ -41,6 +38,8 @@ public class LevelTexDecode
         String txt;
         txt = obj.disassemble(outDirFile);
         obj.writeFile("cellar1.tex.txt", outDirFile, txt);
+
+        obj.extract(new File(outDirFile, "cellar1.tex.png"));
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -74,6 +73,32 @@ public class LevelTexDecode
         }
     }
 
+    private void extract(File outDirFile)
+    {
+        extract(outDirFile, 0x840);
+    }
+
+    private void extract(File outDirFile, int offset)
+    {
+        int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
+        int headerOffset10 = header10 + offset;
+        int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
+
+        PalEntry[] palette = PalEntry.readPalette(fileData, palOffset, 16, 16);
+        palette = PalEntry.unswizzlePalette(palette);
+        HuffVal[] huffVals = decode(palOffset+0xc00);
+
+        int p = headerOffset10+4;
+        int x0 = fileData[p];
+        int y0 = fileData[p+1];
+        int x1 = fileData[p+2];
+        int y1 = fileData[p+3];
+
+        int wBlocks = x1 - x0 + 1;
+        int hBlocks = y1 - y0 + 1;
+        
+
+    }
 
     private String disassemble(File outDirFile)
     {
@@ -185,40 +210,51 @@ public class LevelTexDecode
         
         int p = headerOffset10+4;
         while (fileData[p] != -1){
-            sb.append(HexUtil.formatHex(p)).append(": x0, y0, x1, y1, p: ").append(fileData[p]).append(", ");
-            sb.append(fileData[p+1]).append(", ");
-            sb.append(fileData[p+2]).append(", ");
-            sb.append(fileData[p+3]).append(", ");
+            int x0 = fileData[p];
+            int y0 = fileData[p+1];
+            int x1 = fileData[p+2];
+            int y1 = fileData[p+3];
 
-            int poff =  DataUtil.getLEInt(fileData, p+4) + offset;
-            sb.append(HexUtil.formatHex(poff)).append("\r\n");
 
-            p += 8;
+            sb.append(HexUtil.formatHex(p)).append(": x0, y0, x1, y1 ").append(x0).append(", ");
+            sb.append(y0).append(", ");
+            sb.append(x1).append(", ");
+            sb.append(y1).append(", ");
+
+            p += 4;
+            int wBlocks = x1 - x0 + 1;
+            int hBlocks = y1 - y0 + 1;
+
+            for (int i=0; i < wBlocks * hBlocks; ++i){
+                int poff =  DataUtil.getLEInt(fileData, p) + offset;
+                sb.append(HexUtil.formatHex(poff)).append("\r\n");
+                p+=4;
+            }
         }
 
-        sb.append("\r\nDecoded tuples:\r\n");
-        Tuple[] tuples = decode(palOffset);
+        sb.append("\r\nDecoded huffVals:\r\n");
+        HuffVal[] huffVals = decode(palOffset+0xc00);
         int i=0;
-        for (Tuple tuple : tuples){
-            sb.append(i++).append(": ").append(tuple.a).append(", ").append(tuple.b).append("\r\n");
+        for (HuffVal huffVal : huffVals){
+            sb.append(i++).append(": ").append(huffVal.val).append(", ").append(huffVal.numBits).append("\r\n");
         }
 
         return sb.toString();
     }
 
-    class Tuple
+    class HuffVal
     {
-        public short a;
-        public short b;
+        public short val;
+        public short numBits;
     }
 
-    public Tuple[] decode(int palOffset)
+    public HuffVal[] decode(int tableOffset)
     {
-        Tuple[] out = new Tuple[256];
+        HuffVal[] out = new HuffVal[256];
 
-        int len = DataUtil.getLEInt(fileData, palOffset+0xc00);
-        int bitValOffset = palOffset + 0x0c04 + 2 * len + 0x48;
-        int lookupOffset = palOffset + 0x0c04 + 2 * len;
+        int len = DataUtil.getLEInt(fileData, tableOffset);
+        int bitValOffset = tableOffset + 4 + 2 * len + 0x48;
+        int lookupOffset = tableOffset + 4 + 2 * len;
 
 
         for (int i=0; i<256; ++i){
@@ -235,12 +271,12 @@ public class LevelTexDecode
                     v = DataUtil.getLEInt(fileData, bitValOffset + bit*4);
                 } while (v < a);
             }
-            out[i] = new Tuple();
+            out[i] = new HuffVal();
             if (bit <= 8){
                 int val = DataUtil.getLEInt(fileData, lookupOffset + bit*4);
                 int c04Index = a + val;
-                out[i].a = DataUtil.getLEShort(fileData, palOffset + 0x0c04 + c04Index * 2 );
-                out[i].b = (short)bit;
+                out[i].val = DataUtil.getLEShort(fileData, tableOffset + 4 + c04Index * 2 );
+                out[i].numBits = (short)bit;
             }
         }
 
