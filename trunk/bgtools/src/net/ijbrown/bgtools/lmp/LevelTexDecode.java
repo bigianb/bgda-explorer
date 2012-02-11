@@ -15,6 +15,8 @@
 */
 package net.ijbrown.bgtools.lmp;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 
 /**
@@ -73,12 +75,12 @@ public class LevelTexDecode
         }
     }
 
-    private void extract(File outDirFile)
+    private void extract(File outputfile) throws IOException
     {
-        extract(outDirFile, 0x840);
+        extract(outputfile, 0x840);
     }
 
-    private void extract(File outDirFile, int offset)
+    private void extract(File outputfile, int offset) throws IOException
     {
         int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
         int headerOffset10 = header10 + offset;
@@ -93,11 +95,80 @@ public class LevelTexDecode
         int y0 = fileData[p+1];
         int x1 = fileData[p+2];
         int y1 = fileData[p+3];
-
+        p += 4;
         int wBlocks = x1 - x0 + 1;
         int hBlocks = y1 - y0 + 1;
-        
 
+        BufferedImage image = new BufferedImage(wBlocks*16, hBlocks*16, BufferedImage.TYPE_INT_ARGB);
+
+        for (int yblock=0; yblock < wBlocks; ++yblock){
+            for (int xblock=0; xblock < hBlocks; ++xblock){
+                int blockDataStart = DataUtil.getLEInt(fileData, p);
+                decodeBlock(xblock, yblock, blockDataStart, palOffset + 0xC00, image, palette, huffVals);
+                p+=4;
+            }
+        }
+        ImageIO.write(image, "png", outputfile);
+    }
+
+    private void decodeBlock(int xblock, int yblock, int blockDataStart, int tableOffset, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
+    {
+        int table1Len = DataUtil.getLEInt(fileData, tableOffset) * 2;
+        int table1Start = tableOffset + 4;
+        int table2Start = table1Start + table1Len;
+        int table3Start = table2Start + 0x48;
+
+        int startBit=0;
+        for (int y=0; y<16; ++y){
+            for (int x=0; x < 16; ++x){
+                int startWordIdx = startBit / 16;
+                int word1 = DataUtil.getLEUShort(fileData, blockDataStart + startWordIdx * 2);
+                int word2 = DataUtil.getLEUShort(fileData, blockDataStart + startWordIdx * 2 + 2);
+                // if startBit is 0, word == word1
+                // if startBit is 1, word is 15 bits of word1 and 1 bit of word2
+                int word = ((word1 << 16 | word2) >> (16 - (startBit & 0x0f))) & 0xFFFF;
+
+                int byte1 = (word >> 8) & 0xff;
+                HuffVal hv = huffVals[byte1];
+                int pixCmd;
+                if (hv.numBits != 0){
+                    pixCmd = hv.val;
+                    startBit += hv.numBits;
+                } else {
+                    int table1Idx;
+                    int nineBits = word >> (16 - 9);
+                    int val24 = DataUtil.getLEInt(fileData, table3Start + 0x24);
+                    if (val24 >= nineBits){
+                        startBit += 9;
+                        table1Idx = nineBits + DataUtil.getLEInt(fileData, table2Start + 0x24);
+                    } else {
+                        int bitcount=9;
+                        int bits, table3val;
+                        do {
+                            ++bitcount;
+                            bits = word >> (16 - bitcount);
+                            table3val = DataUtil.getLEInt(fileData, table3Start + bitcount * 4);
+                        } while (table3val < bits);
+                        table1Idx = bits + DataUtil.getLEInt(fileData, table2Start + bitcount * 4);
+                        startBit += bitcount;
+                    }
+                    pixCmd = DataUtil.getLEUShort(fileData, table1Start + table1Idx*2);
+
+
+                }
+                int pix8 = 0;
+                if (pixCmd < 0x100){
+                    pix8 = pixCmd;
+                } else if (pixCmd < 0x105){
+
+                } else {
+                    
+                }
+
+                PalEntry pixel = palette[pix8];
+                image.setRGB(xblock*16 + x, yblock*16 + y, pixel.argb());
+            }
+        }
     }
 
     private String disassemble(File outDirFile)
