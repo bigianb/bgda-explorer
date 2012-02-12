@@ -41,7 +41,16 @@ public class LevelTexDecode
         txt = obj.disassemble(outDirFile);
         obj.writeFile("cellar1.tex.txt", outDirFile, txt);
 
-        obj.extract(new File(outDirFile, "cellar1.tex.png"));
+        obj.extract(new File(outDirFile, "cellar1.tex.png"), 0x840);
+        obj.extract(new File(outDirFile, "cellar1_1.tex.png"), 0x11840);
+        obj.extract(new File(outDirFile, "cellar1_2.tex.png"), 0x22840);
+        obj.extract(new File(outDirFile, "cellar1_3.tex.png"), 0x2E040);
+        obj.extract(new File(outDirFile, "cellar1_4.tex.png"), 0x36840);
+        obj.extract(new File(outDirFile, "cellar1_5.tex.png"), 0x36880);
+        obj.extract(new File(outDirFile, "cellar1_6.tex.png"), 0x368C0);
+        obj.extract(new File(outDirFile, "cellar1_7.tex.png"), 0x36900);
+        obj.extract(new File(outDirFile, "cellar1_8.tex.png"), 0x36940);
+        obj.extract(new File(outDirFile, "cellar1_9.tex.png"), 0x36980);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -75,11 +84,6 @@ public class LevelTexDecode
         }
     }
 
-    private void extract(File outputfile) throws IOException
-    {
-        extract(outputfile, 0x840);
-    }
-
     private void extract(File outputfile, int offset) throws IOException
     {
         int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
@@ -101,15 +105,17 @@ public class LevelTexDecode
 
         BufferedImage image = new BufferedImage(wBlocks*16, hBlocks*16, BufferedImage.TYPE_INT_ARGB);
 
-        for (int yblock=0; yblock < wBlocks; ++yblock){
-            for (int xblock=0; xblock < hBlocks; ++xblock){
-                int blockDataStart = DataUtil.getLEInt(fileData, p);
+        for (int yblock=0; yblock < hBlocks; ++yblock){
+            for (int xblock=0; xblock < wBlocks; ++xblock){
+                int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
                 decodeBlock(xblock, yblock, blockDataStart, palOffset + 0xC00, image, palette, huffVals);
                 p+=4;
             }
         }
         ImageIO.write(image, "png", outputfile);
     }
+
+    private int backJumpTable[] = new int[] {-1, -16, -17, -15, -2};
 
     private void decodeBlock(int xblock, int yblock, int blockDataStart, int tableOffset, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
     {
@@ -118,7 +124,10 @@ public class LevelTexDecode
         int table2Start = table1Start + table1Len;
         int table3Start = table2Start + 0x48;
 
+        int[] pix8s = new int[16*16];
+        int curpix8=0;
         int startBit=0;
+        int prevPixel=0;
         for (int y=0; y<16; ++y){
             for (int x=0; x < 16; ++x){
                 int startWordIdx = startBit / 16;
@@ -160,12 +169,21 @@ public class LevelTexDecode
                 if (pixCmd < 0x100){
                     pix8 = pixCmd;
                 } else if (pixCmd < 0x105){
-
+                    int backjump = backJumpTable[pixCmd - 0x100];
+                    if ((curpix8 + backjump) >= 0){
+                        pix8 = pix8s[curpix8 + backjump];
+                    } else {
+                        throw new RuntimeException("Something went wrong");
+                    }
                 } else {
-                    
+                    int table1Index = (pixCmd - 0x05) + prevPixel * 8;
+                    pix8 = fileData[table1Start + table1Index] & 0xFF;
                 }
 
-                PalEntry pixel = palette[pix8];
+                pix8s[curpix8++] = pix8;
+
+                prevPixel = pix8 & 0xFF;
+                PalEntry pixel = palette[pix8  & 0xFF];
                 image.setRGB(xblock*16 + x, yblock*16 + y, pixel.argb());
             }
         }
