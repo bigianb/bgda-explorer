@@ -51,6 +51,30 @@ public class LevelTexDecode
         obj.extract(new File(outDirFile, "cellar1_7.tex.png"), 0x36900);
         obj.extract(new File(outDirFile, "cellar1_8.tex.png"), 0x36940);
         obj.extract(new File(outDirFile, "cellar1_9.tex.png"), 0x36980);
+
+        File outDirTestFile = new File(outDirTest);
+        outDirTestFile.mkdirs();
+
+        obj = new LevelTexDecode();
+        obj.read("test.tex", inDirFile);
+        txt = obj.disassemble(outDirTestFile);
+        obj.writeFile("test.tex.txt", outDirTestFile, txt);
+
+        obj.extract(new File(outDirTestFile, "test_1.tex.png"), 0x840);
+        obj.extract(new File(outDirTestFile, "test_2.tex.png"), 0x880);
+        obj.extract(new File(outDirTestFile, "test_3.tex.png"), 0x8C0);
+        obj.extract(new File(outDirTestFile, "test_4.tex.png"), 0x900);
+        obj.extract(new File(outDirTestFile, "test_5.tex.png"), 0x940);
+        obj.extract(new File(outDirTestFile, "test_6.tex.png"), 0x17840);
+        obj.extract(new File(outDirTestFile, "test_7.tex.png"), 0x17880);
+        obj.extract(new File(outDirTestFile, "test_8.tex.png"), 0x178C0);
+        obj.extract(new File(outDirTestFile, "test_9.tex.png"), 0x17900);
+        obj.extract(new File(outDirTestFile, "test_10.tex.png"), 0x17940);
+        obj.extract(new File(outDirTestFile, "test_11.tex.png"), 0x2f040);
+        obj.extract(new File(outDirTestFile, "test_12.tex.png"), 0x2f080);
+        obj.extract(new File(outDirTestFile, "test_13.tex.png"), 0x2f0C0);
+        obj.extract(new File(outDirTestFile, "test_14.tex.png"), 0x2f100);
+        obj.extract(new File(outDirTestFile, "test_15.tex.png"), 0x2f140);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -108,7 +132,7 @@ public class LevelTexDecode
         for (int yblock=0; yblock < hBlocks; ++yblock){
             for (int xblock=0; xblock < wBlocks; ++xblock){
                 int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
-                decodeBlock(xblock, yblock, blockDataStart, palOffset + 0xC00, image, palette, huffVals);
+                decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
                 p+=4;
             }
         }
@@ -117,8 +141,9 @@ public class LevelTexDecode
 
     private int backJumpTable[] = new int[] {-1, -16, -17, -15, -2};
 
-    private void decodeBlock(int xblock, int yblock, int blockDataStart, int tableOffset, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
+    private void decodeBlock(int xblock, int yblock, int blockDataStart, int table0Start, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
     {
+        int tableOffset = table0Start + 0x800;
         int table1Len = DataUtil.getLEInt(fileData, tableOffset) * 2;
         int table1Start = tableOffset + 4;
         int table2Start = table1Start + table1Len;
@@ -144,26 +169,23 @@ public class LevelTexDecode
                     pixCmd = hv.val;
                     startBit += hv.numBits;
                 } else {
-                    int table1Idx;
-                    int nineBits = word >> (16 - 9);
-                    int val24 = DataUtil.getLEInt(fileData, table3Start + 0x24);
-                    if (val24 >= nineBits){
-                        startBit += 9;
-                        table1Idx = nineBits + DataUtil.getLEInt(fileData, table2Start + 0x24);
-                    } else {
-                        int bitcount=9;
-                        int bits, table3val;
-                        do {
-                            ++bitcount;
-                            bits = word >> (16 - bitcount);
-                            table3val = DataUtil.getLEInt(fileData, table3Start + bitcount * 4);
-                        } while (table3val < bits);
-                        table1Idx = bits + DataUtil.getLEInt(fileData, table2Start + bitcount * 4);
-                        startBit += bitcount;
+                    // Must be more than an 8 bit code
+                    int bit=9;
+                    int a = word >> (16-bit);
+                    int v = DataUtil.getLEInt(fileData, table3Start + bit*4);
+                    while (v < a){
+                        ++bit;
+                        if (bit > 16){
+                            throw new RuntimeException("A decoding error occured");
+                        }
+                        a = word >> (16-bit);
+                        v = DataUtil.getLEInt(fileData, table3Start + bit*4);
                     }
-                    pixCmd = DataUtil.getLEUShort(fileData, table1Start + table1Idx*2);
+                    startBit += bit;
+                    int val = DataUtil.getLEInt(fileData, table2Start + bit*4);
+                    int table1Index = a + val;
 
-
+                    pixCmd = DataUtil.getLEShort(fileData, table1Start + table1Index*2);
                 }
                 int pix8 = 0;
                 if (pixCmd < 0x100){
@@ -176,8 +198,8 @@ public class LevelTexDecode
                         throw new RuntimeException("Something went wrong");
                     }
                 } else {
-                    int table1Index = (pixCmd - 0x05) + prevPixel * 8;
-                    pix8 = fileData[table1Start + table1Index] & 0xFF;
+                    int table0Index = (pixCmd - 0x105) + prevPixel * 8;
+                    pix8 = fileData[table0Start + table0Index] & 0xFF;
                 }
 
                 pix8s[curpix8++] = pix8;
@@ -341,30 +363,28 @@ public class LevelTexDecode
     {
         HuffVal[] out = new HuffVal[256];
 
-        int len = DataUtil.getLEInt(fileData, tableOffset);
-        int bitValOffset = tableOffset + 4 + 2 * len + 0x48;
-        int lookupOffset = tableOffset + 4 + 2 * len;
-
+        int table1Len = DataUtil.getLEInt(fileData, tableOffset) * 2;
+        int table1Start = tableOffset + 4;
+        int table2Start = table1Start + table1Len;
+        int table3Start = table2Start + 0x48;
 
         for (int i=0; i<256; ++i){
             int bit=1;
             int a = i >> (8-bit);
-            int v = DataUtil.getLEInt(fileData, bitValOffset + bit*4);
-            if (v < a){
-                do {
-                    ++bit;
-                    if (bit > 8){
-                        break;
-                    }
-                    a = i >> (8-bit);
-                    v = DataUtil.getLEInt(fileData, bitValOffset + bit*4);
-                } while (v < a);
+            int v = DataUtil.getLEInt(fileData, table3Start + bit*4);
+            while (v < a){
+                ++bit;
+                if (bit > 8){
+                    break;
+                }
+                a = i >> (8-bit);
+                v = DataUtil.getLEInt(fileData, table3Start + bit*4);
             }
             out[i] = new HuffVal();
             if (bit <= 8){
-                int val = DataUtil.getLEInt(fileData, lookupOffset + bit*4);
-                int c04Index = a + val;
-                out[i].val = DataUtil.getLEShort(fileData, tableOffset + 4 + c04Index * 2 );
+                int val = DataUtil.getLEInt(fileData, table2Start + bit*4);
+                int table1Index = a + val;
+                out[i].val = DataUtil.getLEShort(fileData, table1Start + table1Index * 2 );
                 out[i].numBits = (short)bit;
             }
         }
