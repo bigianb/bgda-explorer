@@ -163,7 +163,9 @@ public class WorldDecode
         int offset60 = DataUtil.getLEInt(fileData, 0x60);
         sb.append("Offset60: ").append(HexUtil.formatHex(offset60)).append("\r\n");
         int offset64 = DataUtil.getLEInt(fileData, 0x64);
-        // see 142ea8
+
+        // Each entry is 2 integers. First one gives the offset into the texture file. Second one is the
+        // data length.
         sb.append("world.64 (offsets into level.tex): ").append(HexUtil.formatHex(offset64)).append("\r\n");
 
         float offset68 = DataUtil.getLEFloat(fileData, 0x68);
@@ -310,7 +312,7 @@ public class WorldDecode
                 byte nregs = fileData[meshOffset+0x10];
                 int startOffset = (nregs+2) * 0x10;
                 vifDecode.readVerts(fileData, meshOffset+startOffset, meshOffset+len*0x10);
-                vifDecode.writeObj(meshName, outDirFile, 10, 10, 128.0);
+                vifDecode.writeObj(meshName, outDirFile, 240, 48, 128.0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
