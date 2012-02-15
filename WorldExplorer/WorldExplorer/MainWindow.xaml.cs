@@ -22,7 +22,7 @@ namespace WorldExplorer
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = new MainWindowViewModel();
+            this.DataContext = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
         }
     }
 }
