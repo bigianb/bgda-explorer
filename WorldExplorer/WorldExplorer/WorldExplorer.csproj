@@ -55,6 +55,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataLoaders\DataUtil.cs" />
+    <Compile Include="DataLoaders\LmpFile.cs" />
     <Compile Include="DataLoaders\GobFile.cs" />
     <Compile Include="TreeView\WorldTreeViewModel.cs" />
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />

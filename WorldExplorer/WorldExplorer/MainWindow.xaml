@@ -9,7 +9,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0" DataContext="{Binding}" ItemsSource="{Binding Children}">
+        <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0" DataContext="{Binding}" ItemsSource="{Binding Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
             <TreeView.ItemContainerStyle>
                 <!-- 
                     This Style binds a TreeViewItem to a TreeViewItemViewModel. 
@@ -43,5 +43,7 @@
                   VerticalAlignment="Stretch" 
                   Grid.Column="1" ResizeBehavior="PreviousAndNext"
                   Width="5" Background="#FFBCBCBC"/>
+
+        <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch" Grid.Column="2" Source="{Binding SlectedNodeImage}" />
     </Grid>
 </Window>
