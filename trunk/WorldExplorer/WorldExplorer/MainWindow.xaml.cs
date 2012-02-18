@@ -22,7 +22,14 @@ namespace WorldExplorer
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
+            DataContext = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
         }
+
+        private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            MainWindowViewModel model = (MainWindowViewModel)DataContext;
+            model.SelectedNode = e.NewValue;
+        }
+
     }
 }
