@@ -1,0 +1,188 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
+
+namespace WorldExplorer.DataLoaders
+{
+    public class TexDecoder
+    {
+        public static WriteableBitmap Decode(byte[] data, int startOffset, int length)
+        {
+            int finalw = BitConverter.ToInt16(data, startOffset);
+            int finalh = BitConverter.ToInt16(data, startOffset + 2);
+
+            int sourcew = finalw;
+            int sourceh = finalh;
+            PalEntry[] pixels = null;
+
+            int curIdx = 0x80 + startOffset;
+            GIFTag gifTag = new GIFTag();
+            gifTag.parse(data, curIdx);
+
+            // This is basically heuristics
+            if (gifTag.nloop == 4) {
+
+                int palw = DataUtil.getLEShort(data, curIdx + 0x30);
+                int palh = DataUtil.getLEShort(data, curIdx + 0x34);
+
+                curIdx += 0x50;
+                GIFTag gifTag2 = new GIFTag();
+                gifTag2.parse(data, curIdx);
+
+                // 8 bit palletised
+                PalEntry[] palette = PalEntry.readPalette(data, curIdx + 0x10, palw, palh);
+
+                palette = PalEntry.unswizzlePalette(palette);
+
+                int palLen = palw * palh * 4;
+                curIdx += (palLen + 0x10);
+
+                GIFTag gifTag3 = new GIFTag();
+                gifTag3.parse(data, curIdx);
+
+                int dimOffset = 0x30;
+                if (palLen == 64) {
+                    dimOffset = 0x20;
+                }
+
+                int rrw = DataUtil.getLEShort(data, curIdx + dimOffset);
+                int rrh = DataUtil.getLEShort(data, curIdx + dimOffset + 4);
+
+                pixels = readPixels32(data, palette, curIdx + 0x70, rrw, rrh, rrw);
+
+                if (palLen != 64) {
+                    pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
+                    sourcew = rrw * 2;
+                    sourceh = rrh * 2;
+                } else {
+                    sourcew = rrw;
+                    sourceh = rrh;
+                }
+
+            } else if (gifTag.nloop == 3) {
+                GIFTag gifTag2 = new GIFTag();
+                gifTag2.parse(data, startOffset + 0xC0);
+
+                if (gifTag2.flg == 2) {
+                    // image mode
+                    pixels = readPixels32(data, startOffset + 0xD0, finalw, finalh);
+                }
+            }
+            WriteableBitmap image = null;
+            if (finalw != 0 && pixels != null) {
+                image = new WriteableBitmap(
+                    finalw, finalh,
+                    96, 96,
+                    PixelFormats.Bgr32,
+                    null);
+                image.Lock();
+                unsafe {
+                    int pBackBuffer = (int)image.BackBuffer;
+                    for (int y = 0; y < sourceh; ++y) {
+                        for (int x = 0; x < sourcew; ++x) {
+                            PalEntry pixel = pixels[y * sourcew + x];
+                            if (pixel != null) {
+                                if (x < finalw && y < finalh) {
+                                    var p = pBackBuffer + y * image.BackBufferStride + x * 4;
+                                    *((int*)p) = pixel.argb();
+                                }
+                            }
+                        }
+                    }
+                }
+                // Specify the area of the bitmap that changed.
+                image.AddDirtyRect(new Int32Rect(0, 0, finalw, finalh));
+
+                // Release the back buffer and make it available for display.
+                image.Unlock();
+            }
+            return image;
+        }
+
+        private static PalEntry[] unswizzle8bpp(PalEntry[] pixels, int w, int h)
+        {
+            PalEntry[] unswizzled = new PalEntry[pixels.Length];
+
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+
+                    int block_location = (y & (~0xf)) * w + (x & (~0xf)) * 2;
+                    int swap_selector = (((y + 2) >> 2) & 0x1) * 4;
+                    int posY = (((y & (~3)) >> 1) + (y & 1)) & 0x7;
+                    int column_location = posY * w * 2 + ((x + swap_selector) & 0x7) * 4;
+
+                    int byte_num = ((y >> 1) & 1) + ((x >> 2) & 2);     // 0,1,2,3
+
+                    int idx = block_location + column_location + byte_num;
+                    if (idx < pixels.Length) {
+                        unswizzled[(y * w) + x] = pixels[idx];
+                    }
+                }
+            }
+
+            return unswizzled;
+        }
+
+
+        private static PalEntry[] readPixels32(byte[] fileData, PalEntry[] palette, int startOffset, int rrw, int rrh, int dbw)
+        {
+            if (palette.Length == 256) {
+                int numDestBytes = rrh * dbw * 4;
+                int widthBytes = dbw * 4;
+                PalEntry[] pixels = new PalEntry[numDestBytes];
+                int idx = startOffset;
+                for (int y = 0; y < rrh; ++y) {
+                    for (int x = 0; x < rrw; ++x) {
+                        int destIdx = y * widthBytes + x * 4;
+                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
+                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
+                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
+                        pixels[destIdx] = palette[fileData[idx++] & 0xFF];
+                    }
+                }
+                return pixels;
+            } else {
+                int numDestBytes = rrh * dbw;
+                PalEntry[] pixels = new PalEntry[numDestBytes];
+                int idx = startOffset;
+                bool lowbit = false;
+                for (int y = 0; y < rrh; ++y) {
+                    for (int x = 0; x < rrw; ++x) {
+                        int destIdx = y * dbw + x;
+                        if (!lowbit) {
+                            pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
+                        } else {
+                            pixels[destIdx] = palette[fileData[idx++] & 0x0F];
+                        }
+                        lowbit = !lowbit;
+                    }
+                }
+                return pixels;
+            }
+        }
+
+        private static PalEntry[] readPixels32(byte[] fileData, int startOffset, int w, int h)
+        {
+            int numPixels = w * h;
+            PalEntry[] pixels = new PalEntry[numPixels];
+            int destIdx = 0;
+            int endOffset = startOffset + numPixels * 4;
+            for (int idx = startOffset; idx < endOffset; ) {
+                PalEntry pe = new PalEntry();
+                pe.r = fileData[idx++];
+                pe.g = fileData[idx++];
+                pe.b = fileData[idx++];
+                pe.a = fileData[idx++];
+
+                pixels[destIdx++] = pe;
+            }
+
+            return pixels;
+        }
+
+    }
+}

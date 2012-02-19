@@ -6,6 +6,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
 {
@@ -21,6 +22,7 @@ namespace WorldExplorer
                 96,
                 PixelFormats.Bgr32,
                 null);
+
             _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Cellar1"))});
         }
 
@@ -36,6 +38,11 @@ namespace WorldExplorer
         public WriteableBitmap SlectedNodeImage
         {
             get { return _selectedNodeImage; }
+            set
+            {
+                _selectedNodeImage = value;
+                this.OnPropertyChanged("SlectedNodeImage");
+            }
         }
 
         private object _selectedNode;
@@ -46,11 +53,21 @@ namespace WorldExplorer
             set
             {
                 _selectedNode = value;
+                if (_selectedNode is LmpEntryTreeViewModel) {
+                    OnLmpEntrySelected((LmpEntryTreeViewModel)_selectedNode);
+                }
                 this.OnPropertyChanged("SelectedNode");
             }
         }
 
-
+        private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
+        {
+            if (lmpEntry.Text.EndsWith(".tex")) {
+                var lmpFile = lmpEntry.LmpFileProperty;
+                var entry = lmpFile.Directory[lmpEntry.Text];
+                SlectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+            }
+        }
 
 
         #region INotifyPropertyChanged Members
