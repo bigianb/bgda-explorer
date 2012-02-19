@@ -33,5 +33,21 @@ namespace WorldExplorer.DataLoaders
             }
             return sb.ToString();
         }
+
+        public static int getLEInt(byte[] data, int offset)
+        {
+            return BitConverter.ToInt32(data, offset);
+        }
+
+        public static short getLEShort(byte[] data, int offset)
+        {
+            return BitConverter.ToInt16(data, offset);
+        }
+
+        public static int getLEUShort(byte[] data, int offset)
+        {
+            return BitConverter.ToUInt16(data, offset);
+        }
+
     }
 }

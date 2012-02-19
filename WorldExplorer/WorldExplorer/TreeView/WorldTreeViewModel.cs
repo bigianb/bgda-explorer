@@ -106,9 +106,40 @@ namespace WorldExplorer
         {
             _lmpFile.ReadDirectory();
             foreach (var entry in _lmpFile.Directory) {
-                var child = new TextTreeViewModel(this, entry.Key);
+                var child = new LmpEntryTreeViewModel(this, _lmpFile, entry.Key);
                 base.Children.Add(child);
             }
+        }
+    }
+
+    /// <summary>
+    /// A simple model that displays an entry in a LMP file.
+    /// </summary>
+    public class LmpEntryTreeViewModel : TreeViewItemViewModel
+    {
+        public LmpEntryTreeViewModel(TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(parent, true)
+        {
+            _lmpFile = lmpFile;
+            _name = entryName;
+        }
+
+        private LmpFile _lmpFile;
+        private string _name;
+
+        public LmpFile LmpFileProperty
+        {
+            get { return _lmpFile; }
+        }
+
+        public string Text
+        {
+            get { return _name; }
+        }
+
+        protected override void LoadChildren()
+        {
+            
         }
     }
 }
