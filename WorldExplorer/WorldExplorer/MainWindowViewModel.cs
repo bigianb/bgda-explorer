@@ -7,12 +7,12 @@ using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using WorldExplorer.DataLoaders;
+using System.Windows.Media.Media3D;
 
 namespace WorldExplorer
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        // ref http://msdn.microsoft.com/en-us/library/system.windows.media.imaging.writeablebitmap.aspx
         public MainWindowViewModel(string dataPath)
         {
             _selectedNodeImage = new WriteableBitmap(
@@ -35,13 +35,25 @@ namespace WorldExplorer
 
         private WriteableBitmap _selectedNodeImage=null;
 
-        public WriteableBitmap SlectedNodeImage
+        public WriteableBitmap SelectedNodeImage
         {
             get { return _selectedNodeImage; }
             set
             {
                 _selectedNodeImage = value;
-                this.OnPropertyChanged("SlectedNodeImage");
+                this.OnPropertyChanged("SelectedNodeImage");
+            }
+        }
+
+        private Model3D _selectedNodeModel;
+
+        public Model3D SelectedNodeModel
+        {
+            get { return _selectedNodeModel; }
+            set
+            {
+                _selectedNodeModel = value;
+                this.OnPropertyChanged("SelectedNodeModel");
             }
         }
 
@@ -62,10 +74,12 @@ namespace WorldExplorer
 
         private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
         {
-            if (lmpEntry.Text.EndsWith(".tex")) {
-                var lmpFile = lmpEntry.LmpFileProperty;
-                var entry = lmpFile.Directory[lmpEntry.Text];
-                SlectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+            var lmpFile = lmpEntry.LmpFileProperty;
+            var entry = lmpFile.Directory[lmpEntry.Text];
+            if (lmpEntry.Text.EndsWith(".tex")) {              
+                SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+            } else if (lmpEntry.Text.EndsWith(".vif")) {
+                SelectedNodeModel = VifDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
             }
         }
 

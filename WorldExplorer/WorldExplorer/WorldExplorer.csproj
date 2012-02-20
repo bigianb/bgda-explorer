@@ -64,6 +64,7 @@
     <Compile Include="DataLoaders\GobFile.cs" />
     <Compile Include="DataLoaders\PalEntry.cs" />
     <Compile Include="DataLoaders\TexDecoder.cs" />
+    <Compile Include="DataLoaders\VifDecoder.cs" />
     <Compile Include="TreeView\WorldTreeViewModel.cs" />
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />
     <Compile Include="World.cs" />
