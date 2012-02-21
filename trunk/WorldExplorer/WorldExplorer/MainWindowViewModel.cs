@@ -79,7 +79,10 @@ namespace WorldExplorer
             if (lmpEntry.Text.EndsWith(".tex")) {              
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
             } else if (lmpEntry.Text.EndsWith(".vif")) {
-                SelectedNodeModel = VifDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
+                var texEntry = lmpFile.Directory[texFilename];
+                SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
+                SelectedNodeModel = VifDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage);
             }
         }
 

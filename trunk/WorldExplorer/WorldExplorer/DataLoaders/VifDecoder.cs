@@ -4,12 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
 using System.Diagnostics;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows;
 
 namespace WorldExplorer.DataLoaders
 {
     class VifDecoder
     {
-        public static Model3D Decode(byte[] data, int startOffset, int length)
+        public static Model3D Decode(byte[] data, int startOffset, int length, BitmapSource texture)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
@@ -17,12 +20,100 @@ namespace WorldExplorer.DataLoaders
             int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C);
 
             var chunks = ReadVerts(data, startOffset + offsetVerts, startOffset + offsetEndVerts);
-            return CreateModel3D(chunks);
+            return CreateModel3D(chunks, texture);
         }
 
-        private static Model3D CreateModel3D(List<Chunk> chunks)
+        private static Model3D CreateModel3D(List<Chunk> chunks, BitmapSource texture)
         {
-            return null;
+            GeometryModel3D model = new GeometryModel3D();
+            var mesh = new MeshGeometry3D();
+
+            int numVertices = 0;
+            foreach (Chunk chunk in chunks) {
+                numVertices += chunk.vertices.Count;
+            }
+            var triangleIndices = new Int32Collection();
+            var uvCoords = new Point[numVertices];
+            int vstart = 0;
+            int uvstart = 0;
+            foreach (Chunk chunk in chunks) {
+                foreach (Vertex vertex in chunk.vertices) {
+                    mesh.Positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
+                }
+                int[] vstrip = new int[chunk.gifTag0.nloop];
+                int regsPerVertex = chunk.gifTag0.nreg;
+                int numVlocs = chunk.vlocs.Count;
+                int numVerts = chunk.vertices.Count;
+                for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
+                    int v = vlocIndx - 2;
+                    int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0xFF) / regsPerVertex;
+                    int stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0xFF) / regsPerVertex;
+                    if (stripIdx3 < vstrip.Length && stripIdx2 < vstrip.Length) {
+                        vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
+
+                        bool skip2 = (chunk.vlocs[vlocIndx].v3 & 0x8000) == 0x8000;
+                        if (skip2) {
+                            vstrip[stripIdx3] |= 0x8000;
+                        }
+                    }
+                    int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0xFF) / regsPerVertex;
+                    bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
+
+                    if (v >= 0 && v < numVerts && stripIdx < vstrip.Length) {
+                        vstrip[stripIdx] = skip ? (v | 0x8000) : v;
+                    }
+                }
+                int triIdx = 0;
+                for (int i = 2; i < vstrip.Length; ++i) {
+                    int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
+                    int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
+                    int vidx3 = vstart + (vstrip[i] & 0xFF);
+
+                    int uv1 = i - 2;
+                    int uv2 = i - 1;
+
+                    // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
+                    if ((triIdx & 1) == 1) {
+                        int temp = uv1;
+                        uv1 = uv2;
+                        uv2 = temp;
+
+                        temp = vidx1;
+                        vidx1 = vidx2;
+                        vidx2 = temp;
+                    }
+
+                    if ((vstrip[i] & 0x8000) == 0) {
+                        triangleIndices.Add(vidx1);
+                        triangleIndices.Add(vidx2);
+                        triangleIndices.Add(vidx3);
+
+                        triangleIndices.Add(vidx3);
+                        triangleIndices.Add(vidx2);
+                        triangleIndices.Add(vidx1);
+
+                        double udiv = texture.PixelWidth * 16.0;
+                        double vdiv = texture.PixelHeight * 16.0;
+
+                        uvCoords[vidx1] = new Point(chunk.uvs[uv1].u /udiv, chunk.uvs[uv1].v / vdiv);
+                        uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
+                        uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
+
+                        ++triIdx;
+                    } else {
+                        triIdx = 0;
+                    }
+                }
+                vstart += chunk.vertices.Count;
+                uvstart += chunk.uvs.Count;
+            }
+            mesh.TriangleIndices = triangleIndices;
+            mesh.TextureCoordinates = new PointCollection(uvCoords);
+            model.Geometry = mesh;
+            DiffuseMaterial dm = new DiffuseMaterial();
+            dm.Brush = new ImageBrush(texture);
+            model.Material = dm;
+            return model;
         }
 
         private class Vertex
