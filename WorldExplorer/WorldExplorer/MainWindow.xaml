@@ -25,7 +25,7 @@
                     </Style.Triggers>
                 </Style>
             </TreeView.ItemContainerStyle>
-            
+
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type local:WorldTreeViewModel}" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
@@ -53,10 +53,20 @@
                         <!-- The Viewport3D provides a rendering surface for 3-D visual content. -->
                         <Viewport3D ClipToBounds="True" Width="150" Height="150" Canvas.Left="0" Canvas.Top="10">
                             <Viewport3D.Camera>
-                                <PerspectiveCamera Position="0,0,2" LookDirection="0,0,-1" FieldOfView="60" />
+                                <PerspectiveCamera Position="0,10,10" LookDirection="0,-1,-1" FieldOfView="60" />
                             </Viewport3D.Camera>
 
                             <Viewport3D.Children>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <AmbientLight Color="#808080" />
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1"/>
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
                                 <ModelVisual3D Content="{Binding SelectedNodeModel}" />
                             </Viewport3D.Children>
                         </Viewport3D>
