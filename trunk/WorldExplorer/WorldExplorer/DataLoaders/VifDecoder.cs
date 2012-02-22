@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*  Copyright (C) 2012 Ian Brown
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,10 +32,13 @@ namespace WorldExplorer.DataLoaders
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
-            int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28);
-            int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C);
+            List<Chunk> chunks = new List<Chunk>();
+            for (int mesh = 0; mesh < numMeshes; ++mesh) {
+                int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + mesh * 4);
+                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + mesh * 4);
 
-            var chunks = ReadVerts(data, startOffset + offsetVerts, startOffset + offsetEndVerts);
+                chunks.AddRange(ReadVerts(data, startOffset + offsetVerts, startOffset + offsetEndVerts));
+            }
             return CreateModel3D(chunks, texture);
         }
 
@@ -33,12 +52,17 @@ namespace WorldExplorer.DataLoaders
                 numVertices += chunk.vertices.Count;
             }
             var triangleIndices = new Int32Collection();
+            var positions = new Point3DCollection(numVertices);
+            var normals = new Vector3DCollection(numVertices);
             var uvCoords = new Point[numVertices];
             int vstart = 0;
             int uvstart = 0;
-            foreach (Chunk chunk in chunks) {
-                foreach (Vertex vertex in chunk.vertices) {
-                    mesh.Positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
+            foreach (var chunk in chunks) {
+                foreach (var vertex in chunk.vertices) {
+                    positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
+                }
+                foreach (var normal in chunk.normals) {
+                    normals.Add(new Vector3D(normal.x / 127.0, normal.y / 127.0, normal.z / 127.0));
                 }
                 int[] vstrip = new int[chunk.gifTag0.nloop];
                 int regsPerVertex = chunk.gifTag0.nreg;
@@ -82,7 +106,7 @@ namespace WorldExplorer.DataLoaders
                         vidx1 = vidx2;
                         vidx2 = temp;
                     }
-
+                    
                     if ((vstrip[i] & 0x8000) == 0) {
                         triangleIndices.Add(vidx1);
                         triangleIndices.Add(vidx2);
@@ -101,18 +125,21 @@ namespace WorldExplorer.DataLoaders
 
                         ++triIdx;
                     } else {
-                        triIdx = 0;
+                        ++triIdx;
                     }
                 }
                 vstart += chunk.vertices.Count;
                 uvstart += chunk.uvs.Count;
             }
             mesh.TriangleIndices = triangleIndices;
+            mesh.Positions = positions;
             mesh.TextureCoordinates = new PointCollection(uvCoords);
+            mesh.Normals = normals;
             model.Geometry = mesh;
             DiffuseMaterial dm = new DiffuseMaterial();
             dm.Brush = new ImageBrush(texture);
             model.Material = dm;
+//            model.BackMaterial = dm;
             return model;
         }
 
