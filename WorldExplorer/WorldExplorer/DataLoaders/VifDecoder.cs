@@ -56,8 +56,11 @@ namespace WorldExplorer.DataLoaders
             var normals = new Vector3DCollection(numVertices);
             var uvCoords = new Point[numVertices];
             int vstart = 0;
-            int uvstart = 0;
             foreach (var chunk in chunks) {
+                if ((chunk.gifTag0.prim & 0x07) != 4) {
+                    Debug.Fail("Can only deal with tri strips");
+                }
+
                 foreach (var vertex in chunk.vertices) {
                     positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
                 }
@@ -83,7 +86,7 @@ namespace WorldExplorer.DataLoaders
                     int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0xFF) / regsPerVertex;
                     bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
 
-                    if (v >= 0 && v < numVerts && stripIdx < vstrip.Length) {
+                    if (v < numVerts && stripIdx < vstrip.Length) {
                         vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                     }
                 }
@@ -112,9 +115,9 @@ namespace WorldExplorer.DataLoaders
                         triangleIndices.Add(vidx2);
                         triangleIndices.Add(vidx3);
 
-                        triangleIndices.Add(vidx3);
                         triangleIndices.Add(vidx2);
                         triangleIndices.Add(vidx1);
+                        triangleIndices.Add(vidx3);
 
                         double udiv = texture.PixelWidth * 16.0;
                         double vdiv = texture.PixelHeight * 16.0;
@@ -122,14 +125,10 @@ namespace WorldExplorer.DataLoaders
                         uvCoords[vidx1] = new Point(chunk.uvs[uv1].u /udiv, chunk.uvs[uv1].v / vdiv);
                         uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
                         uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
-
-                        ++triIdx;
-                    } else {
-                        ++triIdx;
                     }
+                    ++triIdx;
                 }
                 vstart += chunk.vertices.Count;
-                uvstart += chunk.uvs.Count;
             }
             mesh.TriangleIndices = triangleIndices;
             mesh.Positions = positions;
@@ -139,7 +138,6 @@ namespace WorldExplorer.DataLoaders
             DiffuseMaterial dm = new DiffuseMaterial();
             dm.Brush = new ImageBrush(texture);
             model.Material = dm;
-//            model.BackMaterial = dm;
             return model;
         }
 
