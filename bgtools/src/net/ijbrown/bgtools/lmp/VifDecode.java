@@ -198,7 +198,7 @@ public class VifDecode
                     writer.println(vidx3);
                     ++triIdx;
                 } else {
-                    triIdx = 0;
+                    ++triIdx;
                 }
             }
 

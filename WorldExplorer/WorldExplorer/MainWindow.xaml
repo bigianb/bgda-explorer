@@ -48,14 +48,9 @@
                 <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
             </TabItem>
             <TabItem Header="3D View">
-                <Viewbox>
-                    <Canvas Width="321" Height="201">
+                <Viewbox>                  
                         <!-- The Viewport3D provides a rendering surface for 3-D visual content. -->
-                        <Viewport3D ClipToBounds="True" Width="150" Height="150" Canvas.Left="0" Canvas.Top="10">
-                            <Viewport3D.Camera>
-                                <PerspectiveCamera Position="0,10,10" LookDirection="0,-1,-1" FieldOfView="60" />
-                            </Viewport3D.Camera>
-
+                    <Viewport3D Camera="{Binding SelectedNodeCamera}" ClipToBounds="True" Width="150" Height="150" >
                             <Viewport3D.Children>
                                 <ModelVisual3D>
                                     <ModelVisual3D.Content>
@@ -70,7 +65,6 @@
                                 <ModelVisual3D Content="{Binding SelectedNodeModel}" />
                             </Viewport3D.Children>
                         </Viewport3D>
-                    </Canvas>
                 </Viewbox>
             </TabItem>
         </TabControl>
