@@ -23,12 +23,13 @@ using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows;
+using WorldExplorer.Logging;
 
 namespace WorldExplorer.DataLoaders
 {
     class VifDecoder
     {
-        public static Model3D Decode(byte[] data, int startOffset, int length, BitmapSource texture)
+        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
@@ -37,7 +38,7 @@ namespace WorldExplorer.DataLoaders
                 int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + mesh * 4);
                 int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + mesh * 4);
 
-                chunks.AddRange(ReadVerts(data, startOffset + offsetVerts, startOffset + offsetEndVerts));
+                chunks.AddRange(ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts));
             }
             return CreateModel3D(chunks, texture);
         }
@@ -109,7 +110,7 @@ namespace WorldExplorer.DataLoaders
                         vidx1 = vidx2;
                         vidx2 = temp;
                     }
-                    
+
                     if ((vstrip[i] & 0x8000) == 0) {
                         triangleIndices.Add(vidx1);
                         triangleIndices.Add(vidx2);
@@ -122,7 +123,7 @@ namespace WorldExplorer.DataLoaders
                         double udiv = texture.PixelWidth * 16.0;
                         double vdiv = texture.PixelHeight * 16.0;
 
-                        uvCoords[vidx1] = new Point(chunk.uvs[uv1].u /udiv, chunk.uvs[uv1].v / vdiv);
+                        uvCoords[vidx1] = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
                         uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
                         uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
                     }
@@ -188,6 +189,8 @@ namespace WorldExplorer.DataLoaders
             public List<ByteVector> normals = new List<ByteVector>();
             public List<VLoc> vlocs = new List<VLoc>();
             public List<UV> uvs = new List<UV>();
+            public byte[] data_4x8;
+            public ushort[] data_4x16;
         }
 
         private const int NOP_CMD = 0;
@@ -197,7 +200,7 @@ namespace WorldExplorer.DataLoaders
         private const int MSCAL_CMD = 0x14;
         private const int STMASK_CMD = 0x20;
 
-        private static List<Chunk> ReadVerts(byte[] fileData, int offset, int endOffset)
+        private static List<Chunk> ReadVerts(ILogger log, byte[] fileData, int offset, int endOffset)
         {
             var chunks = new List<Chunk>();
             Chunk currentChunk = new Chunk();
@@ -328,6 +331,7 @@ namespace WorldExplorer.DataLoaders
                                 offset += numBytes;
                             } else if (vn == 3 && vl == 0) {
                                 // v4-32
+                                log.LogLine("v4-32 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") + ", addr=" + addr);
                                 if (1 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
@@ -336,16 +340,39 @@ namespace WorldExplorer.DataLoaders
                                     currentChunk.gifTag0.parse(fileData, offset);
                                     currentChunk.gifTag1 = new GIFTag();
                                     currentChunk.gifTag1.parse(fileData, offset + 16);
+                                } else {
+                                    log.LogLine("unknown number of gif commands.");
                                 }
                                 int numBytes = numCommand * 16;
                                 offset += numBytes;
                             } else if (vn == 3 && vl == 1) {
                                 // v4-16
-                                int numBytes = numCommand * 8;
-                                offset += numBytes;
+                                log.LogLine("v4-16 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") + ", addr=" + addr);
+                                int numShorts = numCommand * 4;
+                                if (usn) {
+                                    currentChunk.data_4x16 = new ushort[numShorts];
+                                    for (int i = 0; i < numCommand; ++i) {
+                                        currentChunk.data_4x16[i*4] = DataUtil.getLEUShort(fileData, offset + i * 8);
+                                        currentChunk.data_4x16[i * 4 + 1] = DataUtil.getLEUShort(fileData, offset + i * 8 + 2);
+                                        currentChunk.data_4x16[i * 4 + 2] = DataUtil.getLEUShort(fileData, offset + i * 8 + 4);
+                                        currentChunk.data_4x16[i * 4 + 3] = DataUtil.getLEUShort(fileData, offset + i * 8 + 6);
+
+                                        log.LogLine("0x" + currentChunk.data_4x16[i * 4].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 1].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 2].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 3].ToString("x4"));
+                                    }
+                                } else {
+                                    log.LogLine("Unsupported tag");
+                                }
+                                offset += numShorts * 2;
                             } else if (vn == 3 && vl == 2) {
                                 // v4-8
                                 int numBytes = numCommand * 4;
+                                currentChunk.data_4x8 = new byte[numBytes];
+                                for (int i = 0; i < numBytes; ++i) {
+                                    currentChunk.data_4x8[i] = fileData[offset + i];
+                                }
+                                log.LogLine("v4-8 data. " + numBytes + " bytes, addr="+addr );
+                                log.LogLine("0x" + currentChunk.data_4x8[0].ToString("x2") + ", 0x" + currentChunk.data_4x8[1].ToString("x2") + ", 0x" + currentChunk.data_4x8[2].ToString("x2") + ", 0x" + currentChunk.data_4x8[3].ToString("x2"));
+          
                                 offset += numBytes;
                             } else {
                                 Debug.WriteLine("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);

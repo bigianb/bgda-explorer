@@ -67,6 +67,9 @@
                         </Viewport3D>
                 </Viewbox>
             </TabItem>
+            <TabItem Header="Log">
+                <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" />
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

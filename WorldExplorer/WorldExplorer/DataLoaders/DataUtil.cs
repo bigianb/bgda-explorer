@@ -44,7 +44,7 @@ namespace WorldExplorer.DataLoaders
             return BitConverter.ToInt16(data, offset);
         }
 
-        public static int getLEUShort(byte[] data, int offset)
+        public static ushort getLEUShort(byte[] data, int offset)
         {
             return BitConverter.ToUInt16(data, offset);
         }
