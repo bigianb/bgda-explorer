@@ -24,6 +24,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Media3D;
+using WorldExplorer.Logging;
 
 namespace WorldExplorer
 {
@@ -100,6 +101,17 @@ namespace WorldExplorer
             }
         }
 
+        public string _logText;
+        public String LogText
+        {
+            get { return _logText; }
+            set
+            {
+                _logText = value;
+                this.OnPropertyChanged("LogText");
+            }
+        }
+
         private void UpdateCamera(Model3D model)
         {
             var bounds = model.Bounds;
@@ -124,7 +136,9 @@ namespace WorldExplorer
                 string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
                 var texEntry = lmpFile.Directory[texFilename];
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
-                SelectedNodeModel = VifDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage);
+                var log = new StringLogger();
+                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage);
+                LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel);
             }
         }
