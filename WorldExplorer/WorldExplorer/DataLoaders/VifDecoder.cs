@@ -74,22 +74,33 @@ namespace WorldExplorer.DataLoaders
                 int numVerts = chunk.vertices.Count;
                 for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
                     int v = vlocIndx - 2;
-                    int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0xFF) / regsPerVertex;
-                    int stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0xFF) / regsPerVertex;
+                    int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0x1FF) / regsPerVertex;
+                    int stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0x1FF) / regsPerVertex;
                     if (stripIdx3 < vstrip.Length && stripIdx2 < vstrip.Length) {
-                        vstrip[stripIdx3] = vstrip[stripIdx2] & 0xFF;
+                        vstrip[stripIdx3] = vstrip[stripIdx2] & 0x1FF;
 
                         bool skip2 = (chunk.vlocs[vlocIndx].v3 & 0x8000) == 0x8000;
                         if (skip2) {
                             vstrip[stripIdx3] |= 0x8000;
                         }
                     }
-                    int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0xFF) / regsPerVertex;
+                    int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0x1FF) / regsPerVertex;
                     bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
 
                     if (v < numVerts && stripIdx < vstrip.Length) {
                         vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                     }
+                }
+                int numExtraVlocs = chunk.extraVlocs[0];
+                for (int extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc) {
+                    int idx = extraVloc * 4 + 4;
+                    int stripIndxSrc = (chunk.extraVlocs[idx] & 0x1FF) / regsPerVertex;
+                    int stripIndxDest = (chunk.extraVlocs[idx+1] & 0x1FF) / regsPerVertex;;
+                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+
+                    stripIndxSrc = (chunk.extraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
+                    stripIndxDest = (chunk.extraVlocs[idx + 3] & 0x1FF) / regsPerVertex; ;
+                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
                 }
                 int triIdx = 0;
                 for (int i = 2; i < vstrip.Length; ++i) {
@@ -190,7 +201,7 @@ namespace WorldExplorer.DataLoaders
             public List<VLoc> vlocs = new List<VLoc>();
             public List<UV> uvs = new List<UV>();
             public byte[] data_4x8;
-            public ushort[] data_4x16;
+            public ushort[] extraVlocs;
         }
 
         private const int NOP_CMD = 0;
@@ -350,14 +361,12 @@ namespace WorldExplorer.DataLoaders
                                 log.LogLine("v4-16 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") + ", addr=" + addr);
                                 int numShorts = numCommand * 4;
                                 if (usn) {
-                                    currentChunk.data_4x16 = new ushort[numShorts];
+                                    currentChunk.extraVlocs = new ushort[numShorts];
                                     for (int i = 0; i < numCommand; ++i) {
-                                        currentChunk.data_4x16[i*4] = DataUtil.getLEUShort(fileData, offset + i * 8);
-                                        currentChunk.data_4x16[i * 4 + 1] = DataUtil.getLEUShort(fileData, offset + i * 8 + 2);
-                                        currentChunk.data_4x16[i * 4 + 2] = DataUtil.getLEUShort(fileData, offset + i * 8 + 4);
-                                        currentChunk.data_4x16[i * 4 + 3] = DataUtil.getLEUShort(fileData, offset + i * 8 + 6);
-
-                                        log.LogLine("0x" + currentChunk.data_4x16[i * 4].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 1].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 2].ToString("x4") + ", 0x" + currentChunk.data_4x16[i * 4 + 3].ToString("x4"));
+                                        currentChunk.extraVlocs[i*4] = DataUtil.getLEUShort(fileData, offset + i * 8);
+                                        currentChunk.extraVlocs[i * 4 + 1] = DataUtil.getLEUShort(fileData, offset + i * 8 + 2);
+                                        currentChunk.extraVlocs[i * 4 + 2] = DataUtil.getLEUShort(fileData, offset + i * 8 + 4);
+                                        currentChunk.extraVlocs[i * 4 + 3] = DataUtil.getLEUShort(fileData, offset + i * 8 + 6);
                                     }
                                 } else {
                                     log.LogLine("Unsupported tag");
@@ -370,9 +379,10 @@ namespace WorldExplorer.DataLoaders
                                 for (int i = 0; i < numBytes; ++i) {
                                     currentChunk.data_4x8[i] = fileData[offset + i];
                                 }
-                                log.LogLine("v4-8 data. " + numBytes + " bytes, addr="+addr );
-                                log.LogLine("0x" + currentChunk.data_4x8[0].ToString("x2") + ", 0x" + currentChunk.data_4x8[1].ToString("x2") + ", 0x" + currentChunk.data_4x8[2].ToString("x2") + ", 0x" + currentChunk.data_4x8[3].ToString("x2"));
-          
+                                if (numCommand != 1) {
+                                    log.LogLine("Unsupported data - only 1 line expected");
+                                    log.LogLine("v4-8 data. " + numBytes + " bytes, addr=" + addr);
+                                }
                                 offset += numBytes;
                             } else {
                                 Debug.WriteLine("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);
