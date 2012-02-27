@@ -38,7 +38,8 @@ namespace WorldExplorer.DataLoaders
             GIFTag gifTag = new GIFTag();
             gifTag.parse(data, curIdx);
 
-            // This is basically heuristics
+            // This is basically heuristics. Writing a full GIF parser is complex and as the texture files are written by a tool,
+            // we can safely make some assumptions about their structure.
             if (gifTag.nloop == 4) {
 
                 int palw = DataUtil.getLEShort(data, curIdx + 0x30);
@@ -56,18 +57,21 @@ namespace WorldExplorer.DataLoaders
                 int palLen = palw * palh * 4;
                 curIdx += (palLen + 0x10);
 
+                GIFTag gifTag50 = new GIFTag();
+                gifTag50.parse(data, curIdx);
+                curIdx += 0x20;
+
+                // The following should be a loop, there are repeating sections
                 GIFTag gifTag3 = new GIFTag();
                 gifTag3.parse(data, curIdx);
 
-                int dimOffset = 0x30;
-                if (palLen == 64) {
-                    dimOffset = 0x20;
-                }
+                int dimOffset = 0x10;
 
                 int rrw = DataUtil.getLEShort(data, curIdx + dimOffset);
                 int rrh = DataUtil.getLEShort(data, curIdx + dimOffset + 4);
 
-                pixels = readPixels32(data, palette, curIdx + 0x70, rrw, rrh, rrw);
+                curIdx += gifTag.nloop * 0x10 + 0x10;
+                pixels = readPixels32(data, palette, curIdx, rrw, rrh, rrw);
 
                 if (palLen != 64) {
                     pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
