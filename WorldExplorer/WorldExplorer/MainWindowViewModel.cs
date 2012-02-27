@@ -25,6 +25,7 @@ using System.Windows.Media;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Media3D;
 using WorldExplorer.Logging;
+using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
 {
@@ -41,6 +42,8 @@ namespace WorldExplorer
                 null);
 
             _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Cellar1"))});
+
+
         }
 
         private ReadOnlyCollection<WorldTreeViewModel> _worlds;
@@ -71,6 +74,19 @@ namespace WorldExplorer
             {
                 _selectedNodeModel = value;
                 this.OnPropertyChanged("SelectedNodeModel");
+            }
+        }
+
+        private Transform3D _cameraTransform;
+
+        public Transform3D CameraTransform
+        {
+            get { return _cameraTransform; }
+            set
+            {
+                _cameraTransform = value;
+                _selectedNodeCamera.Transform = _cameraTransform;
+                this.OnPropertyChanged("CameraTransform");
             }
         }
 
