@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
 {
@@ -22,7 +23,12 @@ namespace WorldExplorer
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
+            MainWindowViewModel model = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
+            DataContext = model;
+
+            Trackball trackball = new Trackball();
+            trackball.EventSource = trackballSource;
+            model.CameraTransform = trackball.Transform;
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

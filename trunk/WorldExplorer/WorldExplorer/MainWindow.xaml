@@ -48,9 +48,10 @@
                 <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
             </TabItem>
             <TabItem Header="3D View">
-                <Viewbox>                  
+                <Border Name="trackballSource" Background="Transparent">
+                    <Viewbox  Name="viewbox">
                         <!-- The Viewport3D provides a rendering surface for 3-D visual content. -->
-                    <Viewport3D Camera="{Binding SelectedNodeCamera}" ClipToBounds="True" Width="150" Height="150" >
+                        <Viewport3D Name="viewport3d" Camera="{Binding SelectedNodeCamera}" ClipToBounds="True" Width="150" Height="150" >
                             <Viewport3D.Children>
                                 <ModelVisual3D>
                                     <ModelVisual3D.Content>
@@ -65,7 +66,8 @@
                                 <ModelVisual3D Content="{Binding SelectedNodeModel}" />
                             </Viewport3D.Children>
                         </Viewport3D>
-                </Viewbox>
+                    </Viewbox>
+                </Border>
             </TabItem>
             <TabItem Header="Log">
                 <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" />
