@@ -41,9 +41,7 @@ namespace WorldExplorer
                 PixelFormats.Bgr32,
                 null);
 
-            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Cellar1"))});
-
-
+            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Test"))});
         }
 
         private ReadOnlyCollection<WorldTreeViewModel> _worlds;
@@ -156,6 +154,8 @@ namespace WorldExplorer
                 SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage);
                 LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel);
+            } else if (lmpEntry.Text.EndsWith(".anm")) {
+                LogText = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
             }
         }
 
