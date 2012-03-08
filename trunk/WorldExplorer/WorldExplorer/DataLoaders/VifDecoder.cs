@@ -382,6 +382,13 @@ namespace WorldExplorer.DataLoaders
                                 if (numCommand != 1) {
                                     log.LogLine("Unsupported data - only 1 line expected");
                                     log.LogLine("v4-8 data. " + numBytes + " bytes, addr=" + addr);
+                                    for (int i = 0; i < numBytes; i += 4) {
+                                        log.LogLine("0x" + currentChunk.data_4x8[i].ToString("x2") + ", 0x" + 
+                                            currentChunk.data_4x8[i+1].ToString("x2") + ", 0x" +
+                                            currentChunk.data_4x8[i+2].ToString("x2") + ", 0x" +
+                                            currentChunk.data_4x8[i+3].ToString("x2")
+                                            );
+                                    }
                                 }
                                 offset += numBytes;
                             } else {

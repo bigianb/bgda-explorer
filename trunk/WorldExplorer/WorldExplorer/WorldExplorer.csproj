@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataLoaders\AnmDecoder.cs" />
     <Compile Include="DataLoaders\DataUtil.cs" />
     <Compile Include="DataLoaders\GIFTag.cs" />
     <Compile Include="DataLoaders\HexUtil.cs" />
