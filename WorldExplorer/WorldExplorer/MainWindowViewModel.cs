@@ -155,7 +155,8 @@ namespace WorldExplorer
                 LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
-                LogText = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                LogText = animData.ToString();
             }
         }
 
