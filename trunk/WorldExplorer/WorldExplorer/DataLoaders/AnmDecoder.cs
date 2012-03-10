@@ -25,11 +25,24 @@ namespace WorldExplorer.DataLoaders
 {
     public class AnmDecoder
     {
-        public static string Decode(byte[] data, int startOffset, int length)
+        public static AnimData Decode(byte[] data, int startOffset, int length)
         {
             int endIndex = startOffset + length;
+            AnimData animData = new AnimData();
+            animData.NumBones = DataUtil.getLEInt(data, startOffset);
+            return animData;
+        }
+    }
 
-            return "Anim data";
+    public class AnimData
+    {
+        public int NumBones;
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("Num Bones = ").Append(NumBones).Append("\n");
+            return sb.ToString();
         }
     }
 
