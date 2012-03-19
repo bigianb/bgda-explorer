@@ -150,8 +150,9 @@ namespace WorldExplorer
                 string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
                 var texEntry = lmpFile.Directory[texFilename];
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
+                var animData = LoadFirstAnim(lmpFile);
                 var log = new StringLogger();
-                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage);
+                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData);
                 LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
@@ -160,6 +161,10 @@ namespace WorldExplorer
             }
         }
 
+        private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
+        {
+            return null;
+        }
 
         #region INotifyPropertyChanged Members
 

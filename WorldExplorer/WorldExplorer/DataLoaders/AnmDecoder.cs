@@ -20,6 +20,7 @@ using System.Text;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -39,14 +40,16 @@ namespace WorldExplorer.DataLoaders
                 AnimFrame frame = new AnimFrame();
                 int frameOff = offset8Val + bone * 0x0e;
 
-                frame.x = DataUtil.getLEShort(data, frameOff) / 64.0;
-                frame.y = DataUtil.getLEShort(data, frameOff + 2) / 64.0;
-                frame.z = DataUtil.getLEShort(data, frameOff + 4) / 64.0;
+                frame.Position = new Vector3D(
+                    DataUtil.getLEShort(data, frameOff) / 64.0,
+                    DataUtil.getLEShort(data, frameOff + 2) / 64.0,
+                    DataUtil.getLEShort(data, frameOff + 4) / 64.0);
 
-                frame.a = DataUtil.getLEShort(data, frameOff + 6) / 4096.0;
-                frame.b = DataUtil.getLEShort(data, frameOff + 8) / 4096.0;
-                frame.c = DataUtil.getLEShort(data, frameOff + 0xA) / 4096.0;
-                frame.d = DataUtil.getLEShort(data, frameOff + 0xC) / 4096.0;
+                frame.Rotation = new Quaternion(
+                    DataUtil.getLEShort(data, frameOff + 6) / 4096.0,
+                    DataUtil.getLEShort(data, frameOff + 8) / 4096.0,
+                    DataUtil.getLEShort(data, frameOff + 0xA) / 4096.0,
+                    DataUtil.getLEShort(data, frameOff + 0xC) / 4096.0);
 
                 animData.Frames.Add(frame);
             }
@@ -97,19 +100,14 @@ namespace WorldExplorer.DataLoaders
 
     public class AnimFrame
     {
-        public double x, y, z;
-        public double a, b, c, d;
+        public Vector3D Position;
+        public Quaternion Rotation;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("AnimFrame: (").Append(x).Append(", ");
-            sb.Append(y).Append(", ");
-            sb.Append(z).Append(") (");
-            sb.Append(a).Append(", ");
-            sb.Append(b).Append(", ");
-            sb.Append(c).Append(", ");
-            sb.Append(d).Append(")");
+            sb.Append("AnimFrame: (").Append(Position.ToString()).Append(") (");
+            sb.Append(Rotation.ToString()).Append(")");
             return sb.ToString();
         }
     }

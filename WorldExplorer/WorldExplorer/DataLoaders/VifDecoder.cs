@@ -29,7 +29,7 @@ namespace WorldExplorer.DataLoaders
 {
     class VifDecoder
     {
-        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture)
+        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture, List<AnimData> pose)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
