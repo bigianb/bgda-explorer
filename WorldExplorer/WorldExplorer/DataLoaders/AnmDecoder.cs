@@ -53,12 +53,17 @@ namespace WorldExplorer.DataLoaders
 
                 animData.Frames.Add(frame);
             }
+            int totalFrame = 0;
             int otherOff = offset8Val + animData.NumBones * 0x0e;
             var sb = new StringBuilder();
             while (otherOff < endIndex) {
-                sb.Append("Count: ").Append(data[otherOff++]);
+                int count = data[otherOff++];
                 byte byte2 = data[otherOff++];
                 int bone = byte2 & 0x3f;
+                if (bone == 0x3f) break;
+
+                totalFrame += count;
+                sb.Append("Count(total): ").Append(count).Append("(").Append(totalFrame).Append(")");
                 sb.Append(", Bone: ").Append(bone);
                 // bit 7 specifies whether to read 4 (set) or 3 elements following
                 // bit 6 specifies whether they are shorts or bytes (set).
@@ -76,7 +81,7 @@ namespace WorldExplorer.DataLoaders
                         d = DataUtil.getLEShort(data, otherOff+6);
                         otherOff += 8;
                     }
-                    sb.Append(", (").Append(a).Append(", ").Append(b).Append(", ").Append(c).Append(", ").Append(d).Append(")");
+                    sb.Append(", abcd (").Append(a / 131072.0).Append(", ").Append(b / 131072.0).Append(", ").Append(c / 131072.0).Append(", ").Append(d / 131072.0).Append(")");
                 } else {
                     int x, y, z;
                     if ((byte2 & 0x40) == 0x40) {
@@ -89,7 +94,7 @@ namespace WorldExplorer.DataLoaders
                         z = DataUtil.getLEShort(data, otherOff + 4);
                         otherOff += 6;
                     }
-                    sb.Append(", (").Append(x).Append(", ").Append(y).Append(", ").Append(z).Append(")");
+                    sb.Append(", xyz (").Append(x / 512.0).Append(", ").Append(y / 512.0).Append(", ").Append(z / 512.0).Append(")");
                 }
                 sb.Append("\n");
             }
