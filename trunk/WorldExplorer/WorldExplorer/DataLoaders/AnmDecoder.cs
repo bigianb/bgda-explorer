@@ -30,41 +30,58 @@ namespace WorldExplorer.DataLoaders
         {
             int endIndex = startOffset + length;
             AnimData animData = new AnimData();
-            animData.NumBones = DataUtil.getLEInt(data, startOffset);
+            animData.NumMeshes = DataUtil.getLEInt(data, startOffset);
             animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);
             animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
             animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
             int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
 
-            for (int bone = 0; bone < animData.NumBones; ++bone) {
-                AnimFrame frame = new AnimFrame();
-                int frameOff = offset8Val + bone * 0x0e;
+            AnimMeshPose[] previousPoses = new AnimMeshPose[animData.NumMeshes];
 
-                frame.Position = new Vector3D(
+            AnimMeshPose pose = new AnimMeshPose();
+            for (int meshNum = 0; meshNum < animData.NumMeshes; ++meshNum)
+            {
+                pose = new AnimMeshPose();
+                pose.MeshNum = meshNum;
+                pose.FrameNum = -1;
+                int frameOff = offset8Val + meshNum * 0x0e;
+
+                pose.Position = new Vector3D(
                     DataUtil.getLEShort(data, frameOff) / 64.0,
                     DataUtil.getLEShort(data, frameOff + 2) / 64.0,
                     DataUtil.getLEShort(data, frameOff + 4) / 64.0);
 
-                frame.Rotation = new Quaternion(
+                pose.Rotation = new Quaternion(
                     DataUtil.getLEShort(data, frameOff + 6) / 4096.0,
                     DataUtil.getLEShort(data, frameOff + 8) / 4096.0,
                     DataUtil.getLEShort(data, frameOff + 0xA) / 4096.0,
                     DataUtil.getLEShort(data, frameOff + 0xC) / 4096.0);
 
-                animData.Frames.Add(frame);
+                previousPoses[meshNum] = pose;
+                animData.MeshPoses.Add(pose);
+                pose = new AnimMeshPose();
             }
             int totalFrame = 0;
-            int otherOff = offset8Val + animData.NumBones * 0x0e;
-            var sb = new StringBuilder();
+            int otherOff = offset8Val + animData.NumMeshes * 0x0e;
+ 
             while (otherOff < endIndex) {
                 int count = data[otherOff++];
                 byte byte2 = data[otherOff++];
-                int bone = byte2 & 0x3f;
-                if (bone == 0x3f) break;
+                int meshNum = byte2 & 0x3f;
+                if (meshNum == 0x3f) break;
 
                 totalFrame += count;
-                sb.Append("Count(total): ").Append(count).Append("(").Append(totalFrame).Append(")");
-                sb.Append(", Bone: ").Append(bone);
+
+                if (pose.FrameNum != totalFrame || pose.MeshNum != meshNum)
+                {
+                    animData.MeshPoses.Add(pose);
+                    pose = new AnimMeshPose();
+                    pose.FrameNum = totalFrame;
+                    pose.MeshNum = meshNum;
+                    pose.Position = previousPoses[meshNum].Position;
+                    pose.Rotation = previousPoses[meshNum].Rotation;
+                }
+
                 // bit 7 specifies whether to read 4 (set) or 3 elements following
                 // bit 6 specifies whether they are shorts or bytes (set).
                 if ((byte2 & 0x80) == 0x80) {
@@ -81,7 +98,7 @@ namespace WorldExplorer.DataLoaders
                         d = DataUtil.getLEShort(data, otherOff+6);
                         otherOff += 8;
                     }
-                    sb.Append(", abcd (").Append(a / 131072.0).Append(", ").Append(b / 131072.0).Append(", ").Append(c / 131072.0).Append(", ").Append(d / 131072.0).Append(")");
+                    pose.Rotation = new Quaternion(a / 131072.0, b / 131072.0, c / 131072.0, d / 131072.0);
                 } else {
                     int x, y, z;
                     if ((byte2 & 0x40) == 0x40) {
@@ -94,24 +111,27 @@ namespace WorldExplorer.DataLoaders
                         z = DataUtil.getLEShort(data, otherOff + 4);
                         otherOff += 6;
                     }
-                    sb.Append(", xyz (").Append(x / 512.0).Append(", ").Append(y / 512.0).Append(", ").Append(z / 512.0).Append(")");
+                    pose.Position = new Vector3D(x / 512.0, y / 512.0, z / 512.0);
                 }
-                sb.Append("\n");
             }
-            animData.Other = sb.ToString();
+            animData.MeshPoses.Add(pose);
             return animData;
         }
     }
 
-    public class AnimFrame
+    public class AnimMeshPose
     {
         public Vector3D Position;
         public Quaternion Rotation;
+        public int MeshNum;
+        public int FrameNum;
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("AnimFrame: (").Append(Position.ToString()).Append(") (");
+            sb.Append("AnimMeshPose: MeshNum=").Append(MeshNum);
+            sb.Append(", FrameNum=").Append(FrameNum);
+            sb.Append(", Pos=(").Append(Position.ToString()).Append(") Rot=(");
             sb.Append(Rotation.ToString()).Append(")");
             return sb.ToString();
         }
@@ -119,26 +139,30 @@ namespace WorldExplorer.DataLoaders
 
     public class AnimData
     {
-        public int NumBones;
+        public int NumMeshes;
         public int Offset4Val;
         public int Offset14Val;
         public int Offset18Val;     // These are 4 bytes which are all ored together
 
         public string Other;
 
-        public List<AnimFrame> Frames = new List<AnimFrame>();
+        public List<AnimMeshPose> MeshPoses = new List<AnimMeshPose>();
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("Num Bones = ").Append(NumBones).Append("\n");
+            sb.Append("Num Meshes = ").Append(NumMeshes).Append("\n");
             sb.Append("Offset 4 val = ").Append(Offset4Val).Append("\n");
             sb.Append("Offset 0x14 val = ").Append(Offset14Val).Append("\n");
             sb.Append("Offset 0x18 val = ").Append(Offset18Val).Append("\n");
-            foreach (var frame in Frames) {
-                sb.Append(frame.ToString()).Append("\n");
+            foreach (var pose in MeshPoses)
+            {
+                sb.Append(pose.ToString()).Append("\n");
             }
-            sb.Append(Other);
+            if (Other != null)
+            {
+                sb.Append(Other);
+            }
             return sb.ToString();
         }
     }
