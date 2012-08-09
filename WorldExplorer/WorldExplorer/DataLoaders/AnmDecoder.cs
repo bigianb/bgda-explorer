@@ -30,20 +30,40 @@ namespace WorldExplorer.DataLoaders
         {
             int endIndex = startOffset + length;
             AnimData animData = new AnimData();
-            animData.NumMeshes = DataUtil.getLEInt(data, startOffset);
+            animData.NumBones = DataUtil.getLEInt(data, startOffset);
             animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);
             animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
             animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
             int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
 
-            AnimMeshPose[] previousPoses = new AnimMeshPose[animData.NumMeshes];
+            // 4 shorts per bone
+            int offset0CVal = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
+            animData.boneOffsets = new Vector3D[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i)
+            {
+                animData.boneOffsets[i] = new Vector3D(
+                    DataUtil.getLEShort(data, offset0CVal + i * 8) / 64.0,
+                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 2) / 64.0,
+                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 4) / 64.0
+                );
+            }
+
+            // Mapping table, one byte per meshGroup
+            int offset10Val = startOffset + DataUtil.getLEInt(data, startOffset + 0x10);
+            animData.boneToMeshMapping = new int[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i)
+            {
+                animData.boneToMeshMapping[i] = data[offset10Val + i];
+            }
+
+            AnimMeshPose[] previousPoses = new AnimMeshPose[animData.NumBones];
 
             AnimMeshPose pose = new AnimMeshPose();
-            for (int meshNum = 0; meshNum < animData.NumMeshes; ++meshNum)
+            for (int meshNum = 0; meshNum < animData.NumBones; ++meshNum)
             {
                 pose = new AnimMeshPose();
                 pose.MeshNum = meshNum;
-                pose.FrameNum = -1;
+                pose.FrameNum = 0;
                 int frameOff = offset8Val + meshNum * 0x0e;
 
                 pose.Position = new Vector3D(
@@ -59,10 +79,10 @@ namespace WorldExplorer.DataLoaders
 
                 previousPoses[meshNum] = pose;
                 animData.MeshPoses.Add(pose);
-                pose = new AnimMeshPose();
+                pose = null;
             }
-            int totalFrame = 0;
-            int otherOff = offset8Val + animData.NumMeshes * 0x0e;
+            int totalFrame = 1;
+            int otherOff = offset8Val + animData.NumBones * 0x0e;
  
             while (otherOff < endIndex) {
                 int count = data[otherOff++];
@@ -72,9 +92,12 @@ namespace WorldExplorer.DataLoaders
 
                 totalFrame += count;
 
-                if (pose.FrameNum != totalFrame || pose.MeshNum != meshNum)
+                if (pose == null || pose.FrameNum != totalFrame || pose.MeshNum != meshNum)
                 {
-                    animData.MeshPoses.Add(pose);
+                    if (pose != null)
+                    {
+                        animData.MeshPoses.Add(pose);
+                    }
                     pose = new AnimMeshPose();
                     pose.FrameNum = totalFrame;
                     pose.MeshNum = meshNum;
@@ -115,6 +138,8 @@ namespace WorldExplorer.DataLoaders
                 }
             }
             animData.MeshPoses.Add(pose);
+            animData.NumFrames = totalFrame+1;
+            animData.BuildPerFramePoses();
             return animData;
         }
     }
@@ -139,22 +164,75 @@ namespace WorldExplorer.DataLoaders
 
     public class AnimData
     {
-        public int NumMeshes;
+        public int NumBones;
+        public int NumFrames;
         public int Offset4Val;
         public int Offset14Val;
         public int Offset18Val;     // These are 4 bytes which are all ored together
+
+        public int[] boneToMeshMapping;
+
+        public Vector3D[] boneOffsets;
 
         public string Other;
 
         public List<AnimMeshPose> MeshPoses = new List<AnimMeshPose>();
 
+        public AnimMeshPose[,] perFramePoses;
+
+        public void BuildPerFramePoses()
+        {
+            perFramePoses = new AnimMeshPose[NumFrames, NumBones];
+            foreach (AnimMeshPose pose in MeshPoses)
+            {
+                perFramePoses[pose.FrameNum, pose.MeshNum] = pose;
+            }
+            for (int mesh = 0; mesh < NumBones; ++mesh)
+            {
+                AnimMeshPose prevPose = null;
+                for (int frame = 0; frame < NumFrames; ++frame)
+                {
+                    if (perFramePoses[frame, mesh] == null)
+                    {
+                        // TODO: Interpolate between previous frame values and here.
+                        AnimMeshPose pose = new AnimMeshPose();
+                        pose.MeshNum = mesh;
+                        pose.FrameNum = frame;
+                        pose.Position = prevPose.Position;
+                        pose.Rotation = prevPose.Rotation;
+                        perFramePoses[frame, mesh] = pose;
+                    }
+                    prevPose = perFramePoses[frame, mesh];
+                }
+            }
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("Num Meshes = ").Append(NumMeshes).Append("\n");
+            sb.Append("Num Bones = ").Append(NumBones).Append("\n");
+            sb.Append("Num Frames = ").Append(NumFrames).Append("\n");
             sb.Append("Offset 4 val = ").Append(Offset4Val).Append("\n");
             sb.Append("Offset 0x14 val = ").Append(Offset14Val).Append("\n");
             sb.Append("Offset 0x18 val = ").Append(Offset18Val).Append("\n");
+
+            sb.Append("bone mappings = ");
+            for (int b=0; b<NumBones; ++b){
+                if (b != 0)
+                {
+                    sb.Append(", ");
+                }
+                sb.Append(boneToMeshMapping[b]);
+            }
+            sb.Append("\n");
+
+            sb.Append("bone Offsets:\n");
+            for (int b = 0; b < NumBones; ++b)
+            {
+                sb.Append("Bone: ").Append(b).Append(" ... ");
+                sb.Append(boneOffsets[b].ToString()).Append("\n");
+            }
+
             foreach (var pose in MeshPoses)
             {
                 sb.Append(pose.ToString()).Append("\n");

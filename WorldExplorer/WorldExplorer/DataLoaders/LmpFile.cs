@@ -61,5 +61,11 @@ namespace WorldExplorer.DataLoaders
         }
 
         public Dictionary<String, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
+
+        public EntryInfo FindFirstEntryWithSuffix(String suffix)
+        {
+            EntryInfo entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
+            return entry;
+        }
     }
 }
