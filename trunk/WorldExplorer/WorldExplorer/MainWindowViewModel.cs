@@ -41,7 +41,7 @@ namespace WorldExplorer
                 PixelFormats.Bgr32,
                 null);
 
-            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Test"))});
+            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Cellar1"))});
         }
 
         private ReadOnlyCollection<WorldTreeViewModel> _worlds;
@@ -152,7 +152,7 @@ namespace WorldExplorer
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
                 var animData = LoadFirstAnim(lmpFile);
                 var log = new StringLogger();
-                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData);
+                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData.Count == 0 ? null : animData.First(), 0);
                 LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
@@ -163,7 +163,13 @@ namespace WorldExplorer
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
         {
-            return null;
+            List<AnimData> animList = new List<AnimData>();
+            var animEntry = lmpFile.FindFirstEntryWithSuffix(".anm");
+            if (animEntry != null)
+            {
+                animList.Add(AnmDecoder.Decode(lmpFile.FileData, animEntry.StartOffset, animEntry.Length));
+            }
+            return animList;
         }
 
         #region INotifyPropertyChanged Members

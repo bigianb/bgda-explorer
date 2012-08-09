@@ -29,118 +29,168 @@ namespace WorldExplorer.DataLoaders
 {
     class VifDecoder
     {
-        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture, List<AnimData> pose)
+        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture, AnimData pose, int frame)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
-            List<Chunk> chunks = new List<Chunk>();
-            for (int mesh = 0; mesh < numMeshes; ++mesh) {
-                int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + mesh * 4);
-                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + mesh * 4);
-
-                chunks.AddRange(ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts));
+            List<List<Chunk>> meshes = new List<List<Chunk>>();
+            int totalNumChunks = 0;
+            for (int meshNum = 0; meshNum < numMeshes; ++meshNum) {
+                int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + meshNum * 4);
+                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + meshNum * 4);
+                var chunks = ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts);
+                meshes.Add(chunks);
+                totalNumChunks += chunks.Count;
             }
-            return CreateModel3D(chunks, texture);
+            log.LogLine("Num Meshes="+numMeshes);
+            log.LogLine("Total Num Chunks=" + totalNumChunks);
+            int meshNo=1;
+            foreach (var mesh in meshes)
+            {
+                log.LogLine("Mesh " + meshNo + ", num chunks=" + mesh.Count);
+                ++meshNo;
+            }
+            return CreateModel3D(meshes, texture, pose, frame);
         }
 
-        private static Model3D CreateModel3D(List<Chunk> chunks, BitmapSource texture)
+        private static Model3D CreateModel3D(List<List<Chunk>> meshGroups, BitmapSource texture, AnimData pose, int frame)
         {
             GeometryModel3D model = new GeometryModel3D();
             var mesh = new MeshGeometry3D();
 
             int numVertices = 0;
-            foreach (Chunk chunk in chunks) {
-                numVertices += chunk.vertices.Count;
+            foreach (var meshGroup in meshGroups)
+            {
+                foreach (Chunk chunk in meshGroup)
+                {
+                    numVertices += chunk.vertices.Count;
+                }
             }
             var triangleIndices = new Int32Collection();
             var positions = new Point3DCollection(numVertices);
             var normals = new Vector3DCollection(numVertices);
             var uvCoords = new Point[numVertices];
             int vstart = 0;
-            foreach (var chunk in chunks) {
-                if ((chunk.gifTag0.prim & 0x07) != 4) {
-                    Debug.Fail("Can only deal with tri strips");
-                }
+            int meshNo = 0;
+            int chunkNo = 0;
+            foreach (var meshGroup in meshGroups)
+            {
+                foreach (var chunk in meshGroup)
+                {
+                    if ((chunk.gifTag0.prim & 0x07) != 4)
+                    {
+                        Debug.Fail("Can only deal with tri strips");
+                    }
+                    AnimMeshPose thisPose = null;
+                    if (pose != null)
+                    {
+                        int poseMesh = pose.NumBones > chunkNo ? chunkNo : pose.NumBones - 1;
+                        thisPose = pose.perFramePoses[frame, poseMesh];
+                    }
+                    foreach (var vertex in chunk.vertices)
+                    {
+                        /**
+                        if (thisPose != null)
+                        {
+                            double x = vertex.x / 127.0 + thisPose.Position.X;
+                            double y = vertex.y / 127.0 + thisPose.Position.Y;
+                            double z = vertex.z / 127.0 + thisPose.Position.Z;
+                            positions.Add(new Point3D(x, y, z));
+                        }
+                        else
+                        {
+                         */
+                            positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
+                        //}
+                    }
+                    foreach (var normal in chunk.normals)
+                    {
+                        normals.Add(new Vector3D(normal.x / 127.0, normal.y / 127.0, normal.z / 127.0));
+                    }
+                    int[] vstrip = new int[chunk.gifTag0.nloop];
+                    int regsPerVertex = chunk.gifTag0.nreg;
+                    int numVlocs = chunk.vlocs.Count;
+                    int numVerts = chunk.vertices.Count;
+                    for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx)
+                    {
+                        int v = vlocIndx - 2;
+                        int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0x1FF) / regsPerVertex;
+                        int stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0x1FF) / regsPerVertex;
+                        if (stripIdx3 < vstrip.Length && stripIdx2 < vstrip.Length)
+                        {
+                            vstrip[stripIdx3] = vstrip[stripIdx2] & 0x1FF;
 
-                foreach (var vertex in chunk.vertices) {
-                    positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
-                }
-                foreach (var normal in chunk.normals) {
-                    normals.Add(new Vector3D(normal.x / 127.0, normal.y / 127.0, normal.z / 127.0));
-                }
-                int[] vstrip = new int[chunk.gifTag0.nloop];
-                int regsPerVertex = chunk.gifTag0.nreg;
-                int numVlocs = chunk.vlocs.Count;
-                int numVerts = chunk.vertices.Count;
-                for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
-                    int v = vlocIndx - 2;
-                    int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0x1FF) / regsPerVertex;
-                    int stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0x1FF) / regsPerVertex;
-                    if (stripIdx3 < vstrip.Length && stripIdx2 < vstrip.Length) {
-                        vstrip[stripIdx3] = vstrip[stripIdx2] & 0x1FF;
+                            bool skip2 = (chunk.vlocs[vlocIndx].v3 & 0x8000) == 0x8000;
+                            if (skip2)
+                            {
+                                vstrip[stripIdx3] |= 0x8000;
+                            }
+                        }
+                        int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0x1FF) / regsPerVertex;
+                        bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
 
-                        bool skip2 = (chunk.vlocs[vlocIndx].v3 & 0x8000) == 0x8000;
-                        if (skip2) {
-                            vstrip[stripIdx3] |= 0x8000;
+                        if (v < numVerts && stripIdx < vstrip.Length)
+                        {
+                            vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                         }
                     }
-                    int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0x1FF) / regsPerVertex;
-                    bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
+                    int numExtraVlocs = chunk.extraVlocs[0];
+                    for (int extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc)
+                    {
+                        int idx = extraVloc * 4 + 4;
+                        int stripIndxSrc = (chunk.extraVlocs[idx] & 0x1FF) / regsPerVertex;
+                        int stripIndxDest = (chunk.extraVlocs[idx + 1] & 0x1FF) / regsPerVertex; ;
+                        vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
 
-                    if (v < numVerts && stripIdx < vstrip.Length) {
-                        vstrip[stripIdx] = skip ? (v | 0x8000) : v;
+                        stripIndxSrc = (chunk.extraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
+                        stripIndxDest = (chunk.extraVlocs[idx + 3] & 0x1FF) / regsPerVertex; ;
+                        vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
                     }
-                }
-                int numExtraVlocs = chunk.extraVlocs[0];
-                for (int extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc) {
-                    int idx = extraVloc * 4 + 4;
-                    int stripIndxSrc = (chunk.extraVlocs[idx] & 0x1FF) / regsPerVertex;
-                    int stripIndxDest = (chunk.extraVlocs[idx+1] & 0x1FF) / regsPerVertex;;
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                    int triIdx = 0;
+                    for (int i = 2; i < vstrip.Length; ++i)
+                    {
+                        int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
+                        int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
+                        int vidx3 = vstart + (vstrip[i] & 0xFF);
 
-                    stripIndxSrc = (chunk.extraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
-                    stripIndxDest = (chunk.extraVlocs[idx + 3] & 0x1FF) / regsPerVertex; ;
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
-                }
-                int triIdx = 0;
-                for (int i = 2; i < vstrip.Length; ++i) {
-                    int vidx1 = vstart + (vstrip[i - 2] & 0xFF);
-                    int vidx2 = vstart + (vstrip[i - 1] & 0xFF);
-                    int vidx3 = vstart + (vstrip[i] & 0xFF);
+                        int uv1 = i - 2;
+                        int uv2 = i - 1;
 
-                    int uv1 = i - 2;
-                    int uv2 = i - 1;
+                        // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
+                        if ((triIdx & 1) == 1)
+                        {
+                            int temp = uv1;
+                            uv1 = uv2;
+                            uv2 = temp;
 
-                    // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
-                    if ((triIdx & 1) == 1) {
-                        int temp = uv1;
-                        uv1 = uv2;
-                        uv2 = temp;
+                            temp = vidx1;
+                            vidx1 = vidx2;
+                            vidx2 = temp;
+                        }
 
-                        temp = vidx1;
-                        vidx1 = vidx2;
-                        vidx2 = temp;
+                        if ((vstrip[i] & 0x8000) == 0)
+                        {
+                            triangleIndices.Add(vidx1);
+                            triangleIndices.Add(vidx2);
+                            triangleIndices.Add(vidx3);
+
+                            triangleIndices.Add(vidx2);
+                            triangleIndices.Add(vidx1);
+                            triangleIndices.Add(vidx3);
+
+                            double udiv = texture.PixelWidth * 16.0;
+                            double vdiv = texture.PixelHeight * 16.0;
+
+                            uvCoords[vidx1] = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
+                            uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
+                            uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
+                        }
+                        ++triIdx;
                     }
-
-                    if ((vstrip[i] & 0x8000) == 0) {
-                        triangleIndices.Add(vidx1);
-                        triangleIndices.Add(vidx2);
-                        triangleIndices.Add(vidx3);
-
-                        triangleIndices.Add(vidx2);
-                        triangleIndices.Add(vidx1);
-                        triangleIndices.Add(vidx3);
-
-                        double udiv = texture.PixelWidth * 16.0;
-                        double vdiv = texture.PixelHeight * 16.0;
-
-                        uvCoords[vidx1] = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
-                        uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
-                        uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
-                    }
-                    ++triIdx;
+                    vstart += chunk.vertices.Count;
+                    ++chunkNo;
                 }
-                vstart += chunk.vertices.Count;
+                ++meshNo;
             }
             mesh.TriangleIndices = triangleIndices;
             mesh.Positions = positions;
