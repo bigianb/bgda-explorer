@@ -26,9 +26,13 @@ namespace WorldExplorer
             MainWindowViewModel model = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
             DataContext = model;
 
-            Trackball trackball = new Trackball();
+            var trackball = new Trackball();
             trackball.EventSource = trackballSource;
             model.CameraTransform = trackball.Transform;
+
+            var skeletonTrackball = new Trackball();
+            skeletonTrackball.EventSource = trackballSourceSkeleton;
+            model.SkeletonCameraTransform = skeletonTrackball.Transform;
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

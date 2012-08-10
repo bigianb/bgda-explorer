@@ -36,13 +36,12 @@ namespace WorldExplorer.DataLoaders
             animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
             int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
 
-            // 4 shorts per bone
             int offset0CVal = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
-            animData.boneOffsets = new Vector3D[animData.NumBones];
+            animData.jointPositions = new Point3D[animData.NumBones];
             for (int i = 0; i < animData.NumBones; ++i)
             {
-                animData.boneOffsets[i] = new Vector3D(
-                    DataUtil.getLEShort(data, offset0CVal + i * 8) / 64.0,
+                animData.jointPositions[i] = new Point3D(
+                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 0) / 64.0,
                     DataUtil.getLEShort(data, offset0CVal + i * 8 + 2) / 64.0,
                     DataUtil.getLEShort(data, offset0CVal + i * 8 + 4) / 64.0
                 );
@@ -50,10 +49,10 @@ namespace WorldExplorer.DataLoaders
 
             // Mapping table, one byte per meshGroup
             int offset10Val = startOffset + DataUtil.getLEInt(data, startOffset + 0x10);
-            animData.boneToMeshMapping = new int[animData.NumBones];
+            animData.skeletonDef = new int[animData.NumBones];
             for (int i = 0; i < animData.NumBones; ++i)
             {
-                animData.boneToMeshMapping[i] = data[offset10Val + i];
+                animData.skeletonDef[i] = data[offset10Val + i];
             }
 
             AnimMeshPose[] previousPoses = new AnimMeshPose[animData.NumBones];
@@ -170,9 +169,9 @@ namespace WorldExplorer.DataLoaders
         public int Offset14Val;
         public int Offset18Val;     // These are 4 bytes which are all ored together
 
-        public int[] boneToMeshMapping;
+        public int[] skeletonDef;
 
-        public Vector3D[] boneOffsets;
+        public Point3D[] jointPositions;
 
         public string Other;
 
@@ -185,7 +184,10 @@ namespace WorldExplorer.DataLoaders
             perFramePoses = new AnimMeshPose[NumFrames, NumBones];
             foreach (AnimMeshPose pose in MeshPoses)
             {
-                perFramePoses[pose.FrameNum, pose.MeshNum] = pose;
+                if (pose != null)
+                {
+                    perFramePoses[pose.FrameNum, pose.MeshNum] = pose;
+                }
             }
             for (int mesh = 0; mesh < NumBones; ++mesh)
             {
@@ -216,26 +218,29 @@ namespace WorldExplorer.DataLoaders
             sb.Append("Offset 0x14 val = ").Append(Offset14Val).Append("\n");
             sb.Append("Offset 0x18 val = ").Append(Offset18Val).Append("\n");
 
-            sb.Append("bone mappings = ");
+            sb.Append("skeleton def = ");
             for (int b=0; b<NumBones; ++b){
                 if (b != 0)
                 {
                     sb.Append(", ");
                 }
-                sb.Append(boneToMeshMapping[b]);
+                sb.Append(skeletonDef[b]);
             }
             sb.Append("\n");
 
-            sb.Append("bone Offsets:\n");
+            sb.Append("Joint positions:\n");
             for (int b = 0; b < NumBones; ++b)
             {
-                sb.Append("Bone: ").Append(b).Append(" ... ");
-                sb.Append(boneOffsets[b].ToString()).Append("\n");
+                sb.Append("Joint: ").Append(b).Append(" ... ");
+                sb.Append(jointPositions[b].ToString()).Append("\n");
             }
 
             foreach (var pose in MeshPoses)
             {
-                sb.Append(pose.ToString()).Append("\n");
+                if (pose != null)
+                {
+                    sb.Append(pose.ToString()).Append("\n");
+                }
             }
             if (Other != null)
             {

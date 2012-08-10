@@ -89,19 +89,7 @@ namespace WorldExplorer.DataLoaders
                     }
                     foreach (var vertex in chunk.vertices)
                     {
-                        /**
-                        if (thisPose != null)
-                        {
-                            double x = vertex.x / 127.0 + thisPose.Position.X;
-                            double y = vertex.y / 127.0 + thisPose.Position.Y;
-                            double z = vertex.z / 127.0 + thisPose.Position.Z;
-                            positions.Add(new Point3D(x, y, z));
-                        }
-                        else
-                        {
-                         */
-                            positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
-                        //}
+                        positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
                     }
                     foreach (var normal in chunk.normals)
                     {

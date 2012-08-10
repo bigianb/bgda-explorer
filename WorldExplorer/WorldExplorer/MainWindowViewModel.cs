@@ -100,6 +100,43 @@ namespace WorldExplorer
             }
         }
 
+        private Model3D _skeletonModel;
+
+        public Model3D SkeletonModel
+        {
+            get { return _skeletonModel; }
+            set
+            {
+                _skeletonModel = value;
+                this.OnPropertyChanged("SkeletonModel");
+            }
+        }
+
+        private Transform3D _skeletonCameraTransform;
+
+        public Transform3D SkeletonCameraTransform
+        {
+            get { return _skeletonCameraTransform; }
+            set
+            {
+                _skeletonCameraTransform = value;
+                _skeletonCamera.Transform = _skeletonCameraTransform;
+                this.OnPropertyChanged("SkeletonCameraTransform");
+            }
+        }
+
+        private Camera _skeletonCamera = new OrthographicCamera { Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1) };
+
+        public Camera SkeletonCamera
+        {
+            get { return _skeletonCamera; }
+            set
+            {
+                _skeletonCamera = value;
+                this.OnPropertyChanged("SkeletonCamera");
+            }
+        }
+
         private object _selectedNode;
 
         public object SelectedNode
@@ -126,18 +163,19 @@ namespace WorldExplorer
             }
         }
 
-        private void UpdateCamera(Model3D model)
+        private void UpdateCamera(Model3D model, OrthographicCamera oCam)
         {
             var bounds = model.Bounds;
-            Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
+            //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
+            Point3D centroid = new Point3D(0, 0, 0);
             double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
             double cameraDistance = radius * 1.5;
 
             Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
-            OrthographicCamera oCam = (OrthographicCamera)_selectedNodeCamera;
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, -1);
+
         }
 
         private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
@@ -154,9 +192,11 @@ namespace WorldExplorer
                 var log = new StringLogger();
                 SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData.Count == 0 ? null : animData.First(), 0);
                 LogText += log.ToString();
-                UpdateCamera(SelectedNodeModel);
+                UpdateCamera(SelectedNodeModel, (OrthographicCamera)_selectedNodeCamera);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
                 var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                SkeletonModel = SkeletonProcessor.GetSkeletonModel(animData);
+                UpdateCamera(SkeletonModel, (OrthographicCamera)_skeletonCamera);
                 LogText = animData.ToString();
             }
         }
