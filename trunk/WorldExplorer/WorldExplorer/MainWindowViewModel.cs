@@ -100,40 +100,15 @@ namespace WorldExplorer
             }
         }
 
-        private Model3D _skeletonModel;
+        private SkeletonViewModel _skeletonViewModel = new SkeletonViewModel();
 
-        public Model3D SkeletonModel
+        public SkeletonViewModel TheSkeletonViewModel
         {
-            get { return _skeletonModel; }
+            get { return _skeletonViewModel; }
             set
             {
-                _skeletonModel = value;
-                this.OnPropertyChanged("SkeletonModel");
-            }
-        }
-
-        private Transform3D _skeletonCameraTransform;
-
-        public Transform3D SkeletonCameraTransform
-        {
-            get { return _skeletonCameraTransform; }
-            set
-            {
-                _skeletonCameraTransform = value;
-                _skeletonCamera.Transform = _skeletonCameraTransform;
-                this.OnPropertyChanged("SkeletonCameraTransform");
-            }
-        }
-
-        private Camera _skeletonCamera = new OrthographicCamera { Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1) };
-
-        public Camera SkeletonCamera
-        {
-            get { return _skeletonCamera; }
-            set
-            {
-                _skeletonCamera = value;
-                this.OnPropertyChanged("SkeletonCamera");
+                _skeletonViewModel = value;
+                this.OnPropertyChanged("TheSkeletonViewModel");
             }
         }
 
@@ -175,7 +150,6 @@ namespace WorldExplorer
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, -1);
-
         }
 
         private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
@@ -195,8 +169,7 @@ namespace WorldExplorer
                 UpdateCamera(SelectedNodeModel, (OrthographicCamera)_selectedNodeCamera);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
                 var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
-                SkeletonModel = SkeletonProcessor.GetSkeletonModel(animData);
-                UpdateCamera(SkeletonModel, (OrthographicCamera)_skeletonCamera);
+                _skeletonViewModel.AnimData = animData;
                 LogText = animData.ToString();
             }
         }

@@ -70,23 +70,7 @@
                 </Border>
             </TabItem>          
             <TabItem Header="Skeleton">
-                <Border Background="Transparent" Name="trackballSourceSkeleton">
-                    <Viewbox Name="viewboxSkeleton">
-                        <Viewport3D Camera="{Binding SkeletonCamera}" ClipToBounds="True" Height="150" Name="skeletonViewport" Width="150">
-                            <ModelVisual3D>
-                                <ModelVisual3D.Content>
-                                    <AmbientLight Color="#808080" />
-                                </ModelVisual3D.Content>
-                            </ModelVisual3D>
-                            <ModelVisual3D>
-                                <ModelVisual3D.Content>
-                                    <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1" />
-                                </ModelVisual3D.Content>
-                            </ModelVisual3D>
-                            <ModelVisual3D Content="{Binding SkeletonModel}" />
-                        </Viewport3D>
-                    </Viewbox>
-                </Border>
+                <local:SkeletonView DataContext="{Binding TheSkeletonViewModel}"/>
             </TabItem>
             <TabItem Header="Log">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
