@@ -69,6 +69,10 @@
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="SkeletonProcessor.cs" />
+    <Compile Include="SkeletonView.xaml.cs">
+      <DependentUpon>SkeletonView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SkeletonViewModel.cs" />
     <Compile Include="Tools3D\Trackball.cs" />
     <Compile Include="TreeView\WorldTreeViewModel.cs" />
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />
@@ -86,6 +90,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SkeletonView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindowViewModel.cs" />
