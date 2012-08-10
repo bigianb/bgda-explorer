@@ -40,37 +40,54 @@ namespace WorldExplorer
 
         private static void AddBone(MeshGeometry3D mesh, Point3D startPoint, Point3D endPoint)
         {
-            // Bit of a hack
-            Point3D ep1 = new Point3D(endPoint.X - delta, endPoint.Y - delta, endPoint.Z);
-            Point3D ep2 = new Point3D(endPoint.X - delta, endPoint.Y + delta, endPoint.Z);
-            Point3D ep3 = new Point3D(endPoint.X + delta, endPoint.Y + delta, endPoint.Z);
-            Point3D ep4 = new Point3D(endPoint.X + delta, endPoint.Y - delta, endPoint.Z);
+            AxisAngleRotation3D rotate = new AxisAngleRotation3D();
+            RotateTransform3D xform = new RotateTransform3D(rotate);
+
+            Vector3D boneVec = endPoint - startPoint;
+
+            // radius always points towards -Z (when possible)
+            Vector3D radius;
+
+            if (boneVec.X == 0 && boneVec.Y == 0)
+            {
+                // Special case.
+                radius = new Vector3D(0, -1, 0);
+            }
+            else
+            {
+                // Find vector axis 90 degrees from bone where Z == 0
+                rotate.Axis = Vector3D.CrossProduct(boneVec, new Vector3D(0, 0, 1));
+                rotate.Angle = -90;
+
+                // Rotate 90 degrees to find radius vector
+                radius = boneVec * xform.Value;
+                radius.Normalize();
+            }
+
+            // Rotate the radius around the bone vector
+            rotate.Axis = boneVec;
 
             var positions = mesh.Positions;
+            const int slices = 10;
+            for (int slice = 0; slice < slices; ++slice)
+            {
+                // Rotate radius vector 
+                rotate.Angle = slice * 360.0 / slices;
+                Vector3D vectRadius = radius * xform.Value;
+                rotate.Angle = (slice + 1) * 360.0 / slices;
+                Vector3D vectRadius1 = radius * xform.Value;
 
-            positions.Add(startPoint);
-            positions.Add(ep1);
-            positions.Add(ep2);
+                // Bit of a hack to avoid having to set the normals or worry about consistent winding.
+                positions.Add(startPoint);
+                positions.Add(endPoint + delta * vectRadius);             
+                positions.Add(endPoint + delta * vectRadius1);
 
-            positions.Add(startPoint);
-            positions.Add(ep2);
-            positions.Add(ep3);
+                positions.Add(startPoint);
+                positions.Add(endPoint + delta * vectRadius1);
+                positions.Add(endPoint + delta * vectRadius);
+            }
 
-            positions.Add(startPoint);
-            positions.Add(ep3);
-            positions.Add(ep4);
-
-            positions.Add(startPoint);
-            positions.Add(ep4);
-            positions.Add(ep1);
-
-            positions.Add(ep3);
-            positions.Add(ep2);
-            positions.Add(ep1);
-
-            positions.Add(ep1);
-            positions.Add(ep4);
-            positions.Add(ep3);
         }
+
     }
 }
