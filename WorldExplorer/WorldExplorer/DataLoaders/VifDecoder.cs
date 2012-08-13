@@ -86,15 +86,22 @@ namespace WorldExplorer.DataLoaders
                     {
                         Debug.Fail("Can only deal with tri strips");
                     }
-                    AnimMeshPose thisPose = null;
-                    if (pose != null)
-                    {
-                        int poseMesh = pose.NumBones > chunkNo ? chunkNo : pose.NumBones - 1;
-                        thisPose = pose.perFramePoses[frame, poseMesh];
-                    }
+                    int vwNum = 0;
+                    VertexWeight vw = chunk.vertexWeights[vwNum];
+                    int vnum = 0;
                     foreach (var vertex in chunk.vertices)
                     {
-                        positions.Add(new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0));
+                        if (vw.endVertex < vnum) {
+                            ++vwNum;
+                            vw = chunk.vertexWeights[vwNum];
+                        }
+                        var point = new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0);
+                        if (vw.bone1 != 0) {
+                            AnimMeshPose thisPose = pose.perFramePoses[frame, (vw.bone1-4)/4];
+                            point.Offset(thisPose.Position.X, thisPose.Position.Y, thisPose.Position.Z);
+                        }
+                        positions.Add(point);
+                        ++vnum;
                     }
                     foreach (var normal in chunk.normals)
                     {

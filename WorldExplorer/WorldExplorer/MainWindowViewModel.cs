@@ -164,7 +164,7 @@ namespace WorldExplorer
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
                 var animData = LoadFirstAnim(lmpFile);
                 var log = new StringLogger();
-                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData.Count == 0 ? null : animData.First(), 0);
+                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData.Count == 0 ? null : animData.First(), 10);
                 LogText += log.ToString();
                 UpdateCamera(SelectedNodeModel, (OrthographicCamera)_selectedNodeCamera);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
