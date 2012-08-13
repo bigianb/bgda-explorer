@@ -48,6 +48,11 @@ namespace WorldExplorer.DataLoaders
             foreach (var mesh in meshes)
             {
                 log.LogLine("Mesh " + meshNo + ", num chunks=" + mesh.Count);
+                foreach (Chunk chunk in mesh) {
+                    foreach (VertexWeight vw in chunk.vertexWeights) {
+                        log.LogLine(vw.ToString());
+                    }
+                }
                 ++meshNo;
             }
             return CreateModel3D(meshes, texture, pose, frame);
@@ -229,6 +234,22 @@ namespace WorldExplorer.DataLoaders
             public short v;
         }
 
+        private class VertexWeight
+        {
+            public int startVertex;
+            public int endVertex;
+            public int bone1;
+            public int bone2;
+            public int boneWeight1;
+            public int boneWeight2;
+
+            public override String ToString()
+            {
+                return "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1 +
+                    "; bone2=" + bone2 + ", weight=" + boneWeight2;
+            }
+        }
+
         private class Chunk
         {
             public int mscalID = 0;
@@ -238,7 +259,7 @@ namespace WorldExplorer.DataLoaders
             public List<ByteVector> normals = new List<ByteVector>();
             public List<VLoc> vlocs = new List<VLoc>();
             public List<UV> uvs = new List<UV>();
-            public byte[] data_4x8;
+            public List<VertexWeight> vertexWeights = new List<VertexWeight>();
             public ushort[] extraVlocs;
         }
 
@@ -413,22 +434,27 @@ namespace WorldExplorer.DataLoaders
                             } else if (vn == 3 && vl == 2) {
                                 // v4-8
                                 int numBytes = numCommand * 4;
-                                currentChunk.data_4x8 = new byte[numBytes];
-                                for (int i = 0; i < numBytes; ++i) {
-                                    currentChunk.data_4x8[i] = fileData[offset + i];
-                                }
-                                if (numCommand != 1) {
-                                    log.LogLine("Unsupported data - only 1 line expected");
-                                    log.LogLine("v4-8 data. " + numBytes + " bytes, addr=" + addr);
-                                    for (int i = 0; i < numBytes; i += 4) {
-                                        log.LogLine("0x" + currentChunk.data_4x8[i].ToString("x2") + ", 0x" + 
-                                            currentChunk.data_4x8[i+1].ToString("x2") + ", 0x" +
-                                            currentChunk.data_4x8[i+2].ToString("x2") + ", 0x" +
-                                            currentChunk.data_4x8[i+3].ToString("x2")
-                                            );
+                                currentChunk.vertexWeights = new List<VertexWeight>();
+                                int curVertex=0;
+                                for (int i = 0; i < numCommand; ++i) {
+                                    VertexWeight vw = new VertexWeight();
+                                    vw.startVertex = curVertex;
+                                    vw.bone1 = fileData[offset++];
+                                    vw.boneWeight1 = fileData[offset++];
+                                    vw.bone2 = fileData[offset++];
+                                    if (vw.bone2 == 0xFF) {
+                                        // Single bone
+                                        vw.boneWeight2 = 0;
+                                        int count = fileData[offset++];
+                                        curVertex += count;
+                                    } else {
+                                        vw.boneWeight2 = fileData[offset++];
+                                        ++curVertex;
                                     }
+                                    vw.endVertex = curVertex - 1;
+                                    currentChunk.vertexWeights.Add(vw);
                                 }
-                                offset += numBytes;
+                                
                             } else {
                                 Debug.WriteLine("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);
                                 offset = endOffset;
