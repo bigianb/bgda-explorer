@@ -13,6 +13,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Slider Name="frameSlider" Minimum="-1" Maximum="{Binding MaximumFrame}" Value="{Binding CurrentFrame}"/>
         <Label Grid.Column="1" Content="{Binding CurrentFrame}"/>
@@ -33,5 +34,6 @@
                 </Viewport3D>
             </Viewbox>
         </Border>
+        <Label Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Content="{Binding InfoText}"/>
     </Grid>
 </UserControl>
