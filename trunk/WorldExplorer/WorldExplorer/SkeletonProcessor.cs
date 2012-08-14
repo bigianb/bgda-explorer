@@ -26,21 +26,28 @@ namespace WorldExplorer
 {
     class SkeletonProcessor
     {
-        public static Model3D GetSkeletonModel(AnimData animData)
+        public static Model3D GetSkeletonModel(AnimData animData, int frameNo)
         {
             GeometryModel3D model = new GeometryModel3D();
             MeshGeometry3D mesh = new MeshGeometry3D();
 
             Point3D[] parentPoints = new Point3D[64];
-            parentPoints[0] = new Point3D(0, 0, 0);
+            parentPoints[0] = new Point3D(0, 0, 0);            
 
             for (int jointNum = 0; jointNum < animData.skeletonDef.GetLength(0); ++jointNum)
             {
                 int parentIndex = animData.skeletonDef[jointNum];
-                var headPos = animData.jointPositions[jointNum];
+                // Rest position
+                Point3D pos = animData.jointPositions[jointNum];
 
-                parentPoints[parentIndex + 1] = headPos;
-                AddBone(mesh, parentPoints[parentIndex], headPos);
+                if (frameNo >= 0)
+                {
+                    AnimMeshPose pose = animData.perFramePoses[frameNo, jointNum];
+                    pos.Offset(pos.X, pos.Y, pos.Z);
+                    pos.Offset(pose.Position.X, pose.Position.Y, pose.Position.Z);
+                }
+                parentPoints[parentIndex + 1] = pos;
+                AddBone(mesh, parentPoints[parentIndex], pos);
             }
 
             model.Geometry = mesh;

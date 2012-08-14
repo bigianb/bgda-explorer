@@ -21,7 +21,7 @@ using System.Text;
 
 namespace WorldExplorer.DataLoaders
 {
-    class GIFTag
+    public class GIFTag
     {
     public void parse(byte[] data, int idx)
     {

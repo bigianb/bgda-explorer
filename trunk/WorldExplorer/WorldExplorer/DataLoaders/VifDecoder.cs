@@ -27,9 +27,9 @@ using WorldExplorer.Logging;
 
 namespace WorldExplorer.DataLoaders
 {
-    class VifDecoder
+    public class VifDecoder
     {
-        public static Model3D Decode(ILogger log, byte[] data, int startOffset, int length, BitmapSource texture, AnimData pose, int frame)
+        public static List<List<Chunk>> Decode(ILogger log, byte[] data, int startOffset, int length)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
@@ -55,10 +55,10 @@ namespace WorldExplorer.DataLoaders
                 }
                 ++meshNo;
             }
-            return CreateModel3D(meshes, texture, pose, frame);
+            return meshes;
         }
 
-        private static Model3D CreateModel3D(List<List<Chunk>> meshGroups, BitmapSource texture, AnimData pose, int frame)
+        public static Model3D CreateModel3D(List<List<Chunk>> meshGroups, BitmapSource texture, AnimData pose, int frame)
         {
             GeometryModel3D model = new GeometryModel3D();
             var mesh = new MeshGeometry3D();
@@ -96,9 +96,21 @@ namespace WorldExplorer.DataLoaders
                             vw = chunk.vertexWeights[vwNum];
                         }
                         var point = new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0);
-                        if (vw.bone1 != 0) {
-                            AnimMeshPose thisPose = pose.perFramePoses[frame, (vw.bone1-4)/4];
+                        if (frame >= 0 && pose != null) {
+                            int bone1No = vw.bone1/4;
+                            Point3D restPos = pose.jointPositions[bone1No];
+                            if (bone1No == 1)
+                            {
+                                bone1No += 0;   // breakpoint opportunity
+                            }
+                            AnimMeshPose thisPose = pose.perFramePoses[frame, bone1No];
+                            var jointPos = thisPose.Position;
+                            point.Offset(restPos.X, restPos.Y, restPos.Z);
                             point.Offset(thisPose.Position.X, thisPose.Position.Y, thisPose.Position.Z);
+                            // Now rotate
+                            Matrix3D m = Matrix3D.Identity;
+                            m.RotateAt(thisPose.Rotation, jointPos);
+                            point = m.Transform(point);                                                     
                         }
                         positions.Add(point);
                         ++vnum;
@@ -203,21 +215,21 @@ namespace WorldExplorer.DataLoaders
             return model;
         }
 
-        private class Vertex
+        public class Vertex
         {
             public short x;
             public short y;
             public short z;
         }
 
-        private class ByteVector
+        public class ByteVector
         {
             public byte x;
             public byte y;
             public byte z;
         }
 
-        private class VLoc
+        public class VLoc
         {
             public int v1;
             public int v2;
@@ -229,7 +241,7 @@ namespace WorldExplorer.DataLoaders
             }
         }
 
-        private class UV
+        public class UV
         {
             public UV(short u, short v)
             {
@@ -241,7 +253,7 @@ namespace WorldExplorer.DataLoaders
             public short v;
         }
 
-        private class VertexWeight
+        public class VertexWeight
         {
             public int startVertex;
             public int endVertex;
@@ -257,7 +269,7 @@ namespace WorldExplorer.DataLoaders
             }
         }
 
-        private class Chunk
+        public class Chunk
         {
             public int mscalID = 0;
             public GIFTag gifTag0 = null;

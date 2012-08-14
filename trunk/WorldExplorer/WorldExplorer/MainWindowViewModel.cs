@@ -63,43 +63,6 @@ namespace WorldExplorer
             }
         }
 
-        private Model3D _selectedNodeModel;
-
-        public Model3D SelectedNodeModel
-        {
-            get { return _selectedNodeModel; }
-            set
-            {
-                _selectedNodeModel = value;
-                this.OnPropertyChanged("SelectedNodeModel");
-            }
-        }
-
-        private Transform3D _cameraTransform;
-
-        public Transform3D CameraTransform
-        {
-            get { return _cameraTransform; }
-            set
-            {
-                _cameraTransform = value;
-                _selectedNodeCamera.Transform = _cameraTransform;
-                this.OnPropertyChanged("CameraTransform");
-            }
-        }
-
-        private Camera _selectedNodeCamera = new OrthographicCamera{Position=new Point3D(0, 10, -10), LookDirection=new Vector3D(0,-1,1)};
-
-        public Camera SelectedNodeCamera
-        {
-            get { return _selectedNodeCamera; }
-            set
-            {
-                _selectedNodeCamera = value;
-                this.OnPropertyChanged("SelectedNodeCamera");
-            }
-        }
-
         private SkeletonViewModel _skeletonViewModel = new SkeletonViewModel();
 
         public SkeletonViewModel TheSkeletonViewModel
@@ -109,6 +72,18 @@ namespace WorldExplorer
             {
                 _skeletonViewModel = value;
                 this.OnPropertyChanged("TheSkeletonViewModel");
+            }
+        }
+
+        private ModelViewModel _modelViewModel = new ModelViewModel();
+
+        public ModelViewModel TheModelViewModel
+        {
+            get { return _modelViewModel; }
+            set
+            {
+                _modelViewModel = value;
+                this.OnPropertyChanged("ModelViewModel");
             }
         }
 
@@ -138,20 +113,6 @@ namespace WorldExplorer
             }
         }
 
-        private void UpdateCamera(Model3D model, OrthographicCamera oCam)
-        {
-            var bounds = model.Bounds;
-            //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
-            Point3D centroid = new Point3D(0, 0, 0);
-            double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
-            double cameraDistance = radius * 1.5;
-
-            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
-            oCam.Position = camPos;
-            oCam.Width = cameraDistance;
-            oCam.LookDirection = new Vector3D(0, 1, -1);
-        }
-
         private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
         {
             var lmpFile = lmpEntry.LmpFileProperty;
@@ -164,9 +125,11 @@ namespace WorldExplorer
                 SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
                 var animData = LoadFirstAnim(lmpFile);
                 var log = new StringLogger();
-                SelectedNodeModel = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage, animData.Count == 0 ? null : animData.First(), 10);
+                _modelViewModel.Texture = SelectedNodeImage;
+                _modelViewModel.AnimData = null;
+                _modelViewModel.VifData = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length);
+                _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
                 LogText += log.ToString();
-                UpdateCamera(SelectedNodeModel, (OrthographicCamera)_selectedNodeCamera);
             } else if (lmpEntry.Text.EndsWith(".anm")) {
                 var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
                 _skeletonViewModel.AnimData = animData;

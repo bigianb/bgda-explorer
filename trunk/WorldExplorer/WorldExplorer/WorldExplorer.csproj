@@ -57,6 +57,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ModelViewModel.cs" />
+    <Compile Include="ModelView.xaml.cs">
+      <DependentUpon>ModelView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataLoaders\AnmDecoder.cs" />
     <Compile Include="DataLoaders\DataUtil.cs" />
     <Compile Include="DataLoaders\GIFTag.cs" />
@@ -78,6 +82,10 @@
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />
     <Compile Include="World.cs" />
     <Compile Include="WorldElement.cs" />
+    <Page Include="ModelView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

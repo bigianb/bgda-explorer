@@ -21,12 +21,12 @@ using System.Text;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
 using WorldExplorer.DataLoaders;
+using System.Windows.Media.Imaging;
 
 namespace WorldExplorer
 {
-    public class SkeletonViewModel : INotifyPropertyChanged
+    public class ModelViewModel : INotifyPropertyChanged
     {
-
         private AnimData _animData;
 
         public AnimData AnimData
@@ -42,9 +42,36 @@ namespace WorldExplorer
             }
         }
 
+        private WriteableBitmap _texture;
+
+        public WriteableBitmap Texture
+        {
+            get { return _texture; }
+            set
+            {
+                _texture = value;
+            }
+        }
+
+        private List<List<VifDecoder.Chunk>> _vifData;
+
+        public List<List<VifDecoder.Chunk>> VifData
+        {
+            get { return _vifData; }
+            set
+            {
+                _vifData = value;
+                UpdateModel();
+                this.OnPropertyChanged("VifData");
+            }
+        }
+
         private void UpdateModel()
         {
-            Model = SkeletonProcessor.GetSkeletonModel(_animData, CurrentFrame);
+            if (_vifData != null && _texture != null)
+            {
+                Model = VifDecoder.CreateModel3D(_vifData, _texture, _animData, CurrentFrame);
+            }
         }
 
         public int MaximumFrame
