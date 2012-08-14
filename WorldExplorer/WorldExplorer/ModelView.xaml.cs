@@ -32,22 +32,23 @@ using WorldExplorer.Tools3D;
 namespace WorldExplorer
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for ModelView.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ModelView : UserControl
     {
-        public MainWindow()
+        public ModelView()
         {
             InitializeComponent();
-            MainWindowViewModel model = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
-            DataContext = model;
+
+            DataContextChanged += new DependencyPropertyChangedEventHandler(ModelView_DataContextChanged);
         }
 
-        private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            MainWindowViewModel model = (MainWindowViewModel)DataContext;
-            model.SelectedNode = e.NewValue;
+            ModelViewModel model = (ModelViewModel)DataContext;
+            var trackball = new Trackball();
+            trackball.EventSource = trackballSource;
+            model.CameraTransform = trackball.Transform;
         }
-
     }
 }
