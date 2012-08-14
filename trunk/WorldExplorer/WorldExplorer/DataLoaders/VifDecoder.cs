@@ -95,7 +95,7 @@ namespace WorldExplorer.DataLoaders
                             ++vwNum;
                             vw = chunk.vertexWeights[vwNum];
                         }
-                        var point = new Point3D(vertex.x / 127.0, vertex.y / 127.0, vertex.z / 127.0);
+                        var point = new Point3D(vertex.x / 16.0, vertex.y / 16.0, vertex.z / 16.0);
                         if (frame >= 0 && pose != null) {
                             int bone1No = vw.bone1/4;
                             Point3D restPos = pose.jointPositions[bone1No];

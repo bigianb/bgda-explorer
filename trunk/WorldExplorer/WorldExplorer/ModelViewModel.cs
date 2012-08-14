@@ -92,6 +92,19 @@ namespace WorldExplorer
             }
         }
 
+        private String _infoText;
+
+        public String InfoText
+        {
+            get { return _infoText; }
+            set
+            {
+                _infoText = value;
+                this.OnPropertyChanged("InfoText");
+            }
+
+        }
+
         private Model3D _model;
 
         public Model3D Model
@@ -101,6 +114,7 @@ namespace WorldExplorer
             {
                 _model = value;
                 UpdateCamera(_model);
+                InfoText = "Model Bounds: " + _model.Bounds.ToString();
                 this.OnPropertyChanged("Model");
             }
         }
@@ -135,15 +149,15 @@ namespace WorldExplorer
             OrthographicCamera oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Bounds;
-            //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
             Point3D centroid = new Point3D(0, 0, 0);
             double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
-            double cameraDistance = radius * 2.0;
+            double cameraDistance = radius * 3.0;
 
-            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
+            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z);
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
-            oCam.LookDirection = new Vector3D(0, 1, -1);
+            oCam.LookDirection = new Vector3D(0, 1, 0);
+            oCam.UpDirection = new Vector3D(0, 0, 1);
 
         }
 
