@@ -55,15 +55,15 @@ namespace WorldExplorer.DataLoaders
                 animData.skeletonDef[i] = data[offset10Val + i];
             }
 
-            AnimMeshPose[] previousPoses = new AnimMeshPose[animData.NumBones];
+            AnimMeshPose[] curPose = new AnimMeshPose[animData.NumBones];
 
             AnimMeshPose pose = new AnimMeshPose();
-            for (int meshNum = 0; meshNum < animData.NumBones; ++meshNum)
+            for (int boneNum = 0; boneNum < animData.NumBones; ++boneNum)
             {
                 pose = new AnimMeshPose();
-                pose.BoneNum = meshNum;
+                pose.BoneNum = boneNum;
                 pose.FrameNum = 0;
-                int frameOff = offset8Val + meshNum * 0x0e;
+                int frameOff = offset8Val + boneNum * 0x0e;
 
                 pose.Position = new Point3D(
                     DataUtil.getLEShort(data, frameOff) / 64.0,
@@ -75,25 +75,45 @@ namespace WorldExplorer.DataLoaders
                 double c = DataUtil.getLEShort(data, frameOff + 0x0A) / 4096.0;
                 double d = DataUtil.getLEShort(data, frameOff + 0x0C) / 4096.0;
 
-
                 pose.Rotation = new Quaternion(b, c, d, a);
 
-                previousPoses[meshNum] = pose;
+                curPose[boneNum] = pose;
                 animData.MeshPoses.Add(pose);
-                pose = null;
             }
-            int totalFrame = 1;
+            animData.NumFrames = 1;
+
+            int totalFrame = 0;
             int otherOff = offset8Val + animData.NumBones * 0x0e;
- 
+
+            // What follows are velocities.
+            AnimMeshPose[] vels = new AnimMeshPose[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i) {
+                pose = new AnimMeshPose();
+                pose.FrameNum = 0;
+                pose.BoneNum = i;
+                pose.Position = new Point3D(0, 0, 0);
+                pose.Rotation = new Quaternion(0, 0, 0, 0);
+                vels[i] = pose;
+            }
+            AnimMeshPose[] angVels = new AnimMeshPose[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i) {
+                pose = new AnimMeshPose();
+                pose.FrameNum = 0;
+                pose.BoneNum = i;
+                pose.Position = new Point3D(0, 0, 0);
+                pose.Rotation = new Quaternion(0, 0, 0, 0);
+                angVels[i] = pose;
+            }
+            pose = null;
             while (otherOff < endIndex) {
                 int count = data[otherOff++];
                 byte byte2 = data[otherOff++];
-                int meshNum = byte2 & 0x3f;
-                if (meshNum == 0x3f) break;
+                int boneNum = byte2 & 0x3f;
+                if (boneNum == 0x3f) break;
 
                 totalFrame += count;
 
-                if (pose == null || pose.FrameNum != totalFrame || pose.BoneNum != meshNum)
+                if (pose == null || pose.FrameNum != totalFrame || pose.BoneNum != boneNum)
                 {
                     if (pose != null)
                     {
@@ -101,9 +121,9 @@ namespace WorldExplorer.DataLoaders
                     }
                     pose = new AnimMeshPose();
                     pose.FrameNum = totalFrame;
-                    pose.BoneNum = meshNum;
-                    pose.Position = previousPoses[meshNum].Position;
-                    pose.Rotation = previousPoses[meshNum].Rotation;
+                    pose.BoneNum = boneNum;
+                    pose.Position = curPose[boneNum].Position;
+                    pose.Rotation = curPose[boneNum].Rotation;
                 }
 
                 // bit 7 specifies whether to read 4 (set) or 3 elements following
@@ -122,9 +142,17 @@ namespace WorldExplorer.DataLoaders
                         d = DataUtil.getLEShort(data, otherOff+6);
                         otherOff += 8;
                     }
-//                    pose.Rotation = new Quaternion(a / 131072.0, b / 131072.0, c / 131072.0, d / 131072.0);
-                    pose.Rotation = new Quaternion(b / 131072.0, c / 131072.0, d / 131072.0, a / 131072.0);
-                    pose.Rotation.Normalize();
+                    Quaternion angVel = new Quaternion(b, c, d, a);
+
+                    AnimMeshPose prevAngVel = angVels[boneNum];
+                    double coeff = (totalFrame - prevAngVel.FrameNum) / 131072.0;
+                    Quaternion angDelta = new Quaternion(prevAngVel.Rotation.X * coeff, prevAngVel.Rotation.Y * coeff, prevAngVel.Rotation.Z * coeff, prevAngVel.Rotation.W * coeff);
+                    pose.Rotation = new Quaternion(pose.Rotation.X + angDelta.X, pose.Rotation.Y + angDelta.Y, pose.Rotation.Z + angDelta.Z, pose.Rotation.W + angDelta.W);
+                    curPose[boneNum].Rotation = pose.Rotation;
+                    pose.FrameNum = totalFrame; 
+                    
+                    prevAngVel.Rotation = angVel;
+                    prevAngVel.FrameNum = totalFrame;
                 }
                 else
                 {
@@ -139,7 +167,16 @@ namespace WorldExplorer.DataLoaders
                         z = DataUtil.getLEShort(data, otherOff + 4);
                         otherOff += 6;
                     }
-                    pose.Position = new Point3D(x / 512.0, y / 512.0, z / 512.0);
+                    Point3D vel = new Point3D(x, y, z);
+                    AnimMeshPose prevVel = vels[boneNum];
+                    double coeff = (totalFrame - prevVel.FrameNum) / 512.0;
+                    Point3D posDelta = new Point3D(prevVel.Position.X * coeff, prevVel.Position.Y * coeff, prevVel.Position.Z * coeff);
+                    pose.Position = new Point3D(pose.Position.X + posDelta.X, pose.Position.Y + posDelta.Y, pose.Position.Z + posDelta.Z);
+                    curPose[boneNum].Rotation = pose.Rotation;
+                    pose.FrameNum = totalFrame;
+
+                    prevVel.Position = vel;
+                    prevVel.FrameNum = totalFrame;
                 }
             }
             animData.MeshPoses.Add(pose);
