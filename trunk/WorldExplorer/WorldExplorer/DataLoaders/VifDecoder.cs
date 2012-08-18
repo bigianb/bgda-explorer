@@ -99,7 +99,7 @@ namespace WorldExplorer.DataLoaders
                         if (frame >= 0 && pose != null) {
                             int bone1No = vw.bone1;
                             Point3D restPos1 = pose.jointPositions[bone1No];
-                            AnimMeshPose bone1Pose = pose.perFramePoses[frame, bone1No];
+                            AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
                             if (vw.bone2 == 0xFF) {
                                 var joint1Pos = bone1Pose.Position;
                                 var jointPosDelta = restPos1;
@@ -114,7 +114,7 @@ namespace WorldExplorer.DataLoaders
                                 // multi-bone
                                 int bone2No = vw.bone2;
                                 Point3D restPos2 = pose.jointPositions[bone2No];
-                                AnimMeshPose bone2Pose = pose.perFramePoses[frame, bone2No];
+                                AnimMeshPose bone2Pose = pose.perFrameFKPoses[frame, bone2No];
                                 double totalWeight = vw.boneWeight1 + vw.boneWeight2;
                                 double bone1Coeff = vw.boneWeight1 / totalWeight;
                                 double bone2Coeff = vw.boneWeight2 / totalWeight;
