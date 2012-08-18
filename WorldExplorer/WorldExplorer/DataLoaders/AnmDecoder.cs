@@ -182,6 +182,7 @@ namespace WorldExplorer.DataLoaders
             animData.MeshPoses.Add(pose);
             animData.NumFrames = totalFrame+1;
             animData.BuildPerFramePoses();
+            animData.BuildPerFrameFKPoses();
             return animData;
         }
     }
@@ -222,6 +223,43 @@ namespace WorldExplorer.DataLoaders
 
         public AnimMeshPose[,] perFramePoses;
 
+        // With forward kinematics applied
+        public AnimMeshPose[,] perFrameFKPoses;
+
+        public void BuildPerFrameFKPoses()
+        {
+            perFrameFKPoses = new AnimMeshPose[NumFrames, NumBones];
+            Point3D[] parentPoints = new Point3D[64];
+            Quaternion[] parentRotations = new Quaternion[64];
+            parentPoints[0] = new Point3D(0, 0, 0);
+            parentRotations[0] = new Quaternion(0, 0, 0, 1);
+            for (int frame = 0; frame < NumFrames; ++frame) {
+                for (int jointNum = 0; jointNum < skeletonDef.GetLength(0); ++jointNum) {
+                    int parentIndex = skeletonDef[jointNum];
+                    Point3D parentPos = parentPoints[parentIndex];
+                    Quaternion parentRot = parentRotations[parentIndex];
+                    // Rest position
+                    Point3D restPos = jointPositions[jointNum];
+
+                    AnimMeshPose pose = perFramePoses[frame, jointNum];
+                    Point3D thisPos = pose.Position;
+                    thisPos.Offset(parentPos.X, parentPos.Y, parentPos.Z);
+
+                    Quaternion thisRot = Quaternion.Multiply(parentRot, pose.Rotation);
+                    thisRot.Normalize();
+                    
+                    AnimMeshPose fkPose = new AnimMeshPose();
+                    fkPose.Position = thisPos;
+                    fkPose.Rotation = thisRot;
+                    perFrameFKPoses[frame, jointNum] = fkPose;
+
+                    parentPoints[parentIndex + 1] = fkPose.Position;
+                    parentPoints[parentIndex + 1].Offset(restPos.X, restPos.Y, restPos.Z);        // delta pos
+                    parentRotations[parentIndex + 1] = fkPose.Rotation;
+                }
+            }
+        }
+
         public void BuildPerFramePoses()
         {
             perFramePoses = new AnimMeshPose[NumFrames, NumBones];
@@ -245,6 +283,7 @@ namespace WorldExplorer.DataLoaders
                         pose.FrameNum = frame;
                         pose.Position = prevPose.Position;
                         pose.Rotation = prevPose.Rotation;
+                        pose.Rotation.Normalize();
                         perFramePoses[frame, bone] = pose;
                     }
                     prevPose = perFramePoses[frame, bone];
