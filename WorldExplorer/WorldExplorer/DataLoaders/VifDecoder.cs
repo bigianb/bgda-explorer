@@ -97,20 +97,53 @@ namespace WorldExplorer.DataLoaders
                         }
                         var point = new Point3D(vertex.x / 16.0, vertex.y / 16.0, vertex.z / 16.0);
                         if (frame >= 0 && pose != null) {
-                            int bone1No = vw.bone1/4;
-                            Point3D restPos = pose.jointPositions[bone1No];
-                            if (bone1No == 1)
-                            {
-                                bone1No += 0;   // breakpoint opportunity
+                            int bone1No = vw.bone1;
+                            Point3D restPos1 = pose.jointPositions[bone1No];
+                            AnimMeshPose bone1Pose = pose.perFramePoses[frame, bone1No];
+                            if (vw.bone2 == 0xFF) {
+                                var joint1Pos = bone1Pose.Position;
+                                var jointPosDelta = restPos1;
+                                jointPosDelta.Offset(joint1Pos.X, joint1Pos.Y, joint1Pos.Z);
+                                point.Offset(jointPosDelta.X, jointPosDelta.Y, jointPosDelta.Z);
+
+                                // Now rotate
+                                Matrix3D m = Matrix3D.Identity;
+                                m.RotateAt(bone1Pose.Rotation, bone1Pose.Position);
+                                point = m.Transform(point);
+                            } else {
+                                // multi-bone
+                                int bone2No = vw.bone2;
+                                Point3D restPos2 = pose.jointPositions[bone2No];
+                                AnimMeshPose bone2Pose = pose.perFramePoses[frame, bone2No];
+                                double totalWeight = vw.boneWeight1 + vw.boneWeight2;
+                                double bone1Coeff = vw.boneWeight1 / totalWeight;
+                                double bone2Coeff = vw.boneWeight2 / totalWeight;
+
+                                Point3D point1 = point;
+                                Point3D point2 = point;
+
+                                var joint1Pos = bone1Pose.Position;
+                                point1.Offset(restPos1.X, restPos1.Y, restPos1.Z);
+                                point1.Offset(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z);
+                                // Now rotate
+                                Matrix3D m = Matrix3D.Identity;
+                                m.RotateAt(bone1Pose.Rotation, joint1Pos);
+                                point1 = m.Transform(point1);
+
+                                var joint2Pos = bone2Pose.Position;
+                                point2.Offset(restPos2.X, restPos2.Y, restPos2.Z);
+                                point2.Offset(bone2Pose.Position.X, bone2Pose.Position.Y, bone2Pose.Position.Z);
+                                // Now rotate
+                                Matrix3D m2 = Matrix3D.Identity;
+                                m2.RotateAt(bone2Pose.Rotation, joint2Pos);
+                                point2 = m.Transform(point2);
+
+                                Point3D point1delta = new Point3D((point1.X - point.X) * bone1Coeff, (point1.Y - point.Y) * bone1Coeff, (point1.Z - point.Z) * bone1Coeff);
+                                Point3D point2delta = new Point3D((point2.X - point.X) * bone2Coeff, (point2.Y - point.Y) * bone2Coeff, (point2.Z - point.Z) * bone2Coeff);
+
+                                point.Offset(point1delta.X, point1delta.Y, point1delta.Z);
+                                point.Offset(point2delta.X, point2delta.Y, point2delta.Z);
                             }
-                            AnimMeshPose thisPose = pose.perFramePoses[frame, bone1No];
-                            var jointPos = thisPose.Position;
-                            point.Offset(restPos.X, restPos.Y, restPos.Z);
-                            point.Offset(thisPose.Position.X, thisPose.Position.Y, thisPose.Position.Z);
-                            // Now rotate
-                            Matrix3D m = Matrix3D.Identity;
-                            m.RotateAt(thisPose.Rotation, jointPos);
-                            point = m.Transform(point);                                                     
                         }
                         positions.Add(point);
                         ++vnum;
@@ -458,15 +491,16 @@ namespace WorldExplorer.DataLoaders
                                 for (int i = 0; i < numCommand; ++i) {
                                     VertexWeight vw = new VertexWeight();
                                     vw.startVertex = curVertex;
-                                    vw.bone1 = fileData[offset++];
+                                    vw.bone1 = fileData[offset++] / 4;
                                     vw.boneWeight1 = fileData[offset++];
                                     vw.bone2 = fileData[offset++];
                                     if (vw.bone2 == 0xFF) {
-                                        // Single bone
+                                        // Single bone                                       
                                         vw.boneWeight2 = 0;
                                         int count = fileData[offset++];
                                         curVertex += count;
                                     } else {
+                                        vw.bone2 /= 4;
                                         vw.boneWeight2 = fileData[offset++];
                                         ++curVertex;
                                     }
