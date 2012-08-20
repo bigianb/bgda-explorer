@@ -28,6 +28,10 @@ namespace WorldExplorer
     {
         public static Model3D GetSkeletonModel(AnimData animData, int frameNo)
         {
+            if (null == animData) {
+                return null;
+            }
+
             GeometryModel3D model = new GeometryModel3D();
             MeshGeometry3D mesh = new MeshGeometry3D();
 
@@ -42,9 +46,10 @@ namespace WorldExplorer
 
                 if (frameNo >= 0)
                 {
-                    AnimMeshPose pose = animData.perFramePoses[frameNo, jointNum];
+                    AnimMeshPose pose = animData.perFrameFKPoses[frameNo, jointNum];
                     pos.Offset(pos.X, pos.Y, pos.Z);
                     pos.Offset(pose.Position.X, pose.Position.Y, pose.Position.Z);
+                    pos = pose.Position;
                 }
                 parentPoints[parentIndex + 1] = pos;
                 AddBone(mesh, parentPoints[parentIndex], pos);
