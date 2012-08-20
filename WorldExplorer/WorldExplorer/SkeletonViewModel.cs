@@ -105,6 +105,9 @@ namespace WorldExplorer
 
         private void UpdateCamera(Model3D model)
         {
+            if (model == null) {
+                return;
+            }
             OrthographicCamera oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Bounds;

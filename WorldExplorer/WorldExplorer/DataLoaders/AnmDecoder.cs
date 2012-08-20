@@ -92,7 +92,7 @@ namespace WorldExplorer.DataLoaders
                 pose.FrameNum = 0;
                 pose.BoneNum = i;
                 pose.Position = new Point3D(0, 0, 0);
-                pose.Rotation = new Quaternion(0, 0, 0, 0);
+                pose.Rotation = new Quaternion(0, 0, 0, 1);
                 vels[i] = pose;
             }
             AnimMeshPose[] angVels = new AnimMeshPose[animData.NumBones];
@@ -101,7 +101,7 @@ namespace WorldExplorer.DataLoaders
                 pose.FrameNum = 0;
                 pose.BoneNum = i;
                 pose.Position = new Point3D(0, 0, 0);
-                pose.Rotation = new Quaternion(0, 0, 0, 0);
+                pose.Rotation = new Quaternion(0, 0, 0, 1);
                 angVels[i] = pose;
             }
             pose = null;
@@ -254,7 +254,6 @@ namespace WorldExplorer.DataLoaders
                     perFrameFKPoses[frame, jointNum] = fkPose;
 
                     parentPoints[parentIndex + 1] = fkPose.Position;
-                    parentPoints[parentIndex + 1].Offset(restPos.X, restPos.Y, restPos.Z);        // delta pos
                     parentRotations[parentIndex + 1] = fkPose.Rotation;
                 }
             }

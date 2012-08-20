@@ -100,11 +100,11 @@ namespace WorldExplorer.DataLoaders
                             int bone1No = vw.bone1;
                             Point3D restPos1 = pose.jointPositions[bone1No];
                             AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
+                            var joint1Pos = bone1Pose.Position;
+                            var joint1PosDelta = restPos1;
+                            joint1PosDelta.Offset(joint1Pos.X, joint1Pos.Y, joint1Pos.Z);
                             if (vw.bone2 == 0xFF) {
-                                var joint1Pos = bone1Pose.Position;
-                                var jointPosDelta = restPos1;
-                                jointPosDelta.Offset(joint1Pos.X, joint1Pos.Y, joint1Pos.Z);
-                                point.Offset(jointPosDelta.X, jointPosDelta.Y, jointPosDelta.Z);
+                                point.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
 
                                 // Now rotate
                                 Matrix3D m = Matrix3D.Identity;
@@ -122,20 +122,19 @@ namespace WorldExplorer.DataLoaders
                                 Point3D point1 = point;
                                 Point3D point2 = point;
 
-                                var joint1Pos = bone1Pose.Position;
-                                point1.Offset(restPos1.X, restPos1.Y, restPos1.Z);
-                                point1.Offset(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z);
+                                point1.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
                                 // Now rotate
                                 Matrix3D m = Matrix3D.Identity;
-                                m.RotateAt(bone1Pose.Rotation, joint1Pos);
+                                m.RotateAt(bone1Pose.Rotation, bone1Pose.Position);
                                 point1 = m.Transform(point1);
 
                                 var joint2Pos = bone2Pose.Position;
-                                point2.Offset(restPos2.X, restPos2.Y, restPos2.Z);
-                                point2.Offset(bone2Pose.Position.X, bone2Pose.Position.Y, bone2Pose.Position.Z);
+                                var joint2PosDelta = restPos2;
+                                joint2PosDelta.Offset(joint2Pos.X, joint2Pos.Y, joint2Pos.Z);
+                                point2.Offset(joint2PosDelta.X, joint2PosDelta.Y, joint2PosDelta.Z);
                                 // Now rotate
                                 Matrix3D m2 = Matrix3D.Identity;
-                                m2.RotateAt(bone2Pose.Rotation, joint2Pos);
+                                m2.RotateAt(bone2Pose.Rotation, bone2Pose.Position);
                                 point2 = m.Transform(point2);
 
                                 Point3D point1delta = new Point3D((point1.X - point.X) * bone1Coeff, (point1.Y - point.Y) * bone1Coeff, (point1.Z - point.Z) * bone1Coeff);
