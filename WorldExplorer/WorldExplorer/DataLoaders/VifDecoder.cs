@@ -94,6 +94,9 @@ namespace WorldExplorer.DataLoaders
                         if (vw.endVertex < vnum) {
                             ++vwNum;
                             vw = chunk.vertexWeights[vwNum];
+                            if (vnum < vw.startVertex || vnum > vw.endVertex) {
+                                Debug.Fail("Vertex out of range of bone weights");
+                            }
                         }
                         var point = new Point3D(vertex.x / 16.0, vertex.y / 16.0, vertex.z / 16.0);
                         if (frame >= 0 && pose != null) {
@@ -104,20 +107,24 @@ namespace WorldExplorer.DataLoaders
                             var joint1PosDelta = restPos1;
                             joint1PosDelta.Offset(joint1Pos.X, joint1Pos.Y, joint1Pos.Z);
                             if (vw.bone2 == 0xFF) {
-                                point.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
+                                double bone1Coeff = vw.boneWeight1 / 255.0;
+                                Point3D point1 = point;
+                                point1.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
 
                                 // Now rotate
                                 Matrix3D m = Matrix3D.Identity;
                                 m.RotateAt(bone1Pose.Rotation, bone1Pose.Position);
-                                point = m.Transform(point);
+                                point1 = m.Transform(point1);
+
+                                Point3D point1delta = new Point3D((point1.X - point.X) * bone1Coeff, (point1.Y - point.Y) * bone1Coeff, (point1.Z - point.Z) * bone1Coeff);
+                                point.Offset(point1delta.X, point1delta.Y, point1delta.Z);
                             } else {
                                 // multi-bone
                                 int bone2No = vw.bone2;
                                 Point3D restPos2 = pose.jointPositions[bone2No];
                                 AnimMeshPose bone2Pose = pose.perFrameFKPoses[frame, bone2No];
-                                double totalWeight = vw.boneWeight1 + vw.boneWeight2;
-                                double bone1Coeff = vw.boneWeight1 / totalWeight;
-                                double bone2Coeff = vw.boneWeight2 / totalWeight;
+                                double bone1Coeff = vw.boneWeight1 / 255.0;
+                                double bone2Coeff = vw.boneWeight2 / 255.0;
 
                                 Point3D point1 = point;
                                 Point3D point2 = point;
