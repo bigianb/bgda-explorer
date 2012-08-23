@@ -235,16 +235,21 @@ namespace WorldExplorer.DataLoaders
             parentRotations[0] = new Quaternion(0, 0, 0, 1);
             for (int frame = 0; frame < NumFrames; ++frame) {
                 for (int jointNum = 0; jointNum < skeletonDef.GetLength(0); ++jointNum) {
+
                     int parentIndex = skeletonDef[jointNum];
                     Point3D parentPos = parentPoints[parentIndex];
                     Quaternion parentRot = parentRotations[parentIndex];
-                    // Rest position
-                    Point3D restPos = jointPositions[jointNum];
 
+                    // The world position of the child joint is the local position of the child joint rotated by the
+                    // world rotation of the parent and then offset by the world position of the parent.
                     AnimMeshPose pose = perFramePoses[frame, jointNum];
-                    Point3D thisPos = pose.Position;
+
+                    Matrix3D m = Matrix3D.Identity;
+                    m.Rotate(parentRot);
+                    var thisPos = m.Transform(pose.Position);
                     thisPos.Offset(parentPos.X, parentPos.Y, parentPos.Z);
 
+                    // The world rotation of the child joint is the world rotation of the parent rotated by the local rotation of the child.
                     Quaternion thisRot = Quaternion.Multiply(parentRot, pose.Rotation);
                     thisRot.Normalize();
                     
