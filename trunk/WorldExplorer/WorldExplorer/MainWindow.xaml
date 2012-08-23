@@ -4,60 +4,72 @@
         xmlns:local="clr-namespace:WorldExplorer"
         Title="MainWindow" Height="350" Width="525" DataContext="{Binding}">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0" DataContext="{Binding}" ItemsSource="{Binding Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
-            <TreeView.ItemContainerStyle>
-                <!-- 
-                    This Style binds a TreeViewItem to a TreeViewItemViewModel. 
-                 -->
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
-                    <Setter Property="FontWeight" Value="Normal" />
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="FontWeight" Value="Bold" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </TreeView.ItemContainerStyle>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <TreeView.Resources>
-                <HierarchicalDataTemplate DataType="{x:Type local:WorldTreeViewModel}" ItemsSource="{Binding Children}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding WorldName}" />
-                    </StackPanel>
-                </HierarchicalDataTemplate>
-                <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Text}" />
-                    </StackPanel>
-                </HierarchicalDataTemplate>
-            </TreeView.Resources>
-        </TreeView>
-        <GridSplitter HorizontalAlignment="Right" 
+        <Menu IsMainMenu="True">
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Settings" Command="Properties" />
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0" DataContext="{Binding}" ItemsSource="{Binding Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+                <TreeView.ItemContainerStyle>
+                    <!-- 
+                        This Style binds a TreeViewItem to a TreeViewItemViewModel. 
+                     -->
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                        <Setter Property="FontWeight" Value="Normal" />
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type local:WorldTreeViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding WorldName}" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Text}" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+            <GridSplitter HorizontalAlignment="Right" 
                   VerticalAlignment="Stretch" 
                   Grid.Column="1" ResizeBehavior="PreviousAndNext"
                   Width="5" Background="#FFBCBCBC"/>
-        <TabControl Grid.Column="2">
-            <TabItem Header="Texture">
-                <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
-            </TabItem>
-            <TabItem Header="3D View">
-                <local:ModelView DataContext="{Binding TheModelViewModel}"/>
-            </TabItem>          
-            <TabItem Header="Skeleton">
-                <local:SkeletonView DataContext="{Binding TheSkeletonViewModel}"/>
-            </TabItem>
-            <TabItem Header="Log">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" />
-                </ScrollViewer>
-            </TabItem>
-        </TabControl>
+            <TabControl Grid.Column="2">
+                <TabItem Header="Texture">
+                    <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
+                </TabItem>
+                <TabItem Header="3D View">
+                    <local:ModelView DataContext="{Binding TheModelViewModel}"/>
+                </TabItem>
+                <TabItem Header="Skeleton">
+                    <local:SkeletonView DataContext="{Binding TheSkeletonViewModel}"/>
+                </TabItem>
+                <TabItem Header="Log">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" />
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Grid>
     </Grid>
 </Window>

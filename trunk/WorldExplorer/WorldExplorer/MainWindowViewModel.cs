@@ -41,7 +41,14 @@ namespace WorldExplorer
                 PixelFormats.Bgr32,
                 null);
 
-            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new []{new WorldTreeViewModel(new World(dataPath, "Cellar1"))});
+            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new[] { new WorldTreeViewModel(new World(dataPath, Properties.Settings.Default.GobFile)) });
+        }
+
+        public void SettingsChanged()
+        {
+            String dataPath = Properties.Settings.Default.DataPath;
+            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new[] { new WorldTreeViewModel(new World(dataPath, Properties.Settings.Default.GobFile)) });
+            this.OnPropertyChanged("Children");
         }
 
         private ReadOnlyCollection<WorldTreeViewModel> _worlds;

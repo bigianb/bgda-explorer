@@ -39,8 +39,31 @@ namespace WorldExplorer
         public MainWindow()
         {
             InitializeComponent();
-            MainWindowViewModel model = new MainWindowViewModel(@"C:\emu\bgda\BG\DATA");
+            MainWindowViewModel model = new MainWindowViewModel(Properties.Settings.Default.DataPath);
             DataContext = model;
+
+            CommandBinding binding = new CommandBinding(ApplicationCommands.Properties);
+            binding.Executed += Properties_Executed;
+            binding.CanExecute += Properties_CanExecute;
+            this.CommandBindings.Add(binding);
+        }
+
+        private void Properties_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            SettingsWindow window = new SettingsWindow();
+            bool? result = window.ShowDialog();
+            if (result.GetValueOrDefault(false))
+            {
+                // User pressed save, so we should re-init things.
+                MainWindowViewModel model = (MainWindowViewModel)DataContext;
+                model.SettingsChanged();
+            }
+
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
