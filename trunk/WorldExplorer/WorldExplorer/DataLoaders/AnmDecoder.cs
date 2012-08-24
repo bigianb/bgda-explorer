@@ -36,14 +36,14 @@ namespace WorldExplorer.DataLoaders
             animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
             int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
 
-            int offset0CVal = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
-            animData.jointPositions = new Point3D[animData.NumBones];
+            int bindingPoseOffset = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
+            animData.bindingPose = new Point3D[animData.NumBones];
             for (int i = 0; i < animData.NumBones; ++i)
             {
-                animData.jointPositions[i] = new Point3D(
-                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 0) / 64.0,
-                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 2) / 64.0,
-                    DataUtil.getLEShort(data, offset0CVal + i * 8 + 4) / 64.0
+                animData.bindingPose[i] = new Point3D(
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
                 );
             }
 
@@ -215,7 +215,7 @@ namespace WorldExplorer.DataLoaders
 
         public int[] skeletonDef;
 
-        public Point3D[] jointPositions;
+        public Point3D[] bindingPose;
 
         public string Other;
 
@@ -318,7 +318,7 @@ namespace WorldExplorer.DataLoaders
             for (int b = 0; b < NumBones; ++b)
             {
                 sb.Append("Joint: ").Append(b).Append(" ... ");
-                sb.Append(jointPositions[b].ToString()).Append("\n");
+                sb.Append(bindingPose[b].ToString()).Append("\n");
             }
 
             foreach (var pose in MeshPoses)
