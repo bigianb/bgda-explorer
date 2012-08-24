@@ -22,6 +22,7 @@ using System.Windows.Media.Media3D;
 using System.ComponentModel;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -53,9 +54,9 @@ namespace WorldExplorer
             }
         }
 
-        private List<List<VifDecoder.Chunk>> _vifData;
+        private List<Mesh> _vifData;
 
-        public List<List<VifDecoder.Chunk>> VifData
+        public List<Mesh> VifData
         {
             get { return _vifData; }
             set

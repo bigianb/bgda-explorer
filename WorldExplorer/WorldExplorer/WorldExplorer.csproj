@@ -57,6 +57,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataModel\Mesh.cs" />
+    <Compile Include="DataModel\VertexWeight.cs" />
     <Compile Include="ModelViewModel.cs" />
     <Compile Include="ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
