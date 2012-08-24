@@ -41,14 +41,12 @@ namespace WorldExplorer
             for (int jointNum = 0; jointNum < animData.skeletonDef.GetLength(0); ++jointNum)
             {
                 int parentIndex = animData.skeletonDef[jointNum];
-                // Rest position
-                Point3D pos = animData.jointPositions[jointNum];
+                // Binding position
+                Point3D pos = animData.bindingPose[jointNum];
 
                 if (frameNo >= 0)
                 {
                     AnimMeshPose pose = animData.perFrameFKPoses[frameNo, jointNum];
-                    pos.Offset(pos.X, pos.Y, pos.Z);
-                    pos.Offset(pose.Position.X, pose.Position.Y, pose.Position.Z);
                     pos = pose.Position;
                 }
                 parentPoints[parentIndex + 1] = pos;

@@ -101,54 +101,42 @@ namespace WorldExplorer.DataLoaders
                         var point = new Point3D(vertex.x / 16.0, vertex.y / 16.0, vertex.z / 16.0);
                         if (frame >= 0 && pose != null) {
                             int bone1No = vw.bone1;
-                            Point3D restPos1 = pose.jointPositions[bone1No];
+                            Point3D bindingPos1 = pose.bindingPose[bone1No];
                             AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
                             var joint1Pos = bone1Pose.Position;
-                            var joint1PosDelta = restPos1;
-                            joint1PosDelta.Offset(joint1Pos.X, joint1Pos.Y, joint1Pos.Z);
                             if (vw.bone2 == 0xFF) {
-                                double bone1Coeff = vw.boneWeight1 / 255.0;
-                                Point3D point1 = point;
-                                point1.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
-
-                                // Now rotate
+                                if (bone1No == 1)
+                                {
+                                    bone1No = 1;
+                                }
                                 Matrix3D m = Matrix3D.Identity;
-                                m.RotateAt(bone1Pose.Rotation, bone1Pose.Position);
-                                point1 = m.Transform(point1);
-
-                                Point3D point1delta = new Point3D((point1.X - point.X) * bone1Coeff, (point1.Y - point.Y) * bone1Coeff, (point1.Z - point.Z) * bone1Coeff);
-                                point.Offset(point1delta.X, point1delta.Y, point1delta.Z);
+                                m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
+                                m.Rotate(bone1Pose.Rotation);
+                                m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
+                                point = m.Transform(point);
                             } else {
                                 // multi-bone
                                 int bone2No = vw.bone2;
-                                Point3D restPos2 = pose.jointPositions[bone2No];
+                                Point3D bindingPos2 = pose.bindingPose[bone2No];
                                 AnimMeshPose bone2Pose = pose.perFrameFKPoses[frame, bone2No];
-                                double bone1Coeff = vw.boneWeight1 / 255.0;
-                                double bone2Coeff = vw.boneWeight2 / 255.0;
+                                double boneSum = vw.boneWeight1 + vw.boneWeight2;
+                                double bone1Coeff = vw.boneWeight1 / boneSum;
+                                double bone2Coeff = vw.boneWeight2 / boneSum;
 
-                                Point3D point1 = point;
-                                Point3D point2 = point;
-
-                                point1.Offset(joint1PosDelta.X, joint1PosDelta.Y, joint1PosDelta.Z);
-                                // Now rotate
                                 Matrix3D m = Matrix3D.Identity;
-                                m.RotateAt(bone1Pose.Rotation, bone1Pose.Position);
-                                point1 = m.Transform(point1);
+                                m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
+                                m.Rotate(bone1Pose.Rotation);
+                                m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
+                                var point1 = m.Transform(point);
 
-                                var joint2Pos = bone2Pose.Position;
-                                var joint2PosDelta = restPos2;
-                                joint2PosDelta.Offset(joint2Pos.X, joint2Pos.Y, joint2Pos.Z);
-                                point2.Offset(joint2PosDelta.X, joint2PosDelta.Y, joint2PosDelta.Z);
-                                // Now rotate
+                                 // Now rotate
                                 Matrix3D m2 = Matrix3D.Identity;
-                                m2.RotateAt(bone2Pose.Rotation, bone2Pose.Position);
-                                point2 = m.Transform(point2);
+                                m2.Translate(new Vector3D(-bindingPos2.X, -bindingPos2.Y, -bindingPos2.Z));   // Inverse binding matrix
+                                m2.Rotate(bone2Pose.Rotation);
+                                m2.Translate(new Vector3D(bone2Pose.Position.X, bone2Pose.Position.Y, bone2Pose.Position.Z));
+                                var point2 = m2.Transform(point);
 
-                                Point3D point1delta = new Point3D((point1.X - point.X) * bone1Coeff, (point1.Y - point.Y) * bone1Coeff, (point1.Z - point.Z) * bone1Coeff);
-                                Point3D point2delta = new Point3D((point2.X - point.X) * bone2Coeff, (point2.Y - point.Y) * bone2Coeff, (point2.Z - point.Z) * bone2Coeff);
-
-                                point.Offset(point1delta.X, point1delta.Y, point1delta.Z);
-                                point.Offset(point2delta.X, point2delta.Y, point2delta.Z);
+                                point = new Point3D(point1.X * bone1Coeff + point2.X * bone2Coeff, point1.Y * bone1Coeff + point2.Y * bone2Coeff, point1.Z * bone1Coeff + point2.Z * bone2Coeff);
                             }
                         }
                         positions.Add(point);
@@ -298,13 +286,19 @@ namespace WorldExplorer.DataLoaders
             public int endVertex;
             public int bone1;
             public int bone2;
+            public int bone3;
+            public int bone4;
             public int boneWeight1;
             public int boneWeight2;
+            public int boneWeight3;
+            public int boneWeight4;
 
             public override String ToString()
             {
                 return "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1 +
-                    "; bone2=" + bone2 + ", weight=" + boneWeight2;
+                    "; bone2=" + bone2 + ", weight=" + boneWeight2 +
+                    "; bone3=" + bone3 + ", weight=" + boneWeight3 +
+                    "; bone4=" + bone4 + ", weight=" + boneWeight4;
             }
         }
 
@@ -509,6 +503,21 @@ namespace WorldExplorer.DataLoaders
                                         vw.bone2 /= 4;
                                         vw.boneWeight2 = fileData[offset++];
                                         ++curVertex;
+
+                                        if (vw.boneWeight1 + vw.boneWeight2 < 255)
+                                        {
+                                            ++i;
+                                            vw.bone3 = fileData[offset++] / 4;
+                                            vw.boneWeight3 = fileData[offset++];
+                                            vw.bone4 = fileData[offset++];
+                                            int bw4 = fileData[offset++];
+                                            if (vw.bone4 != 255)
+                                            {
+                                                vw.bone4 /= 4;
+                                                vw.boneWeight4 = bw4;
+                                            }
+                                        }
+
                                     }
                                     vw.endVertex = curVertex - 1;
                                     currentChunk.vertexWeights.Add(vw);
