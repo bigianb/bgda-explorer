@@ -7,7 +7,7 @@ namespace WorldExplorer.DataModel
 {
     class Model
     {
-        // collection of bone meshes
+        // collection of meshes
 
     }
 }

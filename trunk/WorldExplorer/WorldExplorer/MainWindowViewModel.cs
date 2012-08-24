@@ -134,7 +134,7 @@ namespace WorldExplorer
                 var log = new StringLogger();
                 _modelViewModel.Texture = SelectedNodeImage;
                 _modelViewModel.AnimData = null;
-                _modelViewModel.VifData = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length);
+                _modelViewModel.VifData = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
                 _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
                 LogText += log.ToString();
             } else if (lmpEntry.Text.EndsWith(".anm")) {
