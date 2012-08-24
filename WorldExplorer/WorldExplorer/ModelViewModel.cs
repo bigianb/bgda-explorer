@@ -36,7 +36,7 @@ namespace WorldExplorer
             {
                 _animData = value;
                 CurrentFrame = 0;
-                UpdateModel();
+                UpdateModel(false);
                 this.OnPropertyChanged("AnimData");
                 this.OnPropertyChanged("MaximumFrame");
             }
@@ -61,16 +61,20 @@ namespace WorldExplorer
             set
             {
                 _vifData = value;
-                UpdateModel();
+                UpdateModel(true);
                 this.OnPropertyChanged("VifData");
             }
         }
 
-        private void UpdateModel()
+        private void UpdateModel(Boolean updateCamera)
         {
             if (_vifData != null && _texture != null)
             {
                 Model = VifDecoder.CreateModel3D(_vifData, _texture, _animData, CurrentFrame);
+                if (updateCamera)
+                {
+                    UpdateCamera(_model);
+                }
             }
         }
 
@@ -87,7 +91,7 @@ namespace WorldExplorer
             get { return _currentFrame; }
             set {
                 _currentFrame = value;
-                UpdateModel();
+                UpdateModel(false);
                 this.OnPropertyChanged("CurrentFrame");
             }
         }
@@ -113,7 +117,6 @@ namespace WorldExplorer
             set
             {
                 _model = value;
-                UpdateCamera(_model);
                 InfoText = "Model Bounds: " + _model.Bounds.ToString();
                 this.OnPropertyChanged("Model");
             }
@@ -158,7 +161,6 @@ namespace WorldExplorer
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, 0);
             oCam.UpDirection = new Vector3D(0, 0, 1);
-
         }
 
 
