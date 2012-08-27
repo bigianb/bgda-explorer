@@ -142,6 +142,11 @@ namespace WorldExplorer
                 _skeletonViewModel.AnimData = animData;
                 LogText = animData.ToString();
             }
+            else if (lmpEntry.Text.EndsWith(".world"))
+            {
+                var worldData = WorldFileDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                LogText = worldData.ToString();
+            }
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
