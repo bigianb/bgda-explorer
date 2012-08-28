@@ -31,14 +31,17 @@ namespace WorldExplorer
 
         public String DataPath;
         public String Name;
-        public List<WorldElement> elements;
 
         public GobFile WorldGob = null;
+        public WorldTexFile WorldTex = null;
 
         public void Load()
         {
             string gobFilename = DataPath + "\\" + Name + ".gob";
             WorldGob = new GobFile(gobFilename);
+
+            string texFilename = DataPath + "\\" + Name + ".tex";
+            WorldTex = new WorldTexFile(texFilename);
         }
     }
 }

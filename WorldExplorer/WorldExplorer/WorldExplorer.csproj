@@ -58,6 +58,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="DataLoaders\WorldFileDecoder.cs" />
+    <Compile Include="DataLoaders\WorldTexFile.cs" />
     <Compile Include="DataModel\WorldData.cs" />
     <Compile Include="DataModel\Mesh.cs" />
     <Compile Include="DataModel\VertexWeight.cs" />
@@ -88,7 +89,6 @@
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="World.cs" />
-    <Compile Include="WorldElement.cs" />
     <Page Include="ModelView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

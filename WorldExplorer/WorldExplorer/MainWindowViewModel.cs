@@ -144,8 +144,11 @@ namespace WorldExplorer
             }
             else if (lmpEntry.Text.EndsWith(".world"))
             {
-                var worldData = WorldFileDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
-                LogText = worldData.ToString();
+                WorldFileDecoder decoder = new WorldFileDecoder();
+                var log = new StringLogger();
+                var worldData = decoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length);
+                LogText = log.ToString();
+                LogText += worldData.ToString();
             }
         }
 

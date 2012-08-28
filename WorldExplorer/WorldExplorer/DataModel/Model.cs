@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WorldExplorer.DataModel
 {
-    class Model
+    public class Model
     {
         // collection of meshes
 
