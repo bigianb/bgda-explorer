@@ -44,6 +44,11 @@ namespace WorldExplorer.DataLoaders
             return BitConverter.ToInt16(data, offset);
         }
 
+        public static float getLEFloat(byte[] data, int offset)
+        {
+            return BitConverter.ToSingle(data, offset);
+        }
+
         public static ushort getLEUShort(byte[] data, int offset)
         {
             return BitConverter.ToUInt16(data, offset);
