@@ -26,6 +26,7 @@ using WorldExplorer.DataLoaders;
 using System.Windows.Media.Media3D;
 using WorldExplorer.Logging;
 using WorldExplorer.Tools3D;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -134,7 +135,9 @@ namespace WorldExplorer
                 var log = new StringLogger();
                 _modelViewModel.Texture = SelectedNodeImage;
                 _modelViewModel.AnimData = null;
-                _modelViewModel.VifData = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
+                Model model = new Model();
+                model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
+                _modelViewModel.VifModel = model;
                 _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
                 LogText += log.ToString();
             } else if (lmpEntry.Text.EndsWith(".anm")) {

@@ -54,24 +54,24 @@ namespace WorldExplorer
             }
         }
 
-        private List<Mesh> _vifData;
+        private Model _vifModel;
 
-        public List<Mesh> VifData
+        public Model VifModel
         {
-            get { return _vifData; }
+            get { return _vifModel; }
             set
             {
-                _vifData = value;
+                _vifModel = value;
                 UpdateModel(true);
-                this.OnPropertyChanged("VifData");
+                this.OnPropertyChanged("VifModel");
             }
         }
 
         private void UpdateModel(Boolean updateCamera)
         {
-            if (_vifData != null && _texture != null)
+            if (_vifModel != null && _texture != null)
             {
-                Model = VifDecoder.CreateModel3D(_vifData, _texture, _animData, CurrentFrame);
+                Model = VifDecoder.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
                 if (updateCamera)
                 {
                     UpdateCamera(_model);
