@@ -8,6 +8,6 @@ namespace WorldExplorer.DataModel
     public class Model
     {
         // collection of meshes
-
+        public List<Mesh> meshList;
     }
 }
