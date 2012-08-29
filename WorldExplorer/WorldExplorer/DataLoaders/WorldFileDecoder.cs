@@ -28,7 +28,7 @@ namespace WorldExplorer.DataLoaders
 {
     public class WorldFileDecoder
     {
-        public WorldData Decode(ILogger log, byte[] data, int startOffset, int length)
+        public WorldData Decode(WorldTexFile texFile, ILogger log, byte[] data, int startOffset, int length)
         {
             WorldData worldData = new WorldData();
 
@@ -43,6 +43,9 @@ namespace WorldExplorer.DataLoaders
             int off38Rows = DataUtil.getLEInt(data, startOffset + 0x34);
             int off38 = DataUtil.getLEInt(data, startOffset + 0x38);
 
+            int worldTexOffsetsOffset = DataUtil.getLEInt(data, startOffset + 0x64);
+            worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset);
+            log.LogLine("Texture chunk offsets: " + makeString(worldData.textureChunkOffsets));
             worldData.worldElements = new List<WorldElement>(numElements);
             for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
             {
@@ -65,13 +68,15 @@ namespace WorldExplorer.DataLoaders
                 element.boundingBox = new Rect3D(x1, y1, z1, x2-x1, y2-y1, z2-z1);
                 
                 int textureChunk = DataUtil.getLEInt(data, elementStartOffset + 0x24);
+                log.LogLine("Texture Chunk: " + textureChunk);
+
+                element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[0] + textureChunk);
 
                 int ta = DataUtil.getLEShort(data, elementStartOffset + 0x28);
                 int tb = DataUtil.getLEShort(data, elementStartOffset + 0x2A);
                 int tc = DataUtil.getLEShort(data, elementStartOffset + 0x2C);
                 int td = DataUtil.getLEShort(data, elementStartOffset + 0x2E);
-
-                log.LogLine("Texture Chunk: " + textureChunk);
+               
                 log.LogLine("        : " + ta + ", " + tb + ", " + tc + ", " + td);
 
                 int member30 = DataUtil.getLEUShort(data, elementStartOffset + 0x30);
@@ -83,6 +88,34 @@ namespace WorldExplorer.DataLoaders
             }
 
             return worldData;
+        }
+
+        private String makeString(List<int> list)
+        {
+            String s="";
+            foreach (int i in list)
+            {
+                if (s.Length != 0)
+                {
+                    s += ", ";
+                }
+                s += HexUtil.formatHex(i);
+            }
+
+            return s;
+        }
+
+        private List<int> readTextureChunkOffsets(byte[] data, int offset)
+        {
+            List<int> chunkOffsets = new List<int>();
+            int addr;
+            while ((addr = DataUtil.getLEInt(data, offset)) != 0)
+            {
+                chunkOffsets.Add(addr);
+                offset += 8;
+
+            }
+            return chunkOffsets;
         }
 
         private Dictionary<int, Model> modelMap = new Dictionary<int, Model>();

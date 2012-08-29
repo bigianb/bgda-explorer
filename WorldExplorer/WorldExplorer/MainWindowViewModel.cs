@@ -41,22 +41,26 @@ namespace WorldExplorer
                 96,
                 PixelFormats.Bgr32,
                 null);
-
-            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new[] { new WorldTreeViewModel(new World(dataPath, Properties.Settings.Default.GobFile)) });
+            _world = new World(dataPath, Properties.Settings.Default.GobFile);
+            _worldTreeViewModel = new WorldTreeViewModel(_world);
         }
 
         public void SettingsChanged()
         {
             String dataPath = Properties.Settings.Default.DataPath;
-            _worlds = new ReadOnlyCollection<WorldTreeViewModel>(new[] { new WorldTreeViewModel(new World(dataPath, Properties.Settings.Default.GobFile)) });
+            _world = new World(dataPath, Properties.Settings.Default.GobFile);
+            _worldTreeViewModel = new WorldTreeViewModel(_world);
+            // Trigger the tree view to update
             this.OnPropertyChanged("Children");
         }
 
-        private ReadOnlyCollection<WorldTreeViewModel> _worlds;
+        private World _world;
+        private WorldTreeViewModel _worldTreeViewModel;
 
+        // This is what the tree view binds to.
         public ReadOnlyCollection<WorldTreeViewModel> Children
         {
-            get { return _worlds; }
+            get { return new ReadOnlyCollection<WorldTreeViewModel>(new[] { _worldTreeViewModel }); }
         }
 
         private WriteableBitmap _selectedNodeImage=null;
@@ -106,6 +110,10 @@ namespace WorldExplorer
                 if (_selectedNode is LmpEntryTreeViewModel) {
                     OnLmpEntrySelected((LmpEntryTreeViewModel)_selectedNode);
                 }
+                else if (_selectedNode is WorldFileTreeViewModel)
+                {
+                    OnWorldEntrySelected((WorldFileTreeViewModel)_selectedNode);
+                }
                 this.OnPropertyChanged("SelectedNode");
             }
         }
@@ -145,14 +153,17 @@ namespace WorldExplorer
                 _skeletonViewModel.AnimData = animData;
                 LogText = animData.ToString();
             }
-            else if (lmpEntry.Text.EndsWith(".world"))
-            {
-                WorldFileDecoder decoder = new WorldFileDecoder();
-                var log = new StringLogger();
-                var worldData = decoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length);
-                LogText = log.ToString();
-                LogText += worldData.ToString();
-            }
+        }
+
+        private void OnWorldEntrySelected(WorldFileTreeViewModel worldFileModel)
+        {
+            var lmpFile = worldFileModel.LmpFileProperty;
+            var entry = lmpFile.Directory[worldFileModel.Text];
+            WorldFileDecoder decoder = new WorldFileDecoder();
+            var log = new StringLogger();
+            _world.worldData = decoder.Decode(_worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
+            LogText = log.ToString();
+            LogText += _world.worldData.ToString();           
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
