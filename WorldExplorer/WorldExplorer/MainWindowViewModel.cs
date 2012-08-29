@@ -114,6 +114,10 @@ namespace WorldExplorer
                 {
                     OnWorldEntrySelected((WorldFileTreeViewModel)_selectedNode);
                 }
+                else if (_selectedNode is WorldElementTreeViewModel)
+                {
+                    OnWorldElementSelected((WorldElementTreeViewModel)_selectedNode);
+                }
                 this.OnPropertyChanged("SelectedNode");
             }
         }
@@ -162,8 +166,14 @@ namespace WorldExplorer
             WorldFileDecoder decoder = new WorldFileDecoder();
             var log = new StringLogger();
             _world.worldData = decoder.Decode(_worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
+            worldFileModel.ReloadChildren();
             LogText = log.ToString();
             LogText += _world.worldData.ToString();           
+        }
+
+        private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
+        {
+            SelectedNodeImage = worldElementModel.WorldElement.Texture;
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)

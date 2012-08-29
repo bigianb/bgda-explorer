@@ -15,6 +15,7 @@
 */
 
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -85,29 +86,45 @@ namespace WorldExplorer
         {
             foreach (var entry in _world.WorldGob.Directory)
             {
-                base.Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
+                Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
             }
         }
+    }
+
+    public abstract class AbstractLmpTreeViewModel : TreeViewItemViewModel
+    {
+        public AbstractLmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(parent, true)
+        {
+            _lmpFile = lmpFile;
+            _name = entryName;
+            _world = world;
+        }
+
+        protected LmpFile _lmpFile;
+        protected string _name;
+        protected World _world;
+
+        public LmpFile LmpFileProperty
+        {
+            get { return _lmpFile; }
+        }
+
+        public string Text
+        {
+            get { return _name; }
+        }
+
     }
 
     /// <summary>
     /// A simple model that displays a LMP file.
     /// </summary>
-    public class LmpTreeViewModel : TreeViewItemViewModel
+    public class LmpTreeViewModel : AbstractLmpTreeViewModel
     {
         public LmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile)
-            : base(parent, true)
+            : base(world, parent, lmpFile, lmpFile.Name)
         {
-            _lmpFile = lmpFile;
-            _world = world;
-        }
-
-        private LmpFile _lmpFile;
-        private World _world;
-
-        public string Text
-        {
-            get { return _lmpFile.Name; }
         }
 
         protected override void LoadChildren()
@@ -123,7 +140,7 @@ namespace WorldExplorer
                 {
                     child = new LmpEntryTreeViewModel(_world, this, _lmpFile, entry.Key);
                 }
-                base.Children.Add(child);
+                Children.Add(child);
             }
         }
     }
@@ -131,22 +148,59 @@ namespace WorldExplorer
     /// <summary>
     /// A simple model that displays an entry in a LMP file.
     /// </summary>
-    public class LmpEntryTreeViewModel : TreeViewItemViewModel
+    public class LmpEntryTreeViewModel : AbstractLmpTreeViewModel
     {
         public LmpEntryTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(world, parent, lmpFile, entryName)
+        {
+        }
+
+        protected override void LoadChildren()
+        {
+            
+        }
+    }
+
+    public class WorldFileTreeViewModel : AbstractLmpTreeViewModel
+    {
+        public WorldFileTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(world, parent, lmpFile, entryName)
+        {
+        }
+
+        public void ReloadChildren()
+        {
+            Children.Clear();
+            LoadChildren();
+        }
+
+        protected override void LoadChildren()
+        {
+            if (_world.worldData != null){
+                int i = 0;
+                foreach (var element in _world.worldData.worldElements)
+                {
+                    Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + i));
+                    ++i;
+                }
+            }
+        }
+    }
+
+    public class WorldElementTreeViewModel : TreeViewItemViewModel
+    {
+        public WorldElementTreeViewModel(WorldElement worldElement, TreeViewItemViewModel parent, string name)
             : base(parent, true)
         {
-            _lmpFile = lmpFile;
-            _name = entryName;
+            _worldElement = worldElement;
+            _name = name;
         }
 
-        private LmpFile _lmpFile;
         private string _name;
+        private WorldElement _worldElement;
 
-        public LmpFile LmpFileProperty
-        {
-            get { return _lmpFile; }
-        }
+        public WorldElement WorldElement
+        { get { return _worldElement; } }
 
         public string Text
         {
@@ -156,38 +210,6 @@ namespace WorldExplorer
         protected override void LoadChildren()
         {
             
-        }
-    }
-
-
-    /// <summary>
-    /// A simple model that displays an entry in a LMP file.
-    /// </summary>
-    public class WorldFileTreeViewModel : TreeViewItemViewModel
-    {
-        public WorldFileTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
-            : base(parent, true)
-        {
-            _lmpFile = lmpFile;
-            _name = entryName;
-        }
-
-        private LmpFile _lmpFile;
-        private string _name;
-
-        public LmpFile LmpFileProperty
-        {
-            get { return _lmpFile; }
-        }
-
-        public string Text
-        {
-            get { return _name; }
-        }
-
-        protected override void LoadChildren()
-        {
-
         }
     }
 }
