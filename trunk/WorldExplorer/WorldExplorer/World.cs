@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -34,6 +35,9 @@ namespace WorldExplorer
 
         public GobFile WorldGob = null;
         public WorldTexFile WorldTex = null;
+
+        // The parsed data from the various files.
+        public WorldData worldData = null;
 
         public void Load()
         {

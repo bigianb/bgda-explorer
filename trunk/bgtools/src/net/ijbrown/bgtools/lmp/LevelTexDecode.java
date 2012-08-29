@@ -139,7 +139,7 @@ public class LevelTexDecode
         ImageIO.write(image, "png", outputfile);
     }
 
-    private int backJumpTable[] = new int[] {-1, -16, -17, -15, -2};
+    private int[] backJumpTable = new int[] {-1, -16, -17, -15, -2};
 
     private void decodeBlock(int xblock, int yblock, int blockDataStart, int table0Start, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
     {

@@ -28,6 +28,11 @@ namespace WorldExplorer
             _world = world;
         }
 
+        public World World()
+        {
+            return _world;
+        }
+
         public string WorldName
         {
             get { return _world.Name; }
@@ -36,7 +41,7 @@ namespace WorldExplorer
         protected override void LoadChildren()
         {
             _world.Load();
-            base.Children.Add(new GobTreeViewModel(this, _world.WorldGob));
+            base.Children.Add(new GobTreeViewModel(_world, this));
         }
     }
 
@@ -45,7 +50,7 @@ namespace WorldExplorer
     /// </summary>
     public class TextTreeViewModel : TreeViewItemViewModel
     {
-        public TextTreeViewModel(TreeViewItemViewModel parent, string text) : base (parent, false)
+        public TextTreeViewModel(World world, TreeViewItemViewModel parent, string text) : base (parent, false)
         {
             _text = text;
         }
@@ -63,23 +68,24 @@ namespace WorldExplorer
     /// </summary>
     public class GobTreeViewModel : TreeViewItemViewModel
     {
-        public GobTreeViewModel(TreeViewItemViewModel parent, GobFile gobFile)
+        public GobTreeViewModel(World world, TreeViewItemViewModel parent)
             : base(parent, true)
         {
-            _gobFile = gobFile;
+            _world = world;
         }
 
-        private GobFile _gobFile;
+        private World _world;
 
         public string Text
         {
-            get { return _gobFile.Filename; }
+            get { return _world.WorldGob.Filename; }
         }
 
         protected override void LoadChildren()
         {
-            foreach (var entry in _gobFile.Directory) {
-                base.Children.Add(new LmpTreeViewModel(this, entry.Value));
+            foreach (var entry in _world.WorldGob.Directory)
+            {
+                base.Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
             }
         }
     }
@@ -89,13 +95,15 @@ namespace WorldExplorer
     /// </summary>
     public class LmpTreeViewModel : TreeViewItemViewModel
     {
-        public LmpTreeViewModel(TreeViewItemViewModel parent, LmpFile lmpFile)
+        public LmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile)
             : base(parent, true)
         {
             _lmpFile = lmpFile;
+            _world = world;
         }
 
         private LmpFile _lmpFile;
+        private World _world;
 
         public string Text
         {
@@ -106,7 +114,15 @@ namespace WorldExplorer
         {
             _lmpFile.ReadDirectory();
             foreach (var entry in _lmpFile.Directory) {
-                var child = new LmpEntryTreeViewModel(this, _lmpFile, entry.Key);
+                TreeViewItemViewModel child;
+                if (entry.Key.EndsWith(".world"))
+                {
+                    child = new WorldFileTreeViewModel(_world, this, _lmpFile, entry.Key);
+                }
+                else
+                {
+                    child = new LmpEntryTreeViewModel(_world, this, _lmpFile, entry.Key);
+                }
                 base.Children.Add(child);
             }
         }
@@ -117,7 +133,7 @@ namespace WorldExplorer
     /// </summary>
     public class LmpEntryTreeViewModel : TreeViewItemViewModel
     {
-        public LmpEntryTreeViewModel(TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+        public LmpEntryTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
             : base(parent, true)
         {
             _lmpFile = lmpFile;
@@ -140,6 +156,38 @@ namespace WorldExplorer
         protected override void LoadChildren()
         {
             
+        }
+    }
+
+
+    /// <summary>
+    /// A simple model that displays an entry in a LMP file.
+    /// </summary>
+    public class WorldFileTreeViewModel : TreeViewItemViewModel
+    {
+        public WorldFileTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(parent, true)
+        {
+            _lmpFile = lmpFile;
+            _name = entryName;
+        }
+
+        private LmpFile _lmpFile;
+        private string _name;
+
+        public LmpFile LmpFileProperty
+        {
+            get { return _lmpFile; }
+        }
+
+        public string Text
+        {
+            get { return _name; }
+        }
+
+        protected override void LoadChildren()
+        {
+
         }
     }
 }

@@ -18,17 +18,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
+using System.Windows.Media.Imaging;
 
 namespace WorldExplorer.DataModel
 {
     public class WorldData
     {
         public List<WorldElement> worldElements;
+        public List<int> textureChunkOffsets;
     }
 
     public class WorldElement
     {
         public Rect3D boundingBox;
         public Model model;
+        public WriteableBitmap Texture;
     }
 }
