@@ -67,10 +67,27 @@ namespace WorldExplorer.DataLoaders
 
                 element.boundingBox = new Rect3D(x1, y1, z1, x2-x1, y2-y1, z2-z1);
                 
-                int textureChunk = DataUtil.getLEInt(data, elementStartOffset + 0x24);
-                log.LogLine("Texture Chunk: " + textureChunk);
+                int textureNum = DataUtil.getLEInt(data, elementStartOffset + 0x24) / 0x40;
+                log.LogLine("Texture Num: " + textureNum);
 
-                element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[0] + textureChunk);
+                int texChunk = 0;
+                while (element.Texture == null && texChunk < worldData.textureChunkOffsets.Count)
+                {
+                    try
+                    {
+                        element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[texChunk], textureNum);
+                        if (element.Texture != null)
+                        {
+                            log.LogLine("Found in texture chunk: " + texChunk);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // ignore for now
+                        log.LogLine("******* Exception when parsing texture chunk: " + texChunk);
+                    }
+                    ++texChunk;
+                }
 
                 int ta = DataUtil.getLEShort(data, elementStartOffset + 0x28);
                 int tb = DataUtil.getLEShort(data, elementStartOffset + 0x2A);

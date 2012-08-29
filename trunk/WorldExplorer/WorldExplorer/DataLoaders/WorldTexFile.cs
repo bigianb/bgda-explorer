@@ -27,8 +27,14 @@ namespace WorldExplorer.DataLoaders
 
         private Dictionary<int, WriteableBitmap> texMap = new Dictionary<int, WriteableBitmap>();
 
-        public WriteableBitmap GetBitmap(int offset)
+        public WriteableBitmap GetBitmap(int chunkStartOffset, int textureNumber)
         {
+            int numTexturesinChunk = DataUtil.getLEInt(fileData, chunkStartOffset);
+            if (textureNumber > numTexturesinChunk)
+            {
+                return null;
+            }
+            int offset = chunkStartOffset + textureNumber * 0x40;
             WriteableBitmap tex = null;
             if (!texMap.TryGetValue(offset, out tex)){
                 tex = Decode(offset);
@@ -41,6 +47,10 @@ namespace WorldExplorer.DataLoaders
         {
             int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
             int headerOffset10 = header10 + offset;
+            if (headerOffset10 <= 0 || headerOffset10 >= fileData.Length)
+            {
+                return null;
+            }
             int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
 
             PalEntry[] palette = PalEntry.readPalette(fileData, palOffset, 16, 16);
