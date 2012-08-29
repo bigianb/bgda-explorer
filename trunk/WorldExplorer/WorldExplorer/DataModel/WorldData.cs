@@ -25,7 +25,7 @@ namespace WorldExplorer.DataModel
     public class WorldData
     {
         public List<WorldElement> worldElements;
-        public List<int> textureChunkOffsets;
+        public int[,] textureChunkOffsets;
     }
 
     public class WorldElement
