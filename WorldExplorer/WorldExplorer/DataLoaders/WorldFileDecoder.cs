@@ -43,9 +43,15 @@ namespace WorldExplorer.DataLoaders
             int off38Rows = DataUtil.getLEInt(data, startOffset + 0x34);
             int off38 = DataUtil.getLEInt(data, startOffset + 0x38);
 
+            int texll = DataUtil.getLEInt(data, startOffset + 0x58);
+            int texur = DataUtil.getLEInt(data, startOffset + 0x5C);
+            int texX0 = texll % 100;
+            int texY0 = texll / 100;
+            int texX1 = texur % 100;
+            int texY1 = texur / 100;
+
             int worldTexOffsetsOffset = DataUtil.getLEInt(data, startOffset + 0x64);
-            worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset);
-            log.LogLine("Texture chunk offsets: " + makeString(worldData.textureChunkOffsets));
+            worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
             for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
             {
@@ -70,31 +76,20 @@ namespace WorldExplorer.DataLoaders
                 int textureNum = DataUtil.getLEInt(data, elementStartOffset + 0x24) / 0x40;
                 log.LogLine("Texture Num: " + textureNum);
 
-                int texChunk = 0;
-                while (element.Texture == null && texChunk < worldData.textureChunkOffsets.Count)
+                int texCellxy = DataUtil.getLEShort(data, elementStartOffset + 0x28);
+                int y = texCellxy / 100;
+                int x = texCellxy % 100;
+                element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
+                if (element.Texture != null)
                 {
-                    try
-                    {
-                        element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[texChunk], textureNum);
-                        if (element.Texture != null)
-                        {
-                            log.LogLine("Found in texture chunk: " + texChunk);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        // ignore for now
-                        log.LogLine("******* Exception when parsing texture chunk: " + texChunk);
-                    }
-                    ++texChunk;
+                    log.LogLine("Found in texture chunk: " + x + ", " + y);
                 }
 
-                int ta = DataUtil.getLEShort(data, elementStartOffset + 0x28);
                 int tb = DataUtil.getLEShort(data, elementStartOffset + 0x2A);
                 int tc = DataUtil.getLEShort(data, elementStartOffset + 0x2C);
                 int td = DataUtil.getLEShort(data, elementStartOffset + 0x2E);
                
-                log.LogLine("        : " + ta + ", " + tb + ", " + tc + ", " + td);
+                log.LogLine("        : " + tb + ", " + tc + ", " + td);
 
                 int member30 = DataUtil.getLEUShort(data, elementStartOffset + 0x30);
                 log.LogLine("        : " + HexUtil.formatHexUShort(member30));
@@ -122,15 +117,16 @@ namespace WorldExplorer.DataLoaders
             return s;
         }
 
-        private List<int> readTextureChunkOffsets(byte[] data, int offset)
+        private int[,] readTextureChunkOffsets(byte[] data, int offset, int x1, int y1, int x2, int y2)
         {
-            List<int> chunkOffsets = new List<int>();
+            int[,] chunkOffsets = new int[100, 100];
             int addr;
-            while ((addr = DataUtil.getLEInt(data, offset)) != 0)
-            {
-                chunkOffsets.Add(addr);
-                offset += 8;
-
+            for (int y = y1; y <= y2; ++y) {
+                for (int x = x1; x <= x2; ++x) {
+                    int cellOffset = ((y - y1) * 100 + x - x1) * 8;
+                    addr = DataUtil.getLEInt(data, offset + cellOffset);
+                    chunkOffsets[y, x] = addr;
+                }
             }
             return chunkOffsets;
         }
