@@ -64,6 +64,9 @@
                 <TabItem Header="Skeleton">
                     <local:SkeletonView DataContext="{Binding TheSkeletonViewModel}"/>
                 </TabItem>
+                <TabItem Header="Level">
+                    <local:LevelView DataContext="{Binding TheLevelViewModel}"/>
+                </TabItem>
                 <TabItem Header="Log">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" />

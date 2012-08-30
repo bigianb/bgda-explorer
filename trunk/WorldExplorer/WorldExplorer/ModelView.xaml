@@ -17,22 +17,20 @@
         </Grid.RowDefinitions>
         <Slider Name="frameSlider" Minimum="-1" Maximum="{Binding MaximumFrame}" Value="{Binding CurrentFrame}"/>
         <Label Grid.Column="1" Content="{Binding CurrentFrame}"/>
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">
-            <Viewbox Name="viewbox">
-                <Viewport3D Camera="{Binding Camera}" ClipToBounds="True" Height="150" Name="viewport" Width="150">
-                    <ModelVisual3D>
-                        <ModelVisual3D.Content>
-                            <AmbientLight Color="#808080" />
-                        </ModelVisual3D.Content>
-                    </ModelVisual3D>
-                    <ModelVisual3D>
-                        <ModelVisual3D.Content>
-                            <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1" />
-                        </ModelVisual3D.Content>
-                    </ModelVisual3D>
-                    <ModelVisual3D Content="{Binding Model}" />
-                </Viewport3D>
-            </Viewbox>
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">           
+            <Viewport3D Camera="{Binding Camera}" ClipToBounds="True" Name="viewport">
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <AmbientLight Color="#808080" />
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1" />
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+                <ModelVisual3D Content="{Binding Model}" />
+            </Viewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Content="{Binding InfoText}"/>
     </Grid>
