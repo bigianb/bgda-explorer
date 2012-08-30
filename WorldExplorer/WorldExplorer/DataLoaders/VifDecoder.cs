@@ -50,6 +50,14 @@ namespace WorldExplorer.DataLoaders
             return meshes;
         }
 
+        public static Mesh DecodeMesh(ILogger log, byte[] data, int startOffset, int length, int texturePixelWidth, int texturePixelHeight)
+        {           
+            var chunks = ReadVerts(log, data, startOffset, startOffset + length);
+            var mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
+
+            return mesh;
+        }
+
         public static Mesh ChunksToMesh(List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
         {
             Mesh mesh = new Mesh();
@@ -178,22 +186,30 @@ namespace WorldExplorer.DataLoaders
             var normals = new Vector3DCollection(numVertices);
             var uvCoords = new PointCollection(numVertices);
             int vstart = 0;
+            
             foreach (var meshGroup in meshGroups)
             {
+                Boolean hasVertexWeights = meshGroup.vertexWeights.Count > 0;
                 int vwNum = 0;
-                VertexWeight vw = meshGroup.vertexWeights[vwNum];
+                VertexWeight vw = new VertexWeight();
+                if (meshGroup.vertexWeights.Count > 0)
+                {
+                    vw = meshGroup.vertexWeights[vwNum];
+                }
                 int vnum = 0;
                 foreach (var vertex in meshGroup.Positions)
-                {
-                    if (vw.endVertex < vnum) {
-                        ++vwNum;
-                        vw = meshGroup.vertexWeights[vwNum];
-                        if (vnum < vw.startVertex || vnum > vw.endVertex) {
-                            Debug.Fail("Vertex out of range of bone weights");
-                        }
-                    }
+                {                  
                     var point = vertex;
                     if (frame >= 0 && pose != null) {
+                        if (vw.endVertex < vnum)
+                        {
+                            ++vwNum;
+                            vw = meshGroup.vertexWeights[vwNum];
+                            if (vnum < vw.startVertex || vnum > vw.endVertex)
+                            {
+                                Debug.Fail("Vertex out of range of bone weights");
+                            }
+                        }
                         int bone1No = vw.bone1;
                         Point3D bindingPos1 = pose.bindingPose[bone1No];
                         AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
