@@ -174,6 +174,9 @@ namespace WorldExplorer
         private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
         {
             SelectedNodeImage = worldElementModel.WorldElement.Texture;
+            _modelViewModel.Texture = SelectedNodeImage;
+            _modelViewModel.AnimData = null;
+            _modelViewModel.VifModel = worldElementModel.WorldElement.model;
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)

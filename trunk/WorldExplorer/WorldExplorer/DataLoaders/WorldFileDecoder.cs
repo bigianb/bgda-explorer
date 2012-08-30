@@ -62,7 +62,6 @@ namespace WorldExplorer.DataLoaders
                 int vifLen = DataUtil.getLEInt(data, elementStartOffset+8);
                 log.LogLine("-----------");
                 log.LogLine("vifdata: " + vifDataOffset + ", " + vifLen);
-                element.model = decodeModel(data, startOffset + vifDataOffset, vifLen);
 
                 float x1 = DataUtil.getLEFloat(data, elementStartOffset + 0x0C);
                 float y1 = DataUtil.getLEFloat(data, elementStartOffset + 0x10);
@@ -84,6 +83,19 @@ namespace WorldExplorer.DataLoaders
                 {
                     log.LogLine("Found in texture chunk: " + x + ", " + y);
                 }
+
+                var vifLogger = new StringLogger();
+                int texWidth = 100;
+                int texHeight = 100;
+                if (element.Texture != null)
+                {
+                    texWidth = element.Texture.PixelWidth;
+                    texHeight = element.Texture.PixelHeight;
+                }
+
+                byte nregs = data[startOffset + vifDataOffset + 0x10];
+                int vifStartOffset = (nregs + 2) * 0x10;
+                element.model = decodeModel(vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
                 int tb = DataUtil.getLEShort(data, elementStartOffset + 0x2A);
                 int tc = DataUtil.getLEShort(data, elementStartOffset + 0x2C);
@@ -133,11 +145,14 @@ namespace WorldExplorer.DataLoaders
 
         private Dictionary<int, Model> modelMap = new Dictionary<int, Model>();
 
-        public Model decodeModel(byte[] data, int startOffset, int length)
+        public Model decodeModel(ILogger log, byte[] data, int startOffset, int length, int texWidth, int texHeight)
         {
             Model model = null;
             if (!modelMap.TryGetValue(startOffset, out model)){
-
+                model = new Model();
+                model.meshList = new List<Mesh>(1);
+                model.meshList.Add(VifDecoder.DecodeMesh(log, data, startOffset, length, texWidth, texHeight));
+                modelMap.Add(startOffset, model);
             }
             return model;
         }
