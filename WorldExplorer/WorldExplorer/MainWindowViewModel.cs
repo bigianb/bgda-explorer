@@ -95,7 +95,19 @@ namespace WorldExplorer
             set
             {
                 _modelViewModel = value;
-                this.OnPropertyChanged("ModelViewModel");
+                this.OnPropertyChanged("TheModelViewModel");
+            }
+        }
+
+        private LevelViewModel _levelViewModel = new LevelViewModel();
+
+        public LevelViewModel TheLevelViewModel
+        {
+            get { return _levelViewModel; }
+            set
+            {
+                _levelViewModel = value;
+                this.OnPropertyChanged("TheLevelViewModel");
             }
         }
 
