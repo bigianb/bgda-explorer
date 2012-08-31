@@ -30,26 +30,15 @@ namespace WorldExplorer
     public class LevelViewModel : INotifyPropertyChanged
     {
 
-        private WriteableBitmap _texture;
+        private WorldData _worldData;
 
-        public WriteableBitmap Texture
+        public WorldData WorldData
         {
-            get { return _texture; }
+            get { return _worldData; }
             set
             {
-                _texture = value;
-            }
-        }
-
-        private Model _vifModel;
-
-        public Model VifModel
-        {
-            get { return _vifModel; }
-            set
-            {
-                _vifModel = value;
-                this.OnPropertyChanged("VifModel");
+                _worldData = value;
+                rebuildScene();
             }
         }
 
@@ -65,7 +54,36 @@ namespace WorldExplorer
             }
         }
 
-        private void BuildEmptyScene()
+        private void rebuildScene()
+        {
+            List<ModelVisual3D> scene = buildLights();
+
+            foreach (var element in _worldData.worldElements)
+            {
+                ModelVisual3D mv3d = new ModelVisual3D();
+                var model3D = VifDecoder.CreateModel3D(element.model.meshList, element.Texture, null, 0);
+                mv3d.Content = model3D;
+
+                var modelBounds = model3D.Bounds;
+
+                var scaleTransform = new ScaleTransform3D(element.boundingBox.SizeX / modelBounds.SizeX, element.boundingBox.SizeY / modelBounds.SizeY, element.boundingBox.SizeZ / modelBounds.SizeZ);
+                var translateTransform = new TranslateTransform3D(element.boundingBox.X - scaleTransform.ScaleX * modelBounds.X,
+                    element.boundingBox.Y - scaleTransform.ScaleY * modelBounds.Y,
+                    element.boundingBox.Z - scaleTransform.ScaleZ * modelBounds.Z
+                    );
+
+                Transform3DGroup transform3DGroup = new Transform3DGroup();
+                transform3DGroup.Children.Add(scaleTransform);
+                transform3DGroup.Children.Add(translateTransform);
+                mv3d.Transform = transform3DGroup;
+
+                scene.Add(mv3d);
+            }
+
+            Scene = scene;
+        }
+
+        private List<ModelVisual3D> buildLights()
         {
             List<ModelVisual3D> scene = new List<ModelVisual3D>();
             ModelVisual3D ambientLight = new ModelVisual3D();
@@ -75,7 +93,7 @@ namespace WorldExplorer
             directionalLight.Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1));
             scene.Add(directionalLight);
 
-            Scene = scene;
+            return scene;
         }
 
         private List<ModelVisual3D> _scene;

@@ -71,7 +71,9 @@ namespace WorldExplorer.DataLoaders
                 float z2 = DataUtil.getLEFloat(data, elementStartOffset + 0x20);
 
                 element.boundingBox = new Rect3D(x1, y1, z1, x2-x1, y2-y1, z2-z1);
-                
+
+                log.LogLine("Bounding Box: " + element.boundingBox.ToString());
+
                 int textureNum = DataUtil.getLEInt(data, elementStartOffset + 0x24) / 0x40;
                 log.LogLine("Texture Num: " + textureNum);
 

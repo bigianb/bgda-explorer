@@ -179,6 +179,7 @@ namespace WorldExplorer
             var log = new StringLogger();
             _world.worldData = decoder.Decode(_worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
             worldFileModel.ReloadChildren();
+            _levelViewModel.WorldData = _world.worldData;
             LogText = log.ToString();
             LogText += _world.worldData.ToString();           
         }
