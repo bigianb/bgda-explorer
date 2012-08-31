@@ -99,6 +99,7 @@
     <Compile Include="DataLoaders\VifDecoder.cs" />
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="Logging\Logger.cs" />
+    <Compile Include="SceneVisual3D.cs" />
     <Compile Include="SkeletonProcessor.cs" />
     <Compile Include="SkeletonView.xaml.cs">
       <DependentUpon>SkeletonView.xaml</DependentUpon>
