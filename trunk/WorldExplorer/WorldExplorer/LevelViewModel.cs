@@ -66,15 +66,31 @@ namespace WorldExplorer
 
                 var modelBounds = model3D.Bounds;
 
-                var scaleTransform = new ScaleTransform3D(element.boundingBox.SizeX / modelBounds.SizeX, element.boundingBox.SizeY / modelBounds.SizeY, element.boundingBox.SizeZ / modelBounds.SizeZ);
-                var translateTransform = new TranslateTransform3D(element.boundingBox.X - scaleTransform.ScaleX * modelBounds.X,
-                    element.boundingBox.Y - scaleTransform.ScaleY * modelBounds.Y,
-                    element.boundingBox.Z - scaleTransform.ScaleZ * modelBounds.Z
-                    );
-
                 Transform3DGroup transform3DGroup = new Transform3DGroup();
-                transform3DGroup.Children.Add(scaleTransform);
-                transform3DGroup.Children.Add(translateTransform);
+
+                transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
+
+                if ((element.xyzRotFlags & 1) == 1)
+                {
+                    var xrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), (element.xyzRotFlags & 4) == 4 ? 90 : -90));
+                    transform3DGroup.Children.Add(xrot);
+                }
+
+                if ((element.xyzRotFlags & 2) == 2)
+                {
+                    var yrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), (element.xyzRotFlags & 4) == 4 ? 90 : -90));
+                    transform3DGroup.Children.Add(yrot);
+                }
+
+                if ((element.xyzRotFlags & 4) == 4)
+                {
+                    var zrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90));
+                    transform3DGroup.Children.Add(zrot);
+                }
+                
+                
+
+
                 mv3d.Transform = transform3DGroup;
 
                 scene.Add(mv3d);

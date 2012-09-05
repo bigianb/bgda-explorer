@@ -57,7 +57,6 @@ public class WorldDecode
         writer.close();
     }
 
-    private int fileLength;
     private byte[] fileData;
 
     private void read(String filename, File outDirFile) throws IOException
@@ -65,7 +64,7 @@ public class WorldDecode
         File file = new File(outDirFile, filename);
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
 
-        fileLength = (int) file.length();
+        int fileLength = (int) file.length();
         fileData = new byte[fileLength];
 
         int offset = 0;
@@ -103,7 +102,7 @@ public class WorldDecode
 
         sb.append("\r\n");
 
-        int cols = DataUtil.getLEInt(fileData,0x10);
+        int cols = DataUtil.getLEInt(fileData, 0x10);
         int rows = DataUtil.getLEInt(fileData, 0x14);
 
         sb.append("Cols (world.10): ").append(cols).append("\r\n");
@@ -136,7 +135,7 @@ public class WorldDecode
 
 
         int cols_38 = DataUtil.getLEInt(fileData, 0x30);
-        int rows_38 = DataUtil.getLEInt(fileData,0x34);
+        int rows_38 = DataUtil.getLEInt(fileData, 0x34);
 
         sb.append("Cols.38 (world.30): ").append(cols_38).append("\r\n");
         sb.append("Rows.38 (world.34): ").append(rows_38).append("\r\n");
@@ -158,7 +157,7 @@ public class WorldDecode
 
         sb.append("Texture grid min y*100+x: ").append(DataUtil.getLEInt(fileData, 0x58)).append("\r\n");
         sb.append("Texture grid max y*100+x: ").append(DataUtil.getLEInt(fileData, 0x5C)).append("\r\n");
-              
+
         int offset60 = DataUtil.getLEInt(fileData, 0x60);
         sb.append("Offset60: ").append(HexUtil.formatHex(offset60)).append("\r\n");
 
@@ -170,26 +169,22 @@ public class WorldDecode
         float offset68 = DataUtil.getLEFloat(fileData, 0x68);
         sb.append("Offset68: ").append(offset68).append("\r\n");
 
-        sb.append("0x44700000 = ").append(Float.intBitsToFloat(0x44700000)).append("\r\n");
-
         int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
         sb.append("Offset Tex 6c: ").append(HexUtil.formatHex(offsetTex6c)).append("\r\n");
-
-
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Offsets (18) array. Each index points to an entry in array 20.\r\n \r\n");
-        for (int i=0; i<rows*cols; ++i){
-            int off = DataUtil.getLEInt(fileData, offset18 + i*4);
+        for (int i = 0; i < rows * cols; ++i) {
+            int off = DataUtil.getLEInt(fileData, offset18 + i * 4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
 
             int u = DataUtil.getLEShort(fileData, off);
-            while (u >= 0){
+            while (u >= 0) {
                 sb.append(u);
                 off += 2;
                 u = DataUtil.getLEShort(fileData, off);
-                if (u >= 0){
+                if (u >= 0) {
                     sb.append(", ");
                 }
             }
@@ -202,29 +197,28 @@ public class WorldDecode
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Elements (20) array - ").append(count1c).append(" elements\r\n \r\n");
-        for (int i=0; i<count1c; ++i)
-        {
-            int off = offset20 + i*0x1c;
+        for (int i = 0; i < count1c; ++i) {
+            int off = offset20 + i * 0x1c;
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
-            sb.append("    0x00: ").append(DataUtil.getLEShort(fileData, off+0x00)).append("\r\n");
-            sb.append("    0x02: ").append(DataUtil.getLEShort(fileData, off+0x02)).append("\r\n");
-            sb.append("    0x04: ").append(DataUtil.getLEShort(fileData, off+0x04)).append("\r\n");
-            sb.append("    0x06: ").append(DataUtil.getLEShort(fileData, off+0x06)).append("\r\n");
-            sb.append("    0x08: ").append(DataUtil.getLEInt(fileData, off+0x08)).append("\r\n");
+            sb.append("    0x00: ").append(DataUtil.getLEShort(fileData, off + 0x00)).append("\r\n");
+            sb.append("    0x02: ").append(DataUtil.getLEShort(fileData, off + 0x02)).append("\r\n");
+            sb.append("    0x04: ").append(DataUtil.getLEShort(fileData, off + 0x04)).append("\r\n");
+            sb.append("    0x06: ").append(DataUtil.getLEShort(fileData, off + 0x06)).append("\r\n");
+            sb.append("    0x08: ").append(DataUtil.getLEInt(fileData, off + 0x08)).append("\r\n");
 
             // This points to an object - possibly a terrain patch / height map
             // offset 8 and C of it specify rows and cols. 16 bit values start at offset 14.
             // There are rows * cols values.
 
             int linkedObjectOffset = DataUtil.getLEInt(fileData, off + 0x0c);
-            if (!linkedObjects.contains(linkedObjectOffset)){
+            if (!linkedObjects.contains(linkedObjectOffset)) {
                 linkedObjects.add(linkedObjectOffset);
             }
             sb.append("    0x0c: ").append(HexUtil.formatHex(linkedObjectOffset)).append("\r\n");
-            sb.append("    0x10: ").append(DataUtil.getLEShort(fileData, off+0x10)).append("\r\n");
-            sb.append("    0x12: ").append(DataUtil.getLEShort(fileData, off+0x12)).append("\r\n");
-            sb.append("    0x14: ").append(DataUtil.getLEShort(fileData, off+0x14)).append("\r\n");
-            sb.append("    0x16: ").append(DataUtil.getLEShort(fileData, off+0x16)).append("\r\n");
+            sb.append("    0x10: ").append(DataUtil.getLEShort(fileData, off + 0x10)).append("\r\n");
+            sb.append("    0x12: ").append(DataUtil.getLEShort(fileData, off + 0x12)).append("\r\n");
+            sb.append("    0x14: ").append(DataUtil.getLEShort(fileData, off + 0x14)).append("\r\n");
+            sb.append("    0x16: ").append(DataUtil.getLEShort(fileData, off + 0x16)).append("\r\n");
             sb.append("}\r\n");
         }
 
@@ -232,69 +226,85 @@ public class WorldDecode
         sb.append("\r\n");
 
         sb.append("Found the following linked objects...").append("\r\n\r\n");
-        for (int offset : linkedObjects){
+        for (int offset : linkedObjects) {
             sb.append("Offset: ").append(HexUtil.formatHex(offset)).append("\r\n");
 
             sb.append(" 0x00: ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
-            sb.append(" 0x04: ").append(DataUtil.getLEInt(fileData, offset+4)).append("\r\n");
+            sb.append(" 0x04: ").append(DataUtil.getLEInt(fileData, offset + 4)).append("\r\n");
 
-            int patchWidth = DataUtil.getLEInt(fileData, offset+0x08);
-            int patchHeight = DataUtil.getLEInt(fileData, offset+0x0C);
+            int patchWidth = DataUtil.getLEInt(fileData, offset + 0x08);
+            int patchHeight = DataUtil.getLEInt(fileData, offset + 0x0C);
 
             sb.append(" Dimensions=").append(patchWidth).append(" x ").append(patchHeight).append("\r\n\r\n");
 
-            sb.append(" 0x10: ").append(DataUtil.getLEShort(fileData, offset+0x10)).append("\r\n");
-            sb.append(" 0x12: ").append(DataUtil.getLEShort(fileData, offset+0x12)).append("\r\n");
-                      
-            for (int y=0; y<patchHeight; ++y){
-                for (int x=0; x<patchWidth; ++x){
-                    int i = y*patchWidth+x;
-                    sb.append(DataUtil.getLEShort(fileData, offset+0x14+i*2)).append("\r\n");
+            sb.append(" 0x10: ").append(DataUtil.getLEShort(fileData, offset + 0x10)).append("\r\n");
+            sb.append(" 0x12: ").append(DataUtil.getLEShort(fileData, offset + 0x12)).append("\r\n");
+
+            for (int y = 0; y < patchHeight; ++y) {
+                for (int x = 0; x < patchWidth; ++x) {
+                    int i = y * patchWidth + x;
+                    sb.append(DataUtil.getLEShort(fileData, offset + 0x14 + i * 2)).append("\r\n");
                 }
                 sb.append("--\r\n");
             }
         }
 
 
-        List<Integer> meshOffsets = new ArrayList<Integer>();
-        List<Integer> meshLengths = new ArrayList<Integer>();
+        List<Integer> meshOffsets = new ArrayList<>();
+        List<Integer> meshLengths = new ArrayList<>();
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Elements (24) array - ").append(numElements).append(" elements\r\n \r\n");
-        for (int i=0; i<numElements; ++i)
-        {
-            int off = elementBase + i*0x38;
+        for (int i = 0; i < numElements; ++i) {
+            int off = elementBase + i * 0x38;
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
             // offset 0 points to a vif mesh object. Mesh data starts at offset 0x20.
             int meshOffset = DataUtil.getLEInt(fileData, off);
 
-            sb.append("    0x00: ").append(HexUtil.formatHex(meshOffset)).append("\r\n");
-            sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+4))).append("\r\n");
+            sb.append("    vif Data: ").append(HexUtil.formatHex(meshOffset)).append("\r\n");
+            sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off + 4))).append("\r\n");
 
             // in 16 byte units
             int meshDataLen = DataUtil.getLEInt(fileData, off + 8);
-            sb.append("    0x08: ").append(HexUtil.formatHex(meshDataLen)).append("\r\n");
-            sb.append("    0x0C: ").append(DataUtil.getLEFloat(fileData, off+0x0C)).append("\r\n");
-            sb.append("    0x10: ").append(DataUtil.getLEFloat(fileData, off+0x10)).append("\r\n");
-            sb.append("    0x14: ").append(DataUtil.getLEFloat(fileData, off+0x14)).append("\r\n");
-            sb.append("    0x18: ").append(DataUtil.getLEFloat(fileData, off+0x18)).append("\r\n");
-            sb.append("    0x1C: ").append(DataUtil.getLEFloat(fileData, off+0x1C)).append("\r\n");
-            sb.append("    0x20: ").append(DataUtil.getLEFloat(fileData, off+0x20)).append("\r\n");
+            sb.append("    vif Data Len: ").append(HexUtil.formatHex(meshDataLen)).append("\r\n");
+
+            float bbx1 = DataUtil.getLEFloat(fileData, off + 0x0C);
+            float bby1 = DataUtil.getLEFloat(fileData, off + 0x10);
+            float bbz1 = DataUtil.getLEFloat(fileData, off + 0x14);
+            float bbx2 = DataUtil.getLEFloat(fileData, off + 0x18);
+            float bby2 = DataUtil.getLEFloat(fileData, off + 0x1C);
+            float bbz2 = DataUtil.getLEFloat(fileData, off + 0x20);
+
+
+            sb.append("    Bounding Box: ").append(bbx1).append(", ").append(bby1).append(", ").append(bbz1).append("; ");
+            sb.append(bbx2).append(", ").append(bby2).append(", ").append(bbz2);
+            sb.append("\r\n");
+
+            int cellx1 = ((int)bbx1 + 3540)/128;
+            int celly1 = ((int)bbx1 + 3540)/128;
+            int cellx2 = ((int)bbx1 + 4140)/128;
+            int celly2 = ((int)bbx1 + 4140)/128;
+
+            sb.append("    Cell BB: ").append(cellx1).append(", ").append(celly1).append("; ");
+            sb.append(cellx2).append(", ").append(celly2).append("\r\n");
+
             // Chunk in texture
-            sb.append("    0x24: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off+0x24))).append("\r\n");
-            sb.append("    0x28: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x28))).append("\r\n");
-            sb.append("    0x2A: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2A))).append("\r\n");
-            sb.append("    0x2C: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2C))).append("\r\n");
-            sb.append("    0x2E: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x2E))).append("\r\n");
-            int member30 = DataUtil.getLEUShort(fileData, off+0x30);
+            sb.append("    tex num: ").append(DataUtil.getLEInt(fileData, off + 0x24)/0x40).append("\r\n");
+            sb.append("    tex cell: ").append(DataUtil.getLEShort(fileData, off + 0x28)).append("\r\n");
+
+            sb.append("    0x2A: ").append(DataUtil.getLEShort(fileData, off + 0x2A)).append("\r\n");
+            sb.append("    0x2C: ").append(DataUtil.getLEShort(fileData, off + 0x2C)).append("\r\n");
+            sb.append("    0x2E: ").append(DataUtil.getLEShort(fileData, off + 0x2E)).append("\r\n");
+
+            int member30 = DataUtil.getLEUShort(fileData, off + 0x30);
             // test 0x800 for a flag.
-            sb.append("    0x30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
-            sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x32))).append("\r\n");
-            sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off+0x34))).append("\r\n");
+            sb.append("    flags30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
+            sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off + 0x32))).append("\r\n");
+            sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off + 0x34))).append("\r\n");
             sb.append("}\r\n");
 
-            if (!meshOffsets.contains(meshOffset)){
+            if (!meshOffsets.contains(meshOffset)) {
                 meshOffsets.add(meshOffset);
                 meshLengths.add(meshDataLen);
             }
@@ -302,15 +312,15 @@ public class WorldDecode
         }
 
         Iterator<Integer> it = meshLengths.iterator();
-        for(int meshOffset : meshOffsets){
+        for (int meshOffset : meshOffsets) {
             Integer len = it.next();
             VifDecode vifDecode = new VifDecode();
-            String meshName = new String(HexUtil.formatHex(meshOffset)+"_mesh");
+            String meshName = HexUtil.formatHex(meshOffset) + "_mesh";
 
             try {
-                byte nregs = fileData[meshOffset+0x10];
-                int startOffset = (nregs+2) * 0x10;
-                vifDecode.readVerts(fileData, meshOffset+startOffset, meshOffset+len*0x10);
+                byte nregs = fileData[meshOffset + 0x10];
+                int startOffset = (nregs + 2) * 0x10;
+                vifDecode.readVerts(fileData, meshOffset + startOffset, meshOffset + len * 0x10);
                 vifDecode.writeObj(meshName, outDirFile, 240, 48, 128.0);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -320,9 +330,9 @@ public class WorldDecode
         sb.append("\r\n");
         sb.append("Elements (38) array - ").append(numElements).append(" elements\r\n \r\n");
         // points to an array of 16 bit values, each of which is actually an unsigned byte.
-        for (int y = 0; y < rows_38; ++y){
-            for (int x=0; x < cols_38; ++x){
-                int val = DataUtil.getLEUShort(fileData, offset38 + 2 * (y*cols_38 + x));
+        for (int y = 0; y < rows_38; ++y) {
+            for (int x = 0; x < cols_38; ++x) {
+                int val = DataUtil.getLEUShort(fileData, offset38 + 2 * (y * cols_38 + x));
                 val &= 0xFF;
                 sb.append(HexUtil.formatHexByte(val)).append(" ");
             }

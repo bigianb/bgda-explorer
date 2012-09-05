@@ -105,11 +105,23 @@ namespace WorldExplorer.DataLoaders
                
                 log.LogLine("        : " + tb + ", " + tc + ", " + td);
 
-                int member30 = DataUtil.getLEUShort(data, elementStartOffset + 0x30);
-                log.LogLine("        : " + HexUtil.formatHexUShort(member30));
-                int member32 = DataUtil.getLEShort(data, elementStartOffset + 0x32);
+                element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
+
+                int member30 = DataUtil.getLEInt(data, elementStartOffset + 0x30);
+                if ((member30 & 0x01) == 0)
+                {
+                    log.LogLine("Flags   : " + HexUtil.formatHexUShort(member30 & 0xFFFF));
+                    short member32 = DataUtil.getLEShort(data, elementStartOffset + 0x32);
+                    log.LogLine("flags2 : " + member32);
+                }
+                else
+                {
+                    log.LogLine("Flags   : " + HexUtil.formatHex(member30));
+                    element.xyzRotFlags = (member30 >> 16) & 3;
+                }
                 int member34 = DataUtil.getLEShort(data, elementStartOffset + 0x34);
-                log.LogLine("        : " + member32 + ", " + member34);
+                log.LogLine("        : " + HexUtil.formatHexUShort(member34));
+
                 worldData.worldElements.Add(element);
             }
 

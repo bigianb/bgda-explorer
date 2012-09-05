@@ -33,5 +33,10 @@ namespace WorldExplorer.DataModel
         public Rect3D boundingBox;
         public Model model;
         public WriteableBitmap Texture;
+
+        // The position before rotation
+        public Vector3D pos;
+
+        public int xyzRotFlags;
     }
 }
