@@ -28,7 +28,6 @@ public class WorldDecode
     public static void main(String[] args) throws IOException
     {
         String outDirTest = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
-//        String outDir = "/emu/bgda/BG/DATA_extracted/tavern/tavern_lmp/";
         String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
 
         File outDirFile = new File(outDir);
@@ -157,16 +156,16 @@ public class WorldDecode
         int offset54 = DataUtil.getLEInt(fileData, 0x54);
         sb.append("Offset54: ").append(HexUtil.formatHex(offset54)).append("\r\n");
 
-        sb.append("world.58: ").append(DataUtil.getLEInt(fileData, 0x58)).append("\r\n");
-        sb.append("world.5c: ").append(DataUtil.getLEInt(fileData, 0x5C)).append("\r\n");
+        sb.append("Texture grid min y*100+x: ").append(DataUtil.getLEInt(fileData, 0x58)).append("\r\n");
+        sb.append("Texture grid max y*100+x: ").append(DataUtil.getLEInt(fileData, 0x5C)).append("\r\n");
               
         int offset60 = DataUtil.getLEInt(fileData, 0x60);
         sb.append("Offset60: ").append(HexUtil.formatHex(offset60)).append("\r\n");
-        int offset64 = DataUtil.getLEInt(fileData, 0x64);
 
         // Each entry is 2 integers. First one gives the offset into the texture file. Second one is the
-        // data length.
-        sb.append("world.64 (offsets into level.tex): ").append(HexUtil.formatHex(offset64)).append("\r\n");
+        // data length. Each row is 100 entries long. The number of rows is given by the values in 0x58 and 0x5C
+        int offset64 = DataUtil.getLEInt(fileData, 0x64);
+        sb.append("Texture grid array offset: ").append(HexUtil.formatHex(offset64)).append("\r\n");
 
         float offset68 = DataUtil.getLEFloat(fileData, 0x68);
         sb.append("Offset68: ").append(offset68).append("\r\n");
