@@ -69,31 +69,41 @@ namespace WorldExplorer
                 Transform3DGroup transform3DGroup = new Transform3DGroup();
 
                 transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
-
-                if ((element.xyzRotFlags & 1) == 1)
+                bool skip = false;
+                switch (element.xyzRotFlags)
                 {
-                    var xrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), (element.xyzRotFlags & 4) == 4 ? 90 : -90));
-                    transform3DGroup.Children.Add(xrot);
+                    case 0:
+                        // no rotation
+                        break;
+                    case 3:
+                        {
+                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 180));
+                            transform3DGroup.Children.Add(rot);
+                        }
+                        break;
+                    case 6:
+                        {
+                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90));
+                            transform3DGroup.Children.Add(rot);
+                        }
+                        break;
+                    case 5:
+                        {
+                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 270));
+                            transform3DGroup.Children.Add(rot);
+                        }
+                        break;
+                    default:
+                        // throw new Exception("Unknown rotation: " + element.xyzRotFlags);
+                        skip = true;
+                        break;
                 }
-
-                if ((element.xyzRotFlags & 2) == 2)
-                {
-                    var yrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), (element.xyzRotFlags & 4) == 4 ? 90 : -90));
-                    transform3DGroup.Children.Add(yrot);
-                }
-
-                if ((element.xyzRotFlags & 4) == 4)
-                {
-                    var zrot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90));
-                    transform3DGroup.Children.Add(zrot);
-                }
-                
-                
-
 
                 mv3d.Transform = transform3DGroup;
-
-                scene.Add(mv3d);
+                if (!skip)
+                {
+                    scene.Add(mv3d);
+                }
             }
 
             Scene = scene;

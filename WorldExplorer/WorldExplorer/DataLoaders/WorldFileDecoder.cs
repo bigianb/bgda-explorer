@@ -117,7 +117,8 @@ namespace WorldExplorer.DataLoaders
                 else
                 {
                     log.LogLine("Flags   : " + HexUtil.formatHex(member30));
-                    element.xyzRotFlags = (member30 >> 16) & 3;
+                    element.xyzRotFlags = (member30 >> 16) & 7;
+                    log.LogLine("Rot Flags   : " + element.xyzRotFlags);
                 }
                 int member34 = DataUtil.getLEShort(data, elementStartOffset + 0x34);
                 log.LogLine("        : " + HexUtil.formatHexUShort(member34));
