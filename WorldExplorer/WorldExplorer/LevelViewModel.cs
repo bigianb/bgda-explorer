@@ -70,10 +70,8 @@ namespace WorldExplorer
 
                 transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
                 Matrix3D mtx = Matrix3D.Identity;
-                if (element.usesRotFlags)
-                {
-                    if ((element.xyzRotFlags & 4) == 4)
-                    {
+                if (element.usesRotFlags) {
+                    if ((element.xyzRotFlags & 4) == 4) {
                         // Flip x, y
                         mtx.M11 = 0;
                         mtx.M21 = 1;
@@ -82,14 +80,23 @@ namespace WorldExplorer
                         mtx.M22 = 0;
                     }
 
-                    if ((element.xyzRotFlags & 1) == 1)
-                    {
+                    if ((element.xyzRotFlags & 2) == 2) {
                         mtx.M11 = -mtx.M11;
                         mtx.M21 = -mtx.M21;
                     }
 
-                    if ((element.xyzRotFlags & 2) == 2)
-                    {
+                    if ((element.xyzRotFlags & 1) == 1) {
+                        mtx.M12 = -mtx.M12;
+                        mtx.M22 = -mtx.M22;
+                    }
+                } else {
+                    // Change handedness by reversing angle (sign on sin)
+                    mtx.M11 = element.cosAlpha;
+                    mtx.M21 = -element.sinAlpha;
+                    mtx.M12 = element.sinAlpha;
+                    mtx.M22 = element.cosAlpha;
+                    if (element.negYaxis) {
+                        // Should this be col1 due to handed change?
                         mtx.M12 = -mtx.M12;
                         mtx.M22 = -mtx.M22;
                     }
@@ -144,7 +151,7 @@ namespace WorldExplorer
             }
         }
 
-        private Camera _camera = new OrthographicCamera { Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1) };
+        private Camera _camera = new OrthographicCamera { Position = new Point3D(0, -10, 10), LookDirection = new Vector3D(0, 1, -1) };
 
         public Camera Camera
         {
@@ -155,22 +162,6 @@ namespace WorldExplorer
                 this.OnPropertyChanged("Camera");
             }
         }
-
-        private void UpdateCamera(Rect3D bounds)
-        {
-            OrthographicCamera oCam = (OrthographicCamera)_camera;
-
-            Point3D centroid = new Point3D(0, 0, 0);
-            double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
-            double cameraDistance = radius * 3.0;
-
-            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z);
-            oCam.Position = camPos;
-            oCam.Width = cameraDistance;
-            oCam.LookDirection = new Vector3D(0, 1, 0);
-            oCam.UpDirection = new Vector3D(0, 0, 1);
-        }
-
 
         #region INotifyPropertyChanged Members
 
