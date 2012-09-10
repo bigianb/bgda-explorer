@@ -69,41 +69,38 @@ namespace WorldExplorer
                 Transform3DGroup transform3DGroup = new Transform3DGroup();
 
                 transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
-                bool skip = false;
-                switch (element.xyzRotFlags)
+                Matrix3D mtx = Matrix3D.Identity;
+                if (element.usesRotFlags)
                 {
-                    case 0:
-                        // no rotation
-                        break;
-                    case 3:
-                        {
-                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 180));
-                            transform3DGroup.Children.Add(rot);
-                        }
-                        break;
-                    case 6:
-                        {
-                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90));
-                            transform3DGroup.Children.Add(rot);
-                        }
-                        break;
-                    case 5:
-                        {
-                            var rot = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 270));
-                            transform3DGroup.Children.Add(rot);
-                        }
-                        break;
-                    default:
-                        // throw new Exception("Unknown rotation: " + element.xyzRotFlags);
-                        skip = true;
-                        break;
-                }
+                    if ((element.xyzRotFlags & 4) == 4)
+                    {
+                        // Flip x, y
+                        mtx.M11 = 0;
+                        mtx.M21 = 1;
 
-                mv3d.Transform = transform3DGroup;
-                if (!skip)
-                {
-                    scene.Add(mv3d);
+                        mtx.M12 = 1;
+                        mtx.M22 = 0;
+                    }
+
+                    if ((element.xyzRotFlags & 1) == 1)
+                    {
+                        mtx.M11 = -mtx.M11;
+                        mtx.M21 = -mtx.M21;
+                    }
+
+                    if ((element.xyzRotFlags & 2) == 2)
+                    {
+                        mtx.M12 = -mtx.M12;
+                        mtx.M22 = -mtx.M22;
+                    }
                 }
+                if (!mtx.IsIdentity)
+                {
+                    transform3DGroup.Children.Add(new MatrixTransform3D(mtx));
+                }
+                mv3d.Transform = transform3DGroup;
+                
+                scene.Add(mv3d);               
             }
 
             Scene = scene;
