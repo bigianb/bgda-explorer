@@ -107,21 +107,28 @@ namespace WorldExplorer.DataLoaders
 
                 element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
 
-                int member30 = DataUtil.getLEInt(data, elementStartOffset + 0x30);
-                if ((member30 & 0x01) == 0)
+                int flags = DataUtil.getLEInt(data, elementStartOffset + 0x30);
+                if ((flags & 0x01) == 0)
                 {
-                    log.LogLine("Flags   : " + HexUtil.formatHexUShort(member30 & 0xFFFF));
-                    short member32 = DataUtil.getLEShort(data, elementStartOffset + 0x32);
-                    log.LogLine("flags2 : " + member32);
+                    log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
+                    element.cosAlpha = DataUtil.getLEShort(data, elementStartOffset + 0x32) / 32767.0;
+                    element.sinAlpha = DataUtil.getLEShort(data, elementStartOffset + 0x34) / 32767.0;
+                    log.LogLine("cos alpha : " + element.cosAlpha);
+                    log.LogLine("sin alpha : " + element.sinAlpha);
+                    log.LogLine("alpha(cos, sin): " + Math.Acos(element.cosAlpha) * 180.0 / Math.PI + ", " + Math.Asin(element.sinAlpha) * 180.0 / Math.PI);
+
+                    element.usesRotFlags = false;
                 }
                 else
                 {
-                    log.LogLine("Flags   : " + HexUtil.formatHex(member30));
-                    element.xyzRotFlags = (member30 >> 16) & 7;
+                    log.LogLine("Flags   : " + HexUtil.formatHex(flags));
+                    element.xyzRotFlags = (flags >> 16) & 7;
+                    element.usesRotFlags = true;
                     log.LogLine("Rot Flags   : " + element.xyzRotFlags);
                 }
-                int member34 = DataUtil.getLEShort(data, elementStartOffset + 0x34);
-                log.LogLine("        : " + HexUtil.formatHexUShort(member34));
+
+                element.negYaxis = (flags & 0x40) == 0x40;
+
 
                 worldData.worldElements.Add(element);
             }

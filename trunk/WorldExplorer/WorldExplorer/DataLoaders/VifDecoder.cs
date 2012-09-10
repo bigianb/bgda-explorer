@@ -366,7 +366,8 @@ namespace WorldExplorer.DataLoaders
                     case MSCAL_CMD:
                         Debug.WriteLine(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("MSCAL: " + immCommand);
-                        if (immCommand != 66 && immCommand != 68) {
+                        if (immCommand != 66 && immCommand != 68 && immCommand != 70)
+                        {
                             Debug.WriteLine("**** Microcode " + immCommand + " not supported");
                         }
                         currentChunk.mscalID = immCommand;
