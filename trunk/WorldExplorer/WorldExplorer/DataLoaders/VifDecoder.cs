@@ -40,7 +40,7 @@ namespace WorldExplorer.DataLoaders
                 int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + meshNum * 4);
                 int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + meshNum * 4);
                 var chunks = ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts);
-                var Mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
+                var Mesh = ChunksToMesh(log, chunks, texturePixelWidth, texturePixelHeight);
                 meshes.Add(Mesh);
                 totalNumChunks += chunks.Count;
             }
@@ -53,12 +53,12 @@ namespace WorldExplorer.DataLoaders
         public static Mesh DecodeMesh(ILogger log, byte[] data, int startOffset, int length, int texturePixelWidth, int texturePixelHeight)
         {           
             var chunks = ReadVerts(log, data, startOffset, startOffset + length);
-            var mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
+            var mesh = ChunksToMesh(log, chunks, texturePixelWidth, texturePixelHeight);
 
             return mesh;
         }
 
-        public static Mesh ChunksToMesh(List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
+        public static Mesh ChunksToMesh(ILogger log, List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
         {
             Mesh mesh = new Mesh();
             int numVertices = 0;
@@ -70,6 +70,11 @@ namespace WorldExplorer.DataLoaders
             mesh.Normals = new Vector3DCollection(numVertices);
             mesh.vertexWeights = new List<VertexWeight>();
             var uvCoords = new Point[numVertices];
+            Point uninitPoint = new Point(-10000, -10000);
+            for (int uv = 0; uv < uvCoords.Length; ++uv)
+            {
+                uvCoords[uv] = uninitPoint;
+            }
             int vstart = 0;
             foreach (var chunk in chunks) {
                 if ((chunk.gifTag0.prim & 0x07) != 4) {
@@ -125,6 +130,7 @@ namespace WorldExplorer.DataLoaders
 
                     int uv1 = i - 2;
                     int uv2 = i - 1;
+                    int uv3 = i;
 
                     // Flip the faces (indices 1 and 2) to keep the winding rule consistent.
                     if ((triIdx & 1) == 1) {
@@ -149,10 +155,26 @@ namespace WorldExplorer.DataLoaders
 
                         double udiv = texturePixelWidth * 16.0;
                         double vdiv = texturePixelHeight * 16.0;
-                        
-                        uvCoords[vidx1] = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
-                        uvCoords[vidx2] = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
-                        uvCoords[vidx3] = new Point(chunk.uvs[i].u / udiv, chunk.uvs[i].v / vdiv);
+
+                        Point p1 = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
+                        Point p2 = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
+                        Point p3 = new Point(chunk.uvs[uv3].u / udiv, chunk.uvs[uv3].v / vdiv);
+
+                        if (!uninitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
+                        {
+                            log.LogLine("******** Detected per face UVs!");
+                        }
+                        if (!uninitPoint.Equals(uvCoords[vidx2]) && !p2.Equals(uvCoords[vidx2]))
+                        {
+                            log.LogLine("******** Detected per face UVs!");
+                        }
+                        if (!uninitPoint.Equals(uvCoords[vidx3]) && !p3.Equals(uvCoords[vidx3]))
+                        {
+                            log.LogLine("******** Detected per face UVs!");
+                        }
+                        uvCoords[vidx1] = p1;
+                        uvCoords[vidx2] = p2;
+                        uvCoords[vidx3] = p3;
                     }
                     ++triIdx;
                 }
