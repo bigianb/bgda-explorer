@@ -45,7 +45,11 @@ namespace WorldExplorer
 
         void SkeletonView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            SkeletonViewModel model = (SkeletonViewModel)DataContext;
+            var model = DataContext as SkeletonViewModel;
+
+            if (model == null)
+                return;
+
             var skeletonTrackball = new Trackball();
             skeletonTrackball.EventSource = trackballSource;
             model.CameraTransform = skeletonTrackball.Transform;

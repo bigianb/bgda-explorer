@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -27,6 +28,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Win32;
 using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
@@ -36,13 +38,16 @@ namespace WorldExplorer
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainWindowViewModel _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
-            MainWindowViewModel model = new MainWindowViewModel(Properties.Settings.Default.DataPath);
-            DataContext = model;
 
-            CommandBinding binding = new CommandBinding(ApplicationCommands.Properties);
+            _viewModel = new MainWindowViewModel(Properties.Settings.Default.DataPath);
+            DataContext = _viewModel;
+
+            var binding = new CommandBinding(ApplicationCommands.Properties);
             binding.Executed += Properties_Executed;
             binding.CanExecute += Properties_CanExecute;
             this.CommandBindings.Add(binding);
@@ -55,21 +60,31 @@ namespace WorldExplorer
 
         private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SettingsWindow window = new SettingsWindow();
+            var window = new SettingsWindow();
             bool? result = window.ShowDialog();
             if (result.GetValueOrDefault(false))
             {
                 // User pressed save, so we should re-init things.
-                MainWindowViewModel model = (MainWindowViewModel)DataContext;
-                model.SettingsChanged();
+                _viewModel.SettingsChanged();
             }
 
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            MainWindowViewModel model = (MainWindowViewModel)DataContext;
-            model.SelectedNode = e.NewValue;
+            _viewModel.SelectedNode = e.NewValue;
+        }
+
+        private void MenuOpenFileClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Multiselect = false;
+
+            if (dialog.ShowDialog(this).Value)
+            {
+                _viewModel.LoadFile(dialog.FileName);
+                //viewModel.SettingsChanged();
+            }
         }
 
     }

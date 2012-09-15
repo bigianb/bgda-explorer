@@ -32,8 +32,12 @@ namespace WorldExplorer
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
+        string _gobFile;
+        string _dataPath;
+
         public MainWindowViewModel(string dataPath)
         {
+            _dataPath = dataPath;
             _selectedNodeImage = new WriteableBitmap(
                 100,   // width
                 100,   // height
@@ -41,17 +45,27 @@ namespace WorldExplorer
                 96,
                 PixelFormats.Bgr32,
                 null);
-            _world = new World(dataPath, Properties.Settings.Default.GobFile);
+            //_world = new World(dataPath, Properties.Settings.Default.GobFile);
+            //_worldTreeViewModel = new WorldTreeViewModel(_world);
+        }
+
+        public void LoadFile(string file)
+        {
+            _gobFile = System.IO.Path.GetFileName(file);
+            _world = new World(_dataPath, _gobFile);
             _worldTreeViewModel = new WorldTreeViewModel(_world);
+            this.OnPropertyChanged("Children");
         }
 
         public void SettingsChanged()
         {
-            String dataPath = Properties.Settings.Default.DataPath;
-            _world = new World(dataPath, Properties.Settings.Default.GobFile);
-            _worldTreeViewModel = new WorldTreeViewModel(_world);
-            // Trigger the tree view to update
-            this.OnPropertyChanged("Children");
+            _dataPath = Properties.Settings.Default.DataPath;
+
+            if (_gobFile != null)
+            {
+                // Reload gobfile with new settings
+                LoadFile(_gobFile);
+            }
         }
 
         private World _world;

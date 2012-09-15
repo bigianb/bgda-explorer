@@ -75,6 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="LevelViewModel.cs" />
     <Compile Include="LevelView.xaml.cs">
       <DependentUpon>LevelView.xaml</DependentUpon>

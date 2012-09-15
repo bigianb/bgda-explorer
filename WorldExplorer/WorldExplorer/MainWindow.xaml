@@ -10,6 +10,9 @@
         </Grid.RowDefinitions>
 
         <Menu IsMainMenu="True">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open File" Click="MenuOpenFileClick" />
+            </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Settings" Command="Properties" />
             </MenuItem>

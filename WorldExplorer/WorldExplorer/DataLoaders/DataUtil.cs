@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -27,11 +28,18 @@ namespace WorldExplorer.DataLoaders
         {
             StringBuilder sb = new StringBuilder();
             int i = index;
+
+            // TODO: Check array length before access
             while (data[i] != 0) {
                 sb.Append((char)data[i]);
                 ++i;
             }
             return sb.ToString();
+        }
+
+        public static bool FilePathHasInvalidChars(string path)
+        {
+            return (!string.IsNullOrEmpty(path) && path.IndexOfAny(System.IO.Path.GetInvalidPathChars()) >= 0);
         }
 
         public static int getLEInt(byte[] data, int offset)
