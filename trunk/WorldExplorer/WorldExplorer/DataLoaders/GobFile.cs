@@ -29,7 +29,7 @@ namespace WorldExplorer.DataLoaders
             _filepath = filepath;
             FileData = File.ReadAllBytes(filepath);
             ReadDirectory();
-            Filename = _filepath.Split(new[] { '\\', '/' }).Last();
+            Filename = System.IO.Path.GetFileName(filepath);
         }
 
         private string _filepath;

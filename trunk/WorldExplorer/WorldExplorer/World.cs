@@ -15,6 +15,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using WorldExplorer.DataLoaders;
@@ -41,11 +42,9 @@ namespace WorldExplorer
 
         public void Load()
         {
-            string gobFilename = DataPath + "\\" + Name + ".gob";
-            WorldGob = new GobFile(gobFilename);
-
-            string texFilename = DataPath + "\\" + Name + ".tex";
-            WorldTex = new WorldTexFile(texFilename);
+            WorldGob = new GobFile(System.IO.Path.Combine(DataPath, Name));
+            var bareName = System.IO.Path.GetFileNameWithoutExtension(Name) + ".tex";
+            WorldTex = new WorldTexFile(System.IO.Path.Combine(DataPath, bareName));
         }
     }
 }

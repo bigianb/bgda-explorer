@@ -15,7 +15,7 @@ namespace WorldExplorer.DataLoaders
         {
             _filepath = filepath;
             fileData = File.ReadAllBytes(filepath);
-            Filename = _filepath.Split(new[] { '\\', '/' }).Last();
+            Filename = Path.GetFileName(_filepath);
         }
 
         private string _filepath;

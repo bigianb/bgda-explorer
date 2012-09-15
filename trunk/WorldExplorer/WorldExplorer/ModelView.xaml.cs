@@ -45,7 +45,11 @@ namespace WorldExplorer
 
         void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            ModelViewModel model = (ModelViewModel)DataContext;
+            var model = DataContext as ModelViewModel;
+
+            if (model == null)
+                return;
+
             var trackball = new Trackball();
             trackball.EventSource = trackballSource;
             model.CameraTransform = trackball.Transform;
