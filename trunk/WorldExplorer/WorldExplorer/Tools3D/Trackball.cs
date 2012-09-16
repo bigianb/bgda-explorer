@@ -69,6 +69,7 @@ namespace WorldExplorer.Tools3D
                     _eventSource.MouseDown -= this.OnMouseDown;
                     _eventSource.MouseUp -= this.OnMouseUp;
                     _eventSource.MouseMove -= this.OnMouseMove;
+                    _eventSource.MouseWheel -= this.OnMouseWheel;
                 }
 
                 _eventSource = value;
@@ -76,10 +77,26 @@ namespace WorldExplorer.Tools3D
                 _eventSource.MouseDown += this.OnMouseDown;
                 _eventSource.MouseUp += this.OnMouseUp;
                 _eventSource.MouseMove += this.OnMouseMove;
+                _eventSource.MouseWheel += this.OnMouseWheel;
             }
         }
 
+        void OnMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            double scale = e.Delta / 120; // Either -1 for down or 1 for up
+
+            if (scale == -1)
+                scale = 1.05;
+            else
+                scale = 0.95;
+
+            _scale.ScaleX *= scale;
+            _scale.ScaleY *= scale;
+            _scale.ScaleZ *= scale;
+        }
+
         private bool _captured;
+        private bool _middleButton;
 
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
@@ -90,12 +107,19 @@ namespace WorldExplorer.Tools3D
                 EventSource.ActualHeight,
                 _previousPosition2D);
             _captured = true;
+
+            _middleButton = e.MiddleButton == MouseButtonState.Pressed;
         }
 
         private void OnMouseUp(object sender, MouseEventArgs e)
         {
             Mouse.Capture(EventSource, CaptureMode.None);
             _captured = false;
+
+            if (_middleButton && e.MiddleButton == MouseButtonState.Released)
+            {
+                ResetView();
+            }
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -164,6 +188,13 @@ namespace WorldExplorer.Tools3D
             _scale.ScaleX *= scale;
             _scale.ScaleY *= scale;
             _scale.ScaleZ *= scale;
+        }
+
+        public void ResetView()
+        {
+            _scale.ScaleX = _scale.ScaleY = _scale.ScaleZ = 1;
+            _rotation.Axis = new Vector3D(0, 1, 0);
+            _rotation.Angle = 0;
         }
     }
 }

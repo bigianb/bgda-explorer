@@ -24,14 +24,16 @@ namespace WorldExplorer.DataLoaders
 {
     public class GobFile
     {
-        public GobFile(string filepath)
+        public GobFile(EngineVersion engineVersion, string filepath)
         {
+            _engineVersion = engineVersion;
             _filepath = filepath;
             FileData = File.ReadAllBytes(filepath);
             ReadDirectory();
             Filename = System.IO.Path.GetFileName(filepath);
         }
 
+        private EngineVersion _engineVersion;
         private string _filepath;
 
         public String Filename;
@@ -43,7 +45,7 @@ namespace WorldExplorer.DataLoaders
             while (s.Length > 0) {
                 int lmpOffset = BitConverter.ToInt32(FileData, index + 0x20);
                 int lmpLen = BitConverter.ToInt32(FileData, index + 0x24);
-                Directory[s] = new LmpFile(s, FileData, lmpOffset, lmpLen);
+                Directory[s] = new LmpFile(_engineVersion, s, FileData, lmpOffset, lmpLen);
                 index += 0x28;
                 s = DataUtil.GetString(FileData, index);
             }

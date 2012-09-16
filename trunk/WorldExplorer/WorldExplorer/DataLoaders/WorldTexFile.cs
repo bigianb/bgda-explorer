@@ -11,12 +11,15 @@ namespace WorldExplorer.DataLoaders
 {
     public class WorldTexFile
     {
-        public WorldTexFile(string filepath)
+        public WorldTexFile(EngineVersion engineVersion, string filepath)
         {
+            _engineVersion = engineVersion;
             _filepath = filepath;
             fileData = File.ReadAllBytes(filepath);
             Filename = Path.GetFileName(_filepath);
         }
+
+        private EngineVersion _engineVersion;
 
         private string _filepath;
 

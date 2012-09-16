@@ -61,13 +61,14 @@ namespace WorldExplorer
         private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var window = new SettingsWindow();
+            window.Owner = this;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             bool? result = window.ShowDialog();
             if (result.GetValueOrDefault(false))
             {
                 // User pressed save, so we should re-init things.
                 _viewModel.SettingsChanged();
             }
-
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -80,10 +81,10 @@ namespace WorldExplorer
             var dialog = new OpenFileDialog();
             dialog.Multiselect = false;
 
-            if (dialog.ShowDialog(this).Value)
+            bool? result = dialog.ShowDialog();
+            if (result.GetValueOrDefault(false))
             {
                 _viewModel.LoadFile(dialog.FileName);
-                //viewModel.SettingsChanged();
             }
         }
 
