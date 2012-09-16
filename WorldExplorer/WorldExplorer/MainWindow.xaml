@@ -57,7 +57,7 @@
                   VerticalAlignment="Stretch" 
                   Grid.Column="1" ResizeBehavior="PreviousAndNext"
                   Width="5" Background="#FFBCBCBC"/>
-            <TabControl Grid.Column="2">
+            <TabControl Grid.Column="2" Name="tabControl">
                 <TabItem Header="Texture">
                     <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
                 </TabItem>

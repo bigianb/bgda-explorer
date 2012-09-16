@@ -24,14 +24,16 @@ namespace WorldExplorer.DataLoaders
 {
     public class LmpFile
     {
-        public LmpFile(string name, byte[] data, int startOffset, int dataLen)
+        public LmpFile(EngineVersion engineVersion, string name, byte[] data, int startOffset, int dataLen)
         {
+            _engineVersion = engineVersion;
             Name = name;
             FileData = data;
             _startOffset = startOffset;
             _dataLen = dataLen;
         }
 
+        private EngineVersion _engineVersion;
         public String Name;
 
         public void ReadDirectory()
@@ -39,19 +41,9 @@ namespace WorldExplorer.DataLoaders
             var reader = new DataReader(FileData, _startOffset, _dataLen);
             int numEntries = reader.ReadInt32(); //BitConverter.ToInt32(FileData, _startOffset);
 
-            // Detect if it's a new version or not
-            bool isNewVersion = false;
-            string firstFileName = DataUtil.GetString(FileData, _startOffset + 4);
-
-            // If file name has invalid characers or doesn't have an extension assume it's not actually a file name
-            if (DataUtil.FilePathHasInvalidChars(firstFileName) || string.IsNullOrEmpty(Path.GetExtension(firstFileName)))
-                isNewVersion = true;
-
-
             for (int entry = 0; entry < numEntries; ++entry) {
-                if (isNewVersion)
+                if (_engineVersion == EngineVersion.ReturnToArms)
                 {
-                    // Champions RTA version
                     int stringOffset = reader.ReadInt32();
                     int dataOffset = reader.ReadInt32();
                     int dataLength = reader.ReadInt32();
@@ -66,7 +58,6 @@ namespace WorldExplorer.DataLoaders
                 }
                 else
                 {
-                    // BA:DA 1 version
                     int headerOffset = _startOffset + 4 + entry * 64;
                     String subfileName = DataUtil.GetString(FileData, headerOffset);
 

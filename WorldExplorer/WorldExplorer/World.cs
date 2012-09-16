@@ -25,14 +25,18 @@ namespace WorldExplorer
 {
     public class World
     {
-        public World(string dataPath, string name)
+        public World(EngineVersion engineVersion, string dataPath, string name)
         {
+            if (string.IsNullOrEmpty(dataPath))
+                Debug.Fail("Datapath is null");
+            EngineVersion = engineVersion;
             DataPath = dataPath;
             Name = name;
         }
 
         public String DataPath;
         public String Name;
+        public EngineVersion EngineVersion;
 
         public GobFile WorldGob = null;
         public WorldTexFile WorldTex = null;
@@ -42,9 +46,9 @@ namespace WorldExplorer
 
         public void Load()
         {
-            WorldGob = new GobFile(System.IO.Path.Combine(DataPath, Name));
+            WorldGob = new GobFile(EngineVersion, System.IO.Path.Combine(DataPath, Name));
             var bareName = System.IO.Path.GetFileNameWithoutExtension(Name) + ".tex";
-            WorldTex = new WorldTexFile(System.IO.Path.Combine(DataPath, bareName));
+            WorldTex = new WorldTexFile(EngineVersion, System.IO.Path.Combine(DataPath, bareName));
         }
     }
 }

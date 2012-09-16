@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
@@ -45,14 +46,15 @@ namespace WorldExplorer
                 96,
                 PixelFormats.Bgr32,
                 null);
-            //_world = new World(dataPath, Properties.Settings.Default.GobFile);
-            //_worldTreeViewModel = new WorldTreeViewModel(_world);
         }
 
         public void LoadFile(string file)
         {
-            _gobFile = System.IO.Path.GetFileName(file);
-            _world = new World(_dataPath, _gobFile);
+            var folderPath = Path.GetDirectoryName(file);
+            var engineVersion = Properties.Settings.Default.EngineVersion;
+            _gobFile = file;
+
+            _world = new World(engineVersion, folderPath,  Path.GetFileName(_gobFile));
             _worldTreeViewModel = new WorldTreeViewModel(_world);
             this.OnPropertyChanged("Children");
         }
@@ -63,7 +65,7 @@ namespace WorldExplorer
 
             if (_gobFile != null)
             {
-                // Reload gobfile with new settings
+                // Reload file with new settings
                 LoadFile(_gobFile);
             }
         }
@@ -163,35 +165,51 @@ namespace WorldExplorer
         {
             var lmpFile = lmpEntry.LmpFileProperty;
             var entry = lmpFile.Directory[lmpEntry.Text];
-            if (lmpEntry.Text.EndsWith(".tex")) {              
-                SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
-            } else if (lmpEntry.Text.EndsWith(".vif")) {
-                string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
-                var texEntry = lmpFile.Directory[texFilename];
-                SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
-                var animData = LoadFirstAnim(lmpFile);
-                var log = new StringLogger();
-                _modelViewModel.Texture = SelectedNodeImage;
-                _modelViewModel.AnimData = null;
-                Model model = new Model();
-                model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length, SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
-                _modelViewModel.VifModel = model;
-                _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
-                LogText += log.ToString();
-            } else if (lmpEntry.Text.EndsWith(".anm")) {
-                var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
-                _skeletonViewModel.AnimData = animData;
-                LogText = animData.ToString();
+
+            var ext = (Path.GetExtension(lmpEntry.Text) ?? "").ToLower();
+
+            switch (ext)
+            {
+                case ".tex":
+                    {
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                    }
+                    break;
+                case ".vif":
+                    {
+                        string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
+                        var texEntry = lmpFile.Directory[texFilename];
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
+                        var animData = LoadFirstAnim(lmpFile);
+                        var log = new StringLogger();
+                        _modelViewModel.Texture = SelectedNodeImage;
+                        _modelViewModel.AnimData = null;
+                        Model model = new Model();
+                        model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
+                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
+                        _modelViewModel.VifModel = model;
+                        _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
+                        LogText += log.ToString();
+                    }
+                    break;
+                case ".anm":
+                    {
+                        var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                        _skeletonViewModel.AnimData = animData;
+                        LogText = animData.ToString();
+                    }
+                    break;
             }
         }
 
         private void OnWorldEntrySelected(WorldFileTreeViewModel worldFileModel)
         {
+            var engineVersion = Properties.Settings.Default.EngineVersion;
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
             WorldFileDecoder decoder = new WorldFileDecoder();
             var log = new StringLogger();
-            _world.worldData = decoder.Decode(_worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
+            _world.worldData = decoder.Decode(engineVersion, _worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
             worldFileModel.ReloadChildren();
             _levelViewModel.WorldData = _world.worldData;
             LogText = log.ToString();

@@ -37,13 +37,13 @@ namespace WorldExplorer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Cellar1")]
-        public string GobFile {
+        [global::System.Configuration.DefaultSettingValueAttribute("DarkAlliance")]
+        public global::WorldExplorer.DataLoaders.EngineVersion EngineVersion {
             get {
-                return ((string)(this["GobFile"]));
+                return ((global::WorldExplorer.DataLoaders.EngineVersion)(this["EngineVersion"]));
             }
             set {
-                this["GobFile"] = value;
+                this["EngineVersion"] = value;
             }
         }
     }

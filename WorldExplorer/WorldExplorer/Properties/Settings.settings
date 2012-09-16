@@ -5,8 +5,8 @@
     <Setting Name="DataPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\emu\bgda\BG\DATA</Value>
     </Setting>
-    <Setting Name="GobFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Cellar1</Value>
+    <Setting Name="EngineVersion" Type="WorldExplorer.DataLoaders.EngineVersion" Scope="User">
+      <Value Profile="(Default)">DarkAlliance</Value>
     </Setting>
   </Settings>
 </SettingsFile>

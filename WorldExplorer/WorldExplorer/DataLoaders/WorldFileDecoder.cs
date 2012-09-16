@@ -15,6 +15,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows.Media.Imaging;
@@ -28,59 +29,86 @@ namespace WorldExplorer.DataLoaders
 {
     public class WorldFileDecoder
     {
-        public WorldData Decode(WorldTexFile texFile, ILogger log, byte[] data, int startOffset, int length)
+        public WorldData Decode(EngineVersion engineVersion, WorldTexFile texFile, ILogger log, byte[] data, int startOffset, int length)
         {
             WorldData worldData = new WorldData();
 
-            int numElements = DataUtil.getLEInt(data, startOffset + 0);
+            var reader = new DataReader(data, startOffset, length);
 
-            int numCols = DataUtil.getLEInt(data, startOffset + 0x10);
-            int numRows = DataUtil.getLEInt(data, startOffset + 0x14);
+            int numElements = reader.ReadInt32();
 
-            int elementArrayStart = DataUtil.getLEInt(data, startOffset + 0x24);
+            reader.SetOffset(0x10); // Skipping 3 ints
+            int numCols = reader.ReadInt32();
+            int numRows = reader.ReadInt32();
 
-            int off38Cols = DataUtil.getLEInt(data, startOffset + 0x30);
-            int off38Rows = DataUtil.getLEInt(data, startOffset + 0x34);
-            int off38 = DataUtil.getLEInt(data, startOffset + 0x38);
+            reader.SetOffset(0x24); // Skipping 3 ints
+            int elementArrayStart = reader.ReadInt32();
 
-            int texll = DataUtil.getLEInt(data, startOffset + 0x58);
-            int texur = DataUtil.getLEInt(data, startOffset + 0x5C);
+            reader.SetOffset(0x30);
+            int off38Cols = reader.ReadInt32();
+            int off38Rows = reader.ReadInt32();
+            int off38 = reader.ReadInt32();
+
+            reader.SetOffset(0x58);
+            int texll = reader.ReadInt32();
+            int texur = reader.ReadInt32();
             int texX0 = texll % 100;
             int texY0 = texll / 100;
             int texX1 = texur % 100;
             int texY1 = texur / 100;
 
-            int worldTexOffsetsOffset = DataUtil.getLEInt(data, startOffset + 0x64);
+            reader.SetOffset(0x64);
+            int worldTexOffsetsOffset = reader.ReadInt32();
             worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
+
             for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
             {
-                WorldElement element = new WorldElement();
-                int elementStartOffset = startOffset + elementArrayStart + elementIdx * 0x38;
+                var element = new WorldElement();
 
-                int vifDataOffset = DataUtil.getLEInt(data, elementStartOffset);
-                int vifLen = DataUtil.getLEInt(data, elementStartOffset+8);
+                if (engineVersion == EngineVersion.ReturnToArms)
+                {
+                    reader.SetOffset(elementArrayStart + elementIdx * 60);
+                }
+                else // Default to Dark Allience version
+                {
+                    reader.SetOffset(elementArrayStart + elementIdx * 56);
+                }
+
+                int vifDataOffset = reader.ReadInt32();
+
+                if (engineVersion == EngineVersion.DarkAlliance)
+                {
+                    reader.Skip(4);
+                }
+
+                int vifLen = reader.ReadInt32();
                 log.LogLine("-----------");
                 log.LogLine("vifdata: " + vifDataOffset + ", " + vifLen);
 
-                float x1 = DataUtil.getLEFloat(data, elementStartOffset + 0x0C);
-                float y1 = DataUtil.getLEFloat(data, elementStartOffset + 0x10);
-                float z1 = DataUtil.getLEFloat(data, elementStartOffset + 0x14);
-                float x2 = DataUtil.getLEFloat(data, elementStartOffset + 0x18);
-                float y2 = DataUtil.getLEFloat(data, elementStartOffset + 0x1C);
-                float z2 = DataUtil.getLEFloat(data, elementStartOffset + 0x20);
+                float x1 = reader.ReadFloat();
+                float y1 = reader.ReadFloat();
+                float z1 = reader.ReadFloat();
+                float x2 = reader.ReadFloat();
+                float y2 = reader.ReadFloat();
+                float z2 = reader.ReadFloat();
 
                 element.boundingBox = new Rect3D(x1, y1, z1, x2-x1, y2-y1, z2-z1);
 
                 log.LogLine("Bounding Box: " + element.boundingBox.ToString());
 
-                int textureNum = DataUtil.getLEInt(data, elementStartOffset + 0x24) / 0x40;
+                int textureNum = reader.ReadInt32() / 0x40;
                 log.LogLine("Texture Num: " + textureNum);
 
-                int texCellxy = DataUtil.getLEShort(data, elementStartOffset + 0x28);
+                int texCellxy = reader.ReadInt16();
                 int y = texCellxy / 100;
                 int x = texCellxy % 100;
-                element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
+
+                if (textureNum != 0)
+                {
+                    element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
+                }
+
                 if (element.Texture != null)
                 {
                     log.LogLine("Found in texture chunk: " + x + ", " + y);
@@ -97,22 +125,22 @@ namespace WorldExplorer.DataLoaders
 
                 byte nregs = data[startOffset + vifDataOffset + 0x10];
                 int vifStartOffset = (nregs + 2) * 0x10;
-                element.model = decodeModel(vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
+                element.model = decodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
-                int tb = DataUtil.getLEShort(data, elementStartOffset + 0x2A);
-                int tc = DataUtil.getLEShort(data, elementStartOffset + 0x2C);
-                int td = DataUtil.getLEShort(data, elementStartOffset + 0x2E);
+                int tb = reader.ReadInt16();
+                int tc = reader.ReadInt16();
+                int td = reader.ReadInt16();
                
                 log.LogLine("        : " + tb + ", " + tc + ", " + td);
 
                 element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
 
-                int flags = DataUtil.getLEInt(data, elementStartOffset + 0x30);
+                int flags = reader.ReadInt32();
                 if ((flags & 0x01) == 0)
                 {
                     log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
-                    element.cosAlpha = DataUtil.getLEShort(data, elementStartOffset + 0x32) / 32767.0;
-                    element.sinAlpha = DataUtil.getLEShort(data, elementStartOffset + 0x34) / 32767.0;
+                    element.cosAlpha = reader.ReadInt16() / 32767.0;
+                    element.sinAlpha = reader.ReadInt16() / 32767.0;
                     log.LogLine("cos alpha : " + element.cosAlpha);
                     log.LogLine("sin alpha : " + element.sinAlpha);
                     log.LogLine("alpha(cos, sin): " + Math.Acos(element.cosAlpha) * 180.0 / Math.PI + ", " + Math.Asin(element.sinAlpha) * 180.0 / Math.PI);
@@ -167,7 +195,7 @@ namespace WorldExplorer.DataLoaders
 
         private Dictionary<int, Model> modelMap = new Dictionary<int, Model>();
 
-        public Model decodeModel(ILogger log, byte[] data, int startOffset, int length, int texWidth, int texHeight)
+        public Model decodeModel(EngineVersion engineVersion, ILogger log, byte[] data, int startOffset, int length, int texWidth, int texHeight)
         {
             Model model = null;
             if (!modelMap.TryGetValue(startOffset, out model)){
