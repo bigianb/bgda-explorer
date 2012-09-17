@@ -29,15 +29,16 @@ namespace WorldExplorer
             engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Champions: Return To Arms", DataContext = EngineVersion.ReturnToArms });
 
             // Select the correct item
+            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             foreach (ComboBoxItem item in engineVersionBox.Items)
             {
-                if (item.DataContext is EngineVersion && (EngineVersion)item.DataContext == Properties.Settings.Default.EngineVersion)
+                if (item.DataContext is EngineVersion && (EngineVersion)item.DataContext == engineVersion)
                 {
                     engineVersionBox.SelectedItem = item;
                     break;
                 }
             }
-            dataPathTextblock.Text = Properties.Settings.Default.DataPath;
+            dataPathTextblock.Text = App.Settings.Get<string>("Files.DataPath", "");
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -48,10 +49,10 @@ namespace WorldExplorer
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.DataPath = dataPathTextblock.Text;
-            Properties.Settings.Default.EngineVersion = GetVersionFromBox();
+            App.Settings["Files.DataPath"] = dataPathTextblock.Text;
+            App.Settings["Core.EngineVersion"] = GetVersionFromBox();
 
-            Properties.Settings.Default.Save();
+            App.SaveSettings();
             DialogResult = true;
             Close();
         }

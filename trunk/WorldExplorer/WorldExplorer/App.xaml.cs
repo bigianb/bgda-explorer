@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Windows;
+using WorldExplorer.Tools;
 
 namespace WorldExplorer
 {
@@ -12,5 +14,18 @@ namespace WorldExplorer
     /// </summary>
     public partial class App : Application
     {
+        static string SettingsFileName = "settings.ini";
+        public static Section Settings;
+
+        public static void LoadSettings()
+        {
+            Environment.CurrentDirectory = Path.GetDirectoryName(ResourceAssembly.Location);
+            Settings = File.Exists(SettingsFileName) ? SettingsIO.Ini.ParseFile(SettingsFileName) : new Section();
+        }
+
+        public static void SaveSettings()
+        {
+            SettingsIO.Ini.WriteFile(SettingsFileName, Settings);
+        }
     }
 }
