@@ -59,7 +59,7 @@ namespace WorldExplorer.DataLoaders
 
             reader.Skip(4);
             int worldTexOffsetsOffset = reader.ReadInt32();
-            worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
+            worldData.textureChunkOffsets = readTextureChunkOffsets(engineVersion, data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
 
             for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
@@ -93,7 +93,7 @@ namespace WorldExplorer.DataLoaders
                 float y2 = reader.ReadFloat();
                 float z2 = reader.ReadFloat();
 
-                element.boundingBox = new Rect3D(x1, y1, z1, x2-x1, y2-y1, z2-z1);
+                element.boundingBox = new Rect3D(x1, y1, z1, x2 - x1, y2 - y1, z2 - z1);
 
                 log.LogLine("Bounding Box: " + element.boundingBox.ToString());
 
@@ -103,6 +103,12 @@ namespace WorldExplorer.DataLoaders
                 int texCellxy = reader.ReadInt16();
                 int y = texCellxy / 100;
                 int x = texCellxy % 100;
+
+                if (EngineVersion.ReturnToArms == engineVersion)
+                {
+                    x += texX0;
+                    y += texY0;
+                }
 
                 if (textureNum != 0)
                 {
@@ -130,7 +136,7 @@ namespace WorldExplorer.DataLoaders
                 int tb = reader.ReadInt16();
                 int tc = reader.ReadInt16();
                 int td = reader.ReadInt16();
-               
+
                 log.LogLine("        : " + tb + ", " + tc + ", " + td);
 
                 element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
@@ -166,7 +172,7 @@ namespace WorldExplorer.DataLoaders
 
         private String makeString(List<int> list)
         {
-            String s="";
+            String s = "";
             foreach (int i in list)
             {
                 if (s.Length != 0)
@@ -179,14 +185,24 @@ namespace WorldExplorer.DataLoaders
             return s;
         }
 
-        private int[,] readTextureChunkOffsets(byte[] data, int offset, int x1, int y1, int x2, int y2)
+        private int[,] readTextureChunkOffsets(EngineVersion engineVersion, byte[] data, int offset, int x1, int y1, int x2, int y2)
         {
             int[,] chunkOffsets = new int[100, 100];
             int addr;
-            for (int y = y1; y <= y2; ++y) {
-                for (int x = x1; x <= x2; ++x) {
+            for (int y = y1; y <= y2; ++y)
+            {
+                for (int x = x1; x <= x2; ++x)
+                {
                     int cellOffset = ((y - y1) * 100 + x - x1) * 8;
-                    addr = DataUtil.getLEInt(data, offset + cellOffset);
+                    if (EngineVersion.ReturnToArms == engineVersion)
+                    {
+                        // TODO: Figure out what this should really be
+                        addr = 0x800;
+                    }
+                    else
+                    {
+                        addr = DataUtil.getLEInt(data, offset + cellOffset);
+                    }
                     chunkOffsets[y, x] = addr;
                 }
             }
@@ -198,7 +214,8 @@ namespace WorldExplorer.DataLoaders
         public Model decodeModel(EngineVersion engineVersion, ILogger log, byte[] data, int startOffset, int length, int texWidth, int texHeight)
         {
             Model model = null;
-            if (!modelMap.TryGetValue(startOffset, out model)){
+            if (!modelMap.TryGetValue(startOffset, out model))
+            {
                 model = new Model();
                 model.meshList = new List<Mesh>(1);
                 model.meshList.Add(VifDecoder.DecodeMesh(log, data, startOffset, length, texWidth, texHeight));
