@@ -44,7 +44,9 @@ namespace WorldExplorer
         {
             InitializeComponent();
 
-            _viewModel = new MainWindowViewModel(Properties.Settings.Default.DataPath);
+            App.LoadSettings();
+
+            _viewModel = new MainWindowViewModel(App.Settings.Get<string>("Files.DataPath", ""));
             DataContext = _viewModel;
 
             var binding = new CommandBinding(ApplicationCommands.Properties);
@@ -52,10 +54,16 @@ namespace WorldExplorer
             binding.CanExecute += Properties_CanExecute;
             this.CommandBindings.Add(binding);
 
-            if (!string.IsNullOrEmpty(Properties.Settings.Default.LastLoadedFile))
+            var lastLoadedFile = App.Settings.Get<string>("Files.LastLoadedFile", "");
+            if (!string.IsNullOrEmpty(lastLoadedFile))
             {
-                _viewModel.LoadFile(Properties.Settings.Default.LastLoadedFile);
+                _viewModel.LoadFile(lastLoadedFile);
             }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            App.SaveSettings();
         }
 
         private void Properties_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -91,8 +99,8 @@ namespace WorldExplorer
             {
                 _viewModel.LoadFile(dialog.FileName);
 
-                Properties.Settings.Default.LastLoadedFile = dialog.FileName;
-                Properties.Settings.Default.Save();
+                App.Settings["Files.LastLoadedFile"] = dialog.FileName;
+                App.SaveSettings();
             }
         }
 

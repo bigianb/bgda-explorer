@@ -51,7 +51,7 @@ namespace WorldExplorer
         public void LoadFile(string file)
         {
             var folderPath = Path.GetDirectoryName(file);
-            var engineVersion = Properties.Settings.Default.EngineVersion;
+            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             _gobFile = file;
 
             _world = new World(engineVersion, folderPath,  Path.GetFileName(_gobFile));
@@ -61,7 +61,7 @@ namespace WorldExplorer
 
         public void SettingsChanged()
         {
-            _dataPath = Properties.Settings.Default.DataPath;
+            _dataPath = App.Settings.Get<string>("Files.DataPath", "");
 
             if (_gobFile != null)
             {
@@ -204,7 +204,7 @@ namespace WorldExplorer
 
         private void OnWorldEntrySelected(WorldFileTreeViewModel worldFileModel)
         {
-            var engineVersion = Properties.Settings.Default.EngineVersion;
+            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
             WorldFileDecoder decoder = new WorldFileDecoder();
