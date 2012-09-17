@@ -417,18 +417,18 @@ namespace WorldExplorer.DataLoaders
                             bool usn = (immCommand & 0x4000) == 0x4000;
 
                             Debug.WriteLine(HexUtil.formatHex(offset) + " ");
-                            Debug.WriteLine("UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr);
-                            Debug.WriteLine(", num: " + numCommand);
+                            String debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
+
                             if (flag) {
-                                Debug.WriteLine(", Flag");
+                                debugMsg += ", Flag";
                             }
                             if (usn) {
-                                Debug.WriteLine(", Unsigned");
+                                debugMsg += ", Unsigned";
                             }
                             if (mask) {
-                                Debug.WriteLine(", Mask");
+                                debugMsg += ", Mask";
                             }
-                            Debug.WriteLine("");
+                            Debug.WriteLine(debugMsg);
                             offset += 4;
                             if (vn == 1 && vl == 1) {
                                 // v2-16
@@ -491,11 +491,15 @@ namespace WorldExplorer.DataLoaders
                                 if (1 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
+                                    Debug.WriteLine("GifTag: " + currentChunk.gifTag0.ToString());
                                 } else if (2 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
                                     currentChunk.gifTag1 = new GIFTag();
                                     currentChunk.gifTag1.parse(fileData, offset + 16);
+
+                                    Debug.WriteLine("GifTag0: " + currentChunk.gifTag0.ToString());
+                                    Debug.WriteLine("GifTag1: " + currentChunk.gifTag1.ToString());
                                 } else {
                                     log.LogLine("unknown number of gif commands.");
                                 }
