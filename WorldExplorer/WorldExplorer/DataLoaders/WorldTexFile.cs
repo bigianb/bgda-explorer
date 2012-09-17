@@ -40,21 +40,25 @@ namespace WorldExplorer.DataLoaders
             int offset = chunkStartOffset + textureNumber * 0x40;
             WriteableBitmap tex = null;
             if (!texMap.TryGetValue(offset, out tex)){
-                tex = Decode(offset);
+                tex = Decode(offset, chunkStartOffset);
                 texMap.Add(offset, tex);
             }
             return tex;
         }
 
-        public WriteableBitmap Decode(int offset)
+        public WriteableBitmap Decode(int offset, int chunkStartOffset)
         {
+            // Dark Alliance encodes pointers as offsets from the entry in the texture entry table.
+            // Return to arms (more sensibly) encodes pointers as offsets from the current chunk loaded from the disc.
+            int deltaOffset = EngineVersion.DarkAlliance == _engineVersion ? offset : chunkStartOffset;
+
             int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
-            int headerOffset10 = header10 + offset;
+            int headerOffset10 = header10 + deltaOffset;
             if (headerOffset10 <= 0 || headerOffset10 >= fileData.Length)
             {
                 return null;
             }
-            int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
+            int palOffset = DataUtil.getLEInt(fileData, headerOffset10) + deltaOffset;
 
             PalEntry[] palette = PalEntry.readPalette(fileData, palOffset, 16, 16);
             palette = PalEntry.unswizzlePalette(palette);
@@ -80,7 +84,7 @@ namespace WorldExplorer.DataLoaders
             {
                 for (int xblock = 0; xblock < wBlocks; ++xblock)
                 {
-                    int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
+                    int blockDataStart = DataUtil.getLEInt(fileData, p) + deltaOffset;
                     decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
                     p += 4;
                 }
@@ -88,9 +92,33 @@ namespace WorldExplorer.DataLoaders
             
             // Specify the area of the bitmap that changed.
             image.AddDirtyRect(new Int32Rect(0, 0, wBlocks * 16, hBlocks * 16));
+/*
+ * This is rubbish but I think something similar may be required, so I am leaving the code here as an aide-memoir until I am sure it is not needed.
+ * 
+            WriteableBitmap croppedImage = new WriteableBitmap(
+                    x1-x0+1, y1-y0+1,
+                    96, 96,
+                    PixelFormats.Bgr32,
+                    null);
 
+            croppedImage.Lock();
+            int pSrc = (int)image.BackBuffer;
+            int pDest = (int)croppedImage.BackBuffer;
+            for (int y = y0; y <= y1; ++y) {
+                for (int x = x0; x <= x1; ++x) {
+                    unsafe {
+                        int* pSrcPixel = (int*)(pSrc + y * image.BackBufferStride + x * 4);
+                        int* pDestPixel = (int*)(pDest + (y - y0) * croppedImage.BackBufferStride + (x - x0) * 4);
+                        *pDestPixel = *pSrcPixel;
+                    }
+                }
+            }
+            croppedImage.AddDirtyRect(new Int32Rect(0, 0, x1 - x0 + 1, y1 - y0 + 1));
+            croppedImage.Unlock();
+*/
             // Release the back buffer and make it available for display.
             image.Unlock();
+
             return image;
         }
 
