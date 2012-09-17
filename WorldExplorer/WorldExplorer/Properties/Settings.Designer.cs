@@ -46,5 +46,17 @@ namespace WorldExplorer.Properties {
                 this["EngineVersion"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastLoadedFile {
+            get {
+                return ((string)(this["LastLoadedFile"]));
+            }
+            set {
+                this["LastLoadedFile"] = value;
+            }
+        }
     }
 }
