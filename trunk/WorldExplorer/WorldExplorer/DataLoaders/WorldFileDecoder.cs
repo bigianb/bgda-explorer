@@ -37,19 +37,19 @@ namespace WorldExplorer.DataLoaders
 
             int numElements = reader.ReadInt32();
 
-            reader.SetOffset(0x10); // Skipping 3 ints
+            reader.Skip(12); // Skipping 3 ints
             int numCols = reader.ReadInt32();
             int numRows = reader.ReadInt32();
 
-            reader.SetOffset(0x24); // Skipping 3 ints
+            reader.Skip(12); // Skipping 3 ints
             int elementArrayStart = reader.ReadInt32();
 
-            reader.SetOffset(0x30);
+            reader.Skip(8); // Skipping 2 ints
             int off38Cols = reader.ReadInt32();
             int off38Rows = reader.ReadInt32();
             int off38 = reader.ReadInt32();
 
-            reader.SetOffset(0x58);
+            reader.Skip(28);
             int texll = reader.ReadInt32();
             int texur = reader.ReadInt32();
             int texX0 = texll % 100;
@@ -57,7 +57,7 @@ namespace WorldExplorer.DataLoaders
             int texX1 = texur % 100;
             int texY1 = texur / 100;
 
-            reader.SetOffset(0x64);
+            reader.Skip(4);
             int worldTexOffsetsOffset = reader.ReadInt32();
             worldData.textureChunkOffsets = readTextureChunkOffsets(data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
@@ -66,18 +66,18 @@ namespace WorldExplorer.DataLoaders
             {
                 var element = new WorldElement();
 
-                if (engineVersion == EngineVersion.ReturnToArms)
+                if (EngineVersion.ReturnToArms == engineVersion)
                 {
-                    reader.SetOffset(elementArrayStart + elementIdx * 60);
+                    reader.SetOffset(elementArrayStart + elementIdx * 0x3C);
                 }
                 else // Default to Dark Allience version
                 {
-                    reader.SetOffset(elementArrayStart + elementIdx * 56);
+                    reader.SetOffset(elementArrayStart + elementIdx * 0x38);
                 }
 
                 int vifDataOffset = reader.ReadInt32();
 
-                if (engineVersion == EngineVersion.DarkAlliance)
+                if (EngineVersion.DarkAlliance == engineVersion)
                 {
                     reader.Skip(4);
                 }

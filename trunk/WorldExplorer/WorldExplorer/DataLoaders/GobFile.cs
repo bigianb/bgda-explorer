@@ -33,7 +33,7 @@ namespace WorldExplorer.DataLoaders
             Filename = System.IO.Path.GetFileName(filepath);
         }
 
-        private EngineVersion _engineVersion;
+        private readonly EngineVersion _engineVersion;
         private string _filepath;
 
         public String Filename;

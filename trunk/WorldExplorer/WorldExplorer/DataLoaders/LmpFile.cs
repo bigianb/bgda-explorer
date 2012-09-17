@@ -33,7 +33,7 @@ namespace WorldExplorer.DataLoaders
             _dataLen = dataLen;
         }
 
-        private EngineVersion _engineVersion;
+        private readonly EngineVersion _engineVersion;
         public String Name;
 
         public void ReadDirectory()
@@ -42,7 +42,7 @@ namespace WorldExplorer.DataLoaders
             int numEntries = reader.ReadInt32(); //BitConverter.ToInt32(FileData, _startOffset);
 
             for (int entry = 0; entry < numEntries; ++entry) {
-                if (_engineVersion == EngineVersion.ReturnToArms)
+                if (EngineVersion.ReturnToArms == _engineVersion)
                 {
                     int stringOffset = reader.ReadInt32();
                     int dataOffset = reader.ReadInt32();
