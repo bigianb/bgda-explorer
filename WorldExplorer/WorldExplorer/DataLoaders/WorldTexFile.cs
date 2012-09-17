@@ -19,7 +19,7 @@ namespace WorldExplorer.DataLoaders
             Filename = Path.GetFileName(_filepath);
         }
 
-        private EngineVersion _engineVersion;
+        private readonly EngineVersion _engineVersion;
 
         private string _filepath;
 
