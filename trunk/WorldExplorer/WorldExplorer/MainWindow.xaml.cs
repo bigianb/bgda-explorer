@@ -51,6 +51,11 @@ namespace WorldExplorer
             binding.Executed += Properties_Executed;
             binding.CanExecute += Properties_CanExecute;
             this.CommandBindings.Add(binding);
+
+            if (!string.IsNullOrEmpty(Properties.Settings.Default.LastLoadedFile))
+            {
+                _viewModel.LoadFile(Properties.Settings.Default.LastLoadedFile);
+            }
         }
 
         private void Properties_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -85,6 +90,9 @@ namespace WorldExplorer
             if (result.GetValueOrDefault(false))
             {
                 _viewModel.LoadFile(dialog.FileName);
+
+                Properties.Settings.Default.LastLoadedFile = dialog.FileName;
+                Properties.Settings.Default.Save();
             }
         }
 
