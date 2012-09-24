@@ -63,3 +63,55 @@ To make the next step simpler, we divide the numbers by the the number of elemen
 3, 13, 38+nodraw
 6, 4, 41+nodraw
 }}}
+
+for each entry (index i) a, b, c we apply the following logic:
+{{{
+triStrip[c] = triStrip[b]
+triStrip[a] = vertices[i]
+}}}
+
+Following this logic, the tri-strip array is built as follows for the example data:
+
+{{{
+triStrip[10] = vertices[0]
+
+triStrip[12] = triStrip[10] = vertices[0]
+triStrip[2] = vertices[1]
+
+triStrip[14] = triStrip[10] = vertices[0]
+triStrip[4] = vertices[2]
+
+triStrip[16] = triStrip[10] = vertices[0]
+triStrip[13] = vertices[3]
+
+triStrip[22] = triStrip[4] = vertices[2]
+triStrip[32] = vertices[4]
+
+triStrip[34] = triStrip[32] = vertices[4]
+triStrip[46] = vertices[5]
+
+triStrip[35] = triStrip[13] = vertices[3]
+triStrip[0] = vertices[6] + nodraw flag
+
+triStrip[38] = triStrip[13] = vertices[3] + nodraw flag
+triStrip[3] = vertices[7]
+
+triStrip[41] = triStrip[4] = vertices[2] + nodraw flag
+triStrip[6] = vertices[8]
+}}}
+
+If there are more entries than there are vertices, then there is a subsequent section:
+{{{
+unsigned 16 bit: count
+a, b, a2, b2
+a, b, a2, b2
+....
+}}}
+There are _count_ lines.
+
+The logic is:
+{{{
+triStrip[a] = triStrip[b]
+triStrip[a2] = triStrip[b2]
+}}}
+where again the no-draw flag is specified by bit 0x8000 on b and b2.
