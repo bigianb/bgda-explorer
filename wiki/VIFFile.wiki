@@ -7,10 +7,10 @@ VIF files (those with the extension .vif) contain chunks of data which are sent 
 
 A number of data segments are transferred via the VIF. These are:
 
-* Vertex x,y,z position data
-* Vertex normal data
-* A compressed tri-strip
-* A set of per-face uv coords
+  * Vertex x,y,z position data
+  * Vertex normal data
+  * A compressed tri-strip
+  * A set of per-face uv coords
 
 == Tri-Strip details ==
 
@@ -50,8 +50,16 @@ d,   35,  8099
 
 The VU program has 3 passes, so the first 2 entries can be ignored (but they do give us a good hint as to the number of elements per tri-strip entry). From looking at the data, we can also guess that each tri-strip entry is 4 elements long and the vertex position is the second element (the GIF tag transferred in the vif data defines the number of elements).
 
-To make the next step simpler, we divide the numbers by the the number of elements per strip entry (4 in this case), drop the first 2 lines and isolate the no-draw flag as 0x8000. This gives the following data:
+To make the next step simpler, we divide the numbers by the the number of elements per strip entry (4 in this case), drop the first 2 lines and isolate the no-draw flag as 0x8000. This gives the following data (in decimal):
 
 {{{
-
+10, 0, 0
+2, 10, 12
+4, 10, 14
+13, 10, 16
+32, 4, 22
+46, 32, 34
+0+nodraw, 13, 35
+3, 13, 38+nodraw
+6, 4, 41+nodraw
 }}}
