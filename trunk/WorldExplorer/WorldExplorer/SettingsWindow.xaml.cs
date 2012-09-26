@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -72,6 +73,23 @@ namespace WorldExplorer
 
             // Return default version
             return EngineVersion.DarkAlliance;
+        }
+
+        private void BrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+
+            // Select the folder path that is in the text box if there is text 
+            // and if it's a valid folder
+            if (!string.IsNullOrEmpty(dataPathTextblock.Text) && Directory.Exists(dataPathTextblock.Text))
+            {
+                dialog.SelectedPath = dataPathTextblock.Text;
+            }
+
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                dataPathTextblock.Text = dialog.SelectedPath;
+            }
         }
     }
 }

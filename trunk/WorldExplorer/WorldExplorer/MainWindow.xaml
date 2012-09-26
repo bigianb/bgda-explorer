@@ -12,6 +12,8 @@
         <Menu IsMainMenu="True">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open File" Click="MenuOpenFileClick" />
+                <Separator/>
+                <MenuItem Header="E_xit" Click="MenuExitClick" />
             </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Settings" Command="Properties" />

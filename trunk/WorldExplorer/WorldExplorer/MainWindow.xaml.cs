@@ -103,6 +103,9 @@ namespace WorldExplorer
                 App.SaveSettings();
             }
         }
-
+        private void MenuExitClick(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }
