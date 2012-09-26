@@ -1,13 +1,31 @@
-#summary One-sentence summary of this page.
+#summary An explanation on how to compile the source code.
+
+<wiki:toc max_depth="1" />
+<hr/>
 
 = Introduction =
+This should walk you through the basics of getting and compiling the source code.
 
-Add your content here.
+= 1. Prerequisites =
 
+In order to compile bgda-explorer you'll need to 
 
-= Details =
+ * [http://www.microsoft.com/visualstudio/eng/downloads Visual Studio 2012]
+ * [http://tortoisesvn.tigris.org/ TortoiseSVN] ^*recommended svn client^
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+= 2. Checking Out Source Code =
+This will be using TortiseSVN, if you're using a different SVN client your steps may be different.
+
+ # Create a folder where the source code will be downloaded to.
+ # Right click the folder and select Svn Checkout.
+ # A window will open and enter the following URL into the top text box:
+{{{
+https://bgda-explorer.googlecode.com/svn/trunk/
+}}}
+  || <a href="http://i.imgur.com/zJlmm.png"><img src="http://i.imgur.com/zJlmm.png" width="130px" /></a><br> 1 & 2|| <a href="http://i.imgur.com/5BkIB.png"><img src="http://i.imgur.com/5BkIB.png" width="130px" /></a><br> 3||
+
+= 3. Compiling the Source Code and Running the Application =
+
+ # Once the download is complete, open the "WorldExplorer.sln" file which is located in the WorldExplorer folder with Visual Studio.
+ # Click the debug button on the toolbar which will start the compile process and launch the application once completed.
+  || <a href="http://i.imgur.com/h4ipJ.png"><img src="http://i.imgur.com/h4ipJ.png" width="130px" /></a><br> 1|| <a href="http://i.imgur.com/MfrG8.png"><img src="http://i.imgur.com/MfrG8.png" width="130px" /></a><br> 2||
