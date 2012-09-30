@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using WorldExplorer.DataLoaders;
@@ -40,15 +41,30 @@ namespace WorldExplorer
 
         public GobFile WorldGob = null;
         public WorldTexFile WorldTex = null;
+        public LmpFile WorldLmp = null;
 
         // The parsed data from the various files.
         public WorldData worldData = null;
 
         public void Load()
         {
-            WorldGob = new GobFile(EngineVersion, System.IO.Path.Combine(DataPath, Name));
-            var bareName = System.IO.Path.GetFileNameWithoutExtension(Name) + ".tex";
-            WorldTex = new WorldTexFile(EngineVersion, System.IO.Path.Combine(DataPath, bareName));
+            var ext = (Path.GetExtension(Name) ?? "").ToLower();
+
+            switch (ext)
+            {
+                case ".gob":
+                    WorldGob = new GobFile(EngineVersion, Path.Combine(DataPath, Name));
+                    var bareName = Path.GetFileNameWithoutExtension(Name) + ".tex";
+                    WorldTex = new WorldTexFile(EngineVersion, Path.Combine(DataPath, bareName));
+                    break;
+                case ".lmp":
+                    // TODO: Support just passing the filepath instead of having to load data here
+                    var data = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                    WorldLmp = new LmpFile(EngineVersion, Name, data, 0, data.Length);
+                    break;
+                default:
+                    throw new NotSupportedException("Unsupported file type");
+            }
         }
     }
 }
