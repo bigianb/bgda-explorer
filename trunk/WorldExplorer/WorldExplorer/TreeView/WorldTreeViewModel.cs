@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
 
@@ -42,7 +43,19 @@ namespace WorldExplorer
         protected override void LoadChildren()
         {
             _world.Load();
-            base.Children.Add(new GobTreeViewModel(_world, this));
+
+            if (_world.WorldLmp != null)
+            {
+                base.Children.Add(new LmpTreeViewModel(_world, this, _world.WorldLmp));
+            }
+            else if (_world.WorldGob != null)
+            {
+                base.Children.Add(new GobTreeViewModel(_world, this));
+            }
+            else
+            {
+                throw new NotSupportedException("Unknown or corrupted file");
+            }
         }
     }
 
