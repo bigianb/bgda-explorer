@@ -58,6 +58,21 @@ namespace WorldExplorer.DataLoaders
             return mesh;
         }
 
+        // Finds which vertex weight object to use for the given vertex.
+        private static VertexWeight FindVertexWeight(List<VertexWeight> weights, int vertexNum)
+        {
+
+            foreach (var weight in weights) {
+                if (vertexNum >= weight.startVertex && vertexNum <= weight.endVertex) {
+                    return weight;
+                }
+            }
+            if (weights.Count != 0) {
+                Debug.Fail("Failed to find vertex weight");
+            }
+            return new VertexWeight();
+        }
+
         public static Mesh ChunksToMesh(ILogger log, List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
         {
             Mesh mesh = new Mesh();
@@ -88,10 +103,21 @@ namespace WorldExplorer.DataLoaders
                 foreach (var normal in chunk.normals) {
                     mesh.Normals.Add(new Vector3D(normal.x / 127.0, normal.y / 127.0, normal.z / 127.0));
                 }
+                foreach (VertexWeight vw in chunk.vertexWeights) {
+                    VertexWeight vwAdjusted = vw;
+                    vwAdjusted.startVertex += vstart;
+                    if (vwAdjusted.endVertex >= chunk.vertices.Count) {
+                        vwAdjusted.endVertex = chunk.vertices.Count - 1;
+                    }
+                    vwAdjusted.endVertex += vstart;
+                    if (vw.startVertex <= (chunk.vertices.Count-1)) {
+                        mesh.vertexWeights.Add(vwAdjusted);
+                    }
+                }
                 int[] vstrip = new int[chunk.gifTag0.nloop];
                 int regsPerVertex = chunk.gifTag0.nreg;
                 int numVlocs = chunk.vlocs.Count;
-                int numVerts = chunk.vertices.Count;
+                int numVertsInChunk = chunk.vertices.Count;
                 for (int vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx) {
                     int v = vlocIndx - 2;
                     int stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0x1FF) / regsPerVertex;
@@ -107,7 +133,7 @@ namespace WorldExplorer.DataLoaders
                     int stripIdx = (chunk.vlocs[vlocIndx].v1 & 0x1FF) / regsPerVertex;
                     bool skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
 
-                    if (v < numVerts && stripIdx < vstrip.Length) {
+                    if (v < numVertsInChunk && stripIdx < vstrip.Length) {
                         vstrip[stripIdx] = skip ? (v | 0x8000) : v;
                     }
                 }
@@ -144,15 +170,6 @@ namespace WorldExplorer.DataLoaders
                     }
 
                     if ((vstrip[i] & 0x8000) == 0) {
-                        // Double sided hack. Should fix this with normals really
-                        mesh.TriangleIndices.Add(vidx1);
-                        mesh.TriangleIndices.Add(vidx2);
-                        mesh.TriangleIndices.Add(vidx3);
-
-                        mesh.TriangleIndices.Add(vidx2);
-                        mesh.TriangleIndices.Add(vidx1);
-                        mesh.TriangleIndices.Add(vidx3);
-
                         double udiv = texturePixelWidth * 16.0;
                         double vdiv = texturePixelHeight * 16.0;
 
@@ -162,32 +179,75 @@ namespace WorldExplorer.DataLoaders
 
                         if (!uninitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
                         {
-                            log.LogLine("******** Detected per face UVs!");
+                            // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
+                            int originalVIdx = vidx1;
+                            vidx1 = vstart + numVertsInChunk;
+                            ++numVertsInChunk;
+                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
+                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            Array.Resize(ref uvCoords, uvCoords.Length+1);
+                            uvCoords[uvCoords.Length - 1] = uninitPoint;
+                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            if (weight.boneWeight1 > 0) {
+                                VertexWeight vw = new VertexWeight(weight);
+                                vw.startVertex = vidx1;
+                                vw.endVertex = vidx1;
+                                mesh.vertexWeights.Add(vw);
+                            }
                         }
                         if (!uninitPoint.Equals(uvCoords[vidx2]) && !p2.Equals(uvCoords[vidx2]))
                         {
-                            log.LogLine("******** Detected per face UVs!");
+                            // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
+                            int originalVIdx = vidx2;
+                            vidx2 = vstart + numVertsInChunk;
+                            ++numVertsInChunk;
+                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
+                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            Array.Resize(ref uvCoords, uvCoords.Length + 1);
+                            uvCoords[uvCoords.Length - 1] = uninitPoint;
+                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            if (weight.boneWeight1 > 0) {
+                                VertexWeight vw = new VertexWeight(weight);
+                                vw.startVertex = vidx2;
+                                vw.endVertex = vidx2;
+                                mesh.vertexWeights.Add(vw);
+                            }
                         }
                         if (!uninitPoint.Equals(uvCoords[vidx3]) && !p3.Equals(uvCoords[vidx3]))
                         {
-                            log.LogLine("******** Detected per face UVs!");
+                            // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
+                            int originalVIdx = vidx3;
+                            vidx3 = vstart + numVertsInChunk;
+                            ++numVertsInChunk;
+                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
+                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            Array.Resize(ref uvCoords, uvCoords.Length + 1);
+                            uvCoords[uvCoords.Length - 1] = uninitPoint;
+                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            if (weight.boneWeight1 > 0) {
+                                VertexWeight vw = new VertexWeight(weight);
+                                vw.startVertex = vidx3;
+                                vw.endVertex = vidx3;
+                                mesh.vertexWeights.Add(vw);
+                            }
                         }
+
                         uvCoords[vidx1] = p1;
                         uvCoords[vidx2] = p2;
                         uvCoords[vidx3] = p3;
+                        
+                        // Double sided hack. Should fix this with normals really
+                        mesh.TriangleIndices.Add(vidx1);
+                        mesh.TriangleIndices.Add(vidx2);
+                        mesh.TriangleIndices.Add(vidx3);
+
+                        mesh.TriangleIndices.Add(vidx2);
+                        mesh.TriangleIndices.Add(vidx1);
+                        mesh.TriangleIndices.Add(vidx3);
                     }
                     ++triIdx;
                 }
-                foreach (VertexWeight vw in chunk.vertexWeights) {
-                    VertexWeight vwAdjusted = vw;
-                    vwAdjusted.startVertex += vstart;
-                    if (vwAdjusted.endVertex >= chunk.vertices.Count) {
-                        vwAdjusted.endVertex = chunk.vertices.Count - 1;
-                    }
-                    vwAdjusted.endVertex += vstart;
-                    mesh.vertexWeights.Add(vwAdjusted);
-                }
-                vstart += chunk.vertices.Count;
+                vstart += numVertsInChunk;
             }
             mesh.TextureCoordinates = new PointCollection(uvCoords);
             return mesh;
@@ -229,7 +289,7 @@ namespace WorldExplorer.DataLoaders
                             vw = meshGroup.vertexWeights[vwNum];
                             if (vnum < vw.startVertex || vnum > vw.endVertex)
                             {
-                                Debug.Fail("Vertex out of range of bone weights");
+                                Debug.Fail("Vertex " + vnum + " out of range of bone weights " + vw.startVertex + " -> " + vw.endVertex);
                             }
                         }
                         int bone1No = vw.bone1;
