@@ -18,21 +18,6 @@ namespace WorldExplorer.DataModel
         public int boneWeight3;
         public int boneWeight4;
 
-        // Copy Constructor
-        public VertexWeight(VertexWeight vw)
-        {
-            startVertex = vw.startVertex;
-            endVertex = vw.endVertex;
-            bone1 = vw.bone1;
-            bone2 = vw.bone2;
-            bone3 = vw.bone3;
-            bone4 = vw.bone4;
-            boneWeight1 = vw.boneWeight1;
-            boneWeight2 = vw.boneWeight2;
-            boneWeight3 = vw.boneWeight3;
-            boneWeight4 = vw.boneWeight4;
-        }
-
         public override String ToString()
         {
             String s = "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1;

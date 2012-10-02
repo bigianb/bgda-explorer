@@ -183,7 +183,7 @@ namespace WorldExplorer
                     break;
                 case ".vif":
                     {
-                        string texFilename = lmpEntry.Text.Replace(".vif", ".tex");
+                        string texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
                         SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
                         var animData = LoadFirstAnim(lmpFile);
