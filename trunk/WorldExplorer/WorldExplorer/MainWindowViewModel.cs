@@ -50,6 +50,9 @@ namespace WorldExplorer
 
         public void LoadFile(string file)
         {
+            // Clear log text
+            LogText = null;
+
             var folderPath = Path.GetDirectoryName(file);
             var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             _gobFile = file;
@@ -134,6 +137,9 @@ namespace WorldExplorer
             get { return _selectedNode; }
             set
             {
+                // Clear log text
+                LogText = null;
+
                 _selectedNode = value;
                 if (_selectedNode is LmpEntryTreeViewModel) {
                     OnLmpEntrySelected((LmpEntryTreeViewModel)_selectedNode);
