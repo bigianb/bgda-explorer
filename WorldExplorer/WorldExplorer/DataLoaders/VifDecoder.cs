@@ -173,23 +173,22 @@ namespace WorldExplorer.DataLoaders
                         double udiv = texturePixelWidth * 16.0;
                         double vdiv = texturePixelHeight * 16.0;
 
-                        Point p1 = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
-                        Point p2 = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
-                        Point p3 = new Point(chunk.uvs[uv3].u / udiv, chunk.uvs[uv3].v / vdiv);
+                        var p1 = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
+                        var p2 = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
+                        var p3 = new Point(chunk.uvs[uv3].u / udiv, chunk.uvs[uv3].v / vdiv);
 
                         if (!uninitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             int originalVIdx = vidx1;
-                            vidx1 = vstart + numVertsInChunk;
-                            ++numVertsInChunk;
+                            vidx1 = vstart + numVertsInChunk++;
                             mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
                             mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length+1);
                             uvCoords[uvCoords.Length - 1] = uninitPoint;
                             var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
                             if (weight.boneWeight1 > 0) {
-                                VertexWeight vw = new VertexWeight(weight);
+                                var vw = new VertexWeight(weight);
                                 vw.startVertex = vidx1;
                                 vw.endVertex = vidx1;
                                 mesh.vertexWeights.Add(vw);
@@ -199,15 +198,14 @@ namespace WorldExplorer.DataLoaders
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             int originalVIdx = vidx2;
-                            vidx2 = vstart + numVertsInChunk;
-                            ++numVertsInChunk;
+                            vidx2 = vstart + numVertsInChunk++;
                             mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
                             mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length + 1);
                             uvCoords[uvCoords.Length - 1] = uninitPoint;
                             var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
                             if (weight.boneWeight1 > 0) {
-                                VertexWeight vw = new VertexWeight(weight);
+                                var vw = new VertexWeight(weight);
                                 vw.startVertex = vidx2;
                                 vw.endVertex = vidx2;
                                 mesh.vertexWeights.Add(vw);
@@ -217,15 +215,14 @@ namespace WorldExplorer.DataLoaders
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             int originalVIdx = vidx3;
-                            vidx3 = vstart + numVertsInChunk;
-                            ++numVertsInChunk;
+                            vidx3 = vstart + numVertsInChunk++;
                             mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
                             mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length + 1);
                             uvCoords[uvCoords.Length - 1] = uninitPoint;
                             var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
                             if (weight.boneWeight1 > 0) {
-                                VertexWeight vw = new VertexWeight(weight);
+                                var vw = new VertexWeight(weight);
                                 vw.startVertex = vidx3;
                                 vw.endVertex = vidx3;
                                 mesh.vertexWeights.Add(vw);
