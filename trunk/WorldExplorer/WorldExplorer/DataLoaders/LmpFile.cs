@@ -34,12 +34,15 @@ namespace WorldExplorer.DataLoaders
         }
 
         private readonly EngineVersion _engineVersion;
+        /// <summary>
+        /// The .lmp file name.
+        /// </summary>
         public String Name;
 
         public void ReadDirectory()
         {
             var reader = new DataReader(FileData, _startOffset, _dataLen);
-            int numEntries = reader.ReadInt32(); //BitConverter.ToInt32(FileData, _startOffset);
+            int numEntries = reader.ReadInt32();
 
             for (int entry = 0; entry < numEntries; ++entry) {
                 if (EngineVersion.ReturnToArms == _engineVersion)
@@ -73,6 +76,9 @@ namespace WorldExplorer.DataLoaders
 
         private int _startOffset;
         private int _dataLen;
+        /// <summary>
+        /// The raw data of the .lmp file.
+        /// </summary>
         public byte[] FileData;
 
         public class EntryInfo
@@ -82,6 +88,9 @@ namespace WorldExplorer.DataLoaders
             public int Length;
         }
 
+        /// <summary>
+        /// A directory of embeded files where the file names are the keys.
+        /// </summary>
         public Dictionary<String, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
 
         public EntryInfo FindFirstEntryWithSuffix(String suffix)
