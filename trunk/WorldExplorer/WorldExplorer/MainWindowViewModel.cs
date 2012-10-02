@@ -35,17 +35,19 @@ namespace WorldExplorer
     {
         string _gobFile;
         string _dataPath;
+        MainWindow _window;
 
-        public MainWindowViewModel(string dataPath)
+        public MainWindowViewModel(MainWindow window, string dataPath)
         {
+            _window = window;
             _dataPath = dataPath;
-            _selectedNodeImage = new WriteableBitmap(
+            /*_selectedNodeImage = new WriteableBitmap(
                 100,   // width
                 100,   // height
                 96,
                 96,
                 PixelFormats.Bgr32,
-                null);
+                null);*/
         }
 
         public void LoadFile(string file)
@@ -179,6 +181,8 @@ namespace WorldExplorer
                 case ".tex":
                     {
                         SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+
+                        _window.tabControl.SelectedIndex = 0; // Texture View
                     }
                     break;
                 case ".vif":
@@ -196,6 +200,8 @@ namespace WorldExplorer
                         _modelViewModel.VifModel = model;
                         _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
                         LogText += log.ToString();
+
+                        _window.tabControl.SelectedIndex = 1; // Model View
                     }
                     break;
                 case ".anm":
@@ -203,6 +209,8 @@ namespace WorldExplorer
                         var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
                         _skeletonViewModel.AnimData = animData;
                         LogText = animData.ToString();
+
+                        _window.tabControl.SelectedIndex = 2; // Animation View
                     }
                     break;
             }
@@ -219,7 +227,9 @@ namespace WorldExplorer
             worldFileModel.ReloadChildren();
             _levelViewModel.WorldData = _world.worldData;
             LogText = log.ToString();
-            LogText += _world.worldData.ToString();           
+            LogText += _world.worldData.ToString();
+
+            _window.tabControl.SelectedIndex = 3; // World View
         }
 
         private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
@@ -228,6 +238,12 @@ namespace WorldExplorer
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
             _modelViewModel.VifModel = worldElementModel.WorldElement.model;
+
+            // If there is a texture that means there's a model
+            if (SelectedNodeImage != null)
+            {
+                _window.tabControl.SelectedIndex = 1; // Model View
+            }
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
