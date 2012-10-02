@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -46,7 +47,7 @@ namespace WorldExplorer
 
             App.LoadSettings();
 
-            _viewModel = new MainWindowViewModel(App.Settings.Get<string>("Files.DataPath", ""));
+            _viewModel = new MainWindowViewModel(this, App.Settings.Get<string>("Files.DataPath", ""));
             DataContext = _viewModel;
 
             var binding = new CommandBinding(ApplicationCommands.Properties);
@@ -106,6 +107,30 @@ namespace WorldExplorer
         private void MenuExitClick(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void Menu_Export_Texture_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.SelectedNodeImage == null)
+            {
+                MessageBox.Show(this, "No texture currently loaded.", "Error", MessageBoxButton.OK);
+                return;
+            }
+
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "PNG Image|*.png";
+            var result = dialog.ShowDialog(this);
+
+            if (result.GetValueOrDefault(false))
+            {
+                using (FileStream stream5 = new FileStream(dialog.FileName, FileMode.Create))
+                {
+                    var encoder5 = new PngBitmapEncoder();
+                    encoder5.Frames.Add(BitmapFrame.Create(_viewModel.SelectedNodeImage));
+                    encoder5.Save(stream5);
+                    stream5.Close();
+                }
+            }
         }
     }
 }
