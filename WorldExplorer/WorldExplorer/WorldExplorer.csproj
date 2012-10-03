@@ -76,6 +76,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataExporters\VifExporter.cs" />
     <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="DataLoaders\EngineVersion.cs" />
     <Compile Include="LevelViewModel.cs" />
