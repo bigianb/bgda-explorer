@@ -30,6 +30,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
+using WorldExplorer.DataExporters;
 using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
@@ -123,13 +124,40 @@ namespace WorldExplorer
 
             if (result.GetValueOrDefault(false))
             {
-                using (FileStream stream5 = new FileStream(dialog.FileName, FileMode.Create))
+                using (var stream = new FileStream(dialog.FileName, FileMode.Create))
                 {
-                    var encoder5 = new PngBitmapEncoder();
-                    encoder5.Frames.Add(BitmapFrame.Create(_viewModel.SelectedNodeImage));
-                    encoder5.Save(stream5);
-                    stream5.Close();
+                    var encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(_viewModel.SelectedNodeImage));
+                    encoder.Save(stream);
+
+                    stream.Flush();
+                    stream.Close();
                 }
+            }
+        }
+        private void Menu_Export_Model_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.TheModelViewModel.VifModel == null)
+            {
+                MessageBox.Show(this, "No model currently loaded.", "Error", MessageBoxButton.OK);
+                return;
+            }
+            if (_viewModel.TheModelViewModel.Texture == null)
+            {
+                MessageBox.Show(this, "Model does not have a texture.", "Error", MessageBoxButton.OK);
+                return;
+            }
+            
+
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "OBJ File|*.obj";
+            var result = dialog.ShowDialog(this);
+
+            if (result.GetValueOrDefault(false))
+            {
+                DataExporters.VifExporter exporter = new VifExporter();
+
+                exporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
             }
         }
     }
