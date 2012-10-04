@@ -14,11 +14,11 @@ namespace WorldExplorer.DataExporters
     {
         void WriteMtlFile(string mtlFile, String name)
         {
-            using (var stream = File.Open(mtlFile, FileMode.Create, FileAccess.Write))
+            using (var stream = new FileStream(mtlFile, FileMode.Create))
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine("newmtl " + name);
-                writer.WriteLine("map_Kd " + name + ".png");
+                writer.WriteLine("map_Kd .\\" + name + ".png");
 
                 writer.Flush();
             }
@@ -45,12 +45,16 @@ namespace WorldExplorer.DataExporters
             var objFile = File.Open(Path.Combine(dir, name + ".obj"), FileMode.Create);
             var writer = new StreamWriter(objFile);
 
-            writer.WriteLine("g " + name);
             writer.WriteLine("mtllib " + name + ".mtl");
-            writer.WriteLine("usemtl " + name);
+            writer.WriteLine("");
 
+            int vStart = 0;
+            int meshCount = 1;
             foreach (var mesh in model.meshList)
             {
+                writer.WriteLine("g Mesh_" + meshCount);
+                writer.WriteLine("usemtl " + name);
+
                 foreach (var vertex in mesh.Positions)
                 {
                     writer.WriteLine("v {0} {1} {2}", 
@@ -58,6 +62,7 @@ namespace WorldExplorer.DataExporters
                         FormatDouble(vertex.Y / scale), 
                         FormatDouble(vertex.Z / scale));
                 }
+                writer.WriteLine("");
 
                 foreach (var uv in mesh.TextureCoordinates)
                 {
@@ -65,6 +70,7 @@ namespace WorldExplorer.DataExporters
                         FormatDouble(uv.X), 
                         FormatDouble(uv.Y));
                 }
+                writer.WriteLine("");
 
                 foreach (var vec in mesh.Normals)
                 {
@@ -73,22 +79,27 @@ namespace WorldExplorer.DataExporters
                         FormatDouble(vec.Y), 
                         FormatDouble(vec.Z));
                 }
+                writer.WriteLine("");
 
                 for (int i = 0; i < mesh.TriangleIndices.Count-3; i += 6)
                 {
                     writer.WriteLine("f {0}/{1}/{2} {3}/{4}/{5} {6}/{7}/{8}",
-                        mesh.TriangleIndices[i] + 1,
-                        mesh.TriangleIndices[i] + 1,
-                        mesh.TriangleIndices[i] + 1,
+                        mesh.TriangleIndices[i] + 1 + vStart,
+                        mesh.TriangleIndices[i] + 1 + vStart,
+                        mesh.TriangleIndices[i] + 1 + vStart,
 
-                        mesh.TriangleIndices[i + 1] + 1,
-                        mesh.TriangleIndices[i + 1] + 1,
-                        mesh.TriangleIndices[i + 1] + 1,
+                        mesh.TriangleIndices[i + 1] + 1 + vStart,
+                        mesh.TriangleIndices[i + 1] + 1 + vStart,
+                        mesh.TriangleIndices[i + 1] + 1 + vStart,
 
-                        mesh.TriangleIndices[i + 2] + 1,
-                        mesh.TriangleIndices[i + 2] + 1,
-                        mesh.TriangleIndices[i + 2] + 1);
+                        mesh.TriangleIndices[i + 2] + 1 + vStart,
+                        mesh.TriangleIndices[i + 2] + 1 + vStart,
+                        mesh.TriangleIndices[i + 2] + 1 + vStart);
                 }
+                writer.WriteLine("");
+
+                vStart += mesh.Positions.Count;
+                meshCount++;
             }
 
             writer.Flush();
