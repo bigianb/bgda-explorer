@@ -42,7 +42,7 @@ namespace WorldExplorer.DataExporters
 
             WriteMtlFile(Path.Combine(dir, name + ".mtl"), name);
 
-            var objFile = File.OpenWrite(Path.Combine(dir, name + ".obj"));
+            var objFile = File.Open(Path.Combine(dir, name + ".obj"), FileMode.Create);
             var writer = new StreamWriter(objFile);
 
             writer.WriteLine("g " + name);
@@ -74,20 +74,19 @@ namespace WorldExplorer.DataExporters
                         FormatDouble(vec.Z));
                 }
 
-                // TODO: Skip the duplicate face, but also skip adding duplicate positions, uv's etc
-                for (int i = 0; i < mesh.TriangleIndices.Count-3; i += 3)
+                for (int i = 0; i < mesh.TriangleIndices.Count-3; i += 6)
                 {
                     writer.WriteLine("f {0}/{1}/{2} {3}/{4}/{5} {6}/{7}/{8}",
                         mesh.TriangleIndices[i] + 1,
-                        mesh.TriangleIndices[i + 1] + 1,
-                        mesh.TriangleIndices[i + 2] + 1,
-
                         mesh.TriangleIndices[i] + 1,
-                        mesh.TriangleIndices[i + 1] + 1,
-                        mesh.TriangleIndices[i + 2] + 1,
-
                         mesh.TriangleIndices[i] + 1,
+
                         mesh.TriangleIndices[i + 1] + 1,
+                        mesh.TriangleIndices[i + 1] + 1,
+                        mesh.TriangleIndices[i + 1] + 1,
+
+                        mesh.TriangleIndices[i + 2] + 1,
+                        mesh.TriangleIndices[i + 2] + 1,
                         mesh.TriangleIndices[i + 2] + 1);
                 }
             }
