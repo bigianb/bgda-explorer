@@ -73,6 +73,19 @@ namespace WorldExplorer.DataLoaders
             return new VertexWeight();
         }
 
+        // Tile an S,T coord to 0 -> 1.
+        private static Point TileST(Point pointIn)
+        {
+            Point pointOut=pointIn;
+            if (pointOut.X > 1.0) {
+                pointOut.X = pointOut.X - Math.Floor(pointOut.X);
+            }
+            if (pointOut.Y > 1.0) {
+                pointOut.Y = pointOut.Y - Math.Floor(pointOut.Y);
+            }
+            return pointOut;
+        }
+
         public static Mesh ChunksToMesh(ILogger log, List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
         {
             Mesh mesh = new Mesh();
@@ -170,12 +183,17 @@ namespace WorldExplorer.DataLoaders
                     }
 
                     if ((vstrip[i] & 0x8000) == 0) {
+                        // WPF really has S,T coords rather than u,v
                         double udiv = texturePixelWidth * 16.0;
                         double vdiv = texturePixelHeight * 16.0;
 
                         var p1 = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
                         var p2 = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
                         var p3 = new Point(chunk.uvs[uv3].u / udiv, chunk.uvs[uv3].v / vdiv);
+
+                        p1 = TileST(p1);
+                        p2 = TileST(p2);
+                        p3 = TileST(p3);
 
                         if (!uninitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
                         {
@@ -355,7 +373,9 @@ namespace WorldExplorer.DataLoaders
             mesh3D.Normals = normals;
             model.Geometry = mesh3D;
             DiffuseMaterial dm = new DiffuseMaterial();
-            dm.Brush = new ImageBrush(texture);
+            ImageBrush ib = new ImageBrush(texture);
+            ib.ViewportUnits = BrushMappingMode.Absolute;
+            dm.Brush = ib;
             model.Material = dm;
             return model;
         }
