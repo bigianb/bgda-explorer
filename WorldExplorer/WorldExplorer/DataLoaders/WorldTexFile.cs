@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using System.Diagnostics;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -52,6 +53,7 @@ namespace WorldExplorer.DataLoaders
             // Return to arms (more sensibly) encodes pointers as offsets from the current chunk loaded from the disc.
             int deltaOffset = EngineVersion.DarkAlliance == _engineVersion ? offset : chunkStartOffset;
 
+            int header0 = DataUtil.getLEUShort(fileData, offset);
             int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
             int headerOffset10 = header10 + deltaOffset;
             if (headerOffset10 <= 0 || headerOffset10 >= fileData.Length)
@@ -70,8 +72,8 @@ namespace WorldExplorer.DataLoaders
             int x1 = fileData[p+2];
             int y1 = fileData[p+3];
             p += 4;
-            int wBlocks = x1 - x0 + 1;
-            int hBlocks = y1 - y0 + 1;
+            int wBlocks = x1 + 1;
+            int hBlocks = y1 + 1;
 
             WriteableBitmap image = new WriteableBitmap(
                     wBlocks * 16, hBlocks * 16,
@@ -80,9 +82,9 @@ namespace WorldExplorer.DataLoaders
                     null);
             image.Lock();
 
-            for (int yblock = 0; yblock < hBlocks; ++yblock)
+            for (int yblock = y0; yblock <= y1; ++yblock)
             {
-                for (int xblock = 0; xblock < wBlocks; ++xblock)
+                for (int xblock = x0; xblock <= x1; ++xblock)
                 {
                     int blockDataStart = DataUtil.getLEInt(fileData, p) + deltaOffset;
                     decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
