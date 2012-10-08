@@ -77,11 +77,13 @@ namespace WorldExplorer.DataLoaders
         private static Point TileST(Point pointIn)
         {
             Point pointOut=pointIn;
-            if (pointOut.X > 1.0) {
-                pointOut.X = pointOut.X - Math.Floor(pointOut.X);
+            if (pointOut.X > 1.0)
+            {
+                pointOut.X = pointOut.X%1;
             }
-            if (pointOut.Y > 1.0) {
-                pointOut.Y = pointOut.Y - Math.Floor(pointOut.Y);
+            if (pointOut.Y > 1.0)
+            {
+                pointOut.Y = pointOut.Y%1;
             }
             return pointOut;
         }
