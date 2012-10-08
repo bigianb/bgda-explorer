@@ -210,7 +210,29 @@ namespace WorldExplorer
                         _skeletonViewModel.AnimData = animData;
                         LogText = animData.ToString();
 
-                        _window.tabControl.SelectedIndex = 2; // Animation View
+                        if (_modelViewModel.VifModel != null)
+                        {
+                            int boneCount = _modelViewModel.VifModel.CountBones();
+                            if (boneCount != 0 && boneCount == animData.NumBones)
+                            {
+                                _modelViewModel.AnimData = animData;
+
+                                // Switch tab to animation tab only if the current tab isnt the model view tab
+                                if (_window.tabControl.SelectedIndex != 1) // Model View
+                                {
+                                    _window.tabControl.SelectedIndex = 2; // Skeleton View
+                                }
+                            }
+                            else
+                            {
+                                // Bone count doesn't match, switch to skeleton view
+                                _window.tabControl.SelectedIndex = 2; // Skeleton View
+                            }
+                        }
+                        else
+                        {
+                            _window.tabControl.SelectedIndex = 2; // Skeleton View
+                        }
                     }
                     break;
             }
