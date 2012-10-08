@@ -190,7 +190,6 @@ namespace WorldExplorer
                         string texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
                         SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
-                        var animData = LoadFirstAnim(lmpFile);
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
@@ -198,7 +197,13 @@ namespace WorldExplorer
                         model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
                                                            SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
                         _modelViewModel.VifModel = model;
-                        _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
+
+                        // Load animation data
+                        var animData = LoadFirstAnim(lmpFile);
+                        // Make sure the animation will work with the model
+                        if (animData.Count > 0 && animData[0].NumBones == model.CountBones())
+                            _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
+
                         LogText += log.ToString();
 
                         _window.tabControl.SelectedIndex = 1; // Model View

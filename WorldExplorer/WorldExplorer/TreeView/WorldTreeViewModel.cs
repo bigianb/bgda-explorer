@@ -143,15 +143,19 @@ namespace WorldExplorer
         protected override void LoadChildren()
         {
             _lmpFile.ReadDirectory();
-            foreach (var entry in _lmpFile.Directory) {
+            foreach (var entry in _lmpFile.Directory)
+            {
+                var ext = (System.IO.Path.GetExtension(entry.Key) ?? "").ToLower();
+
                 TreeViewItemViewModel child;
-                if (entry.Key.EndsWith(".world"))
+                switch (ext)
                 {
-                    child = new WorldFileTreeViewModel(_world, this, _lmpFile, entry.Key);
-                }
-                else
-                {
-                    child = new LmpEntryTreeViewModel(_world, this, _lmpFile, entry.Key);
+                    case ".world":
+                        child = new WorldFileTreeViewModel(_world, this, _lmpFile, entry.Key);
+                        break;
+                    default:
+                        child = new LmpEntryTreeViewModel(_world, this, _lmpFile, entry.Key);
+                        break;
                 }
                 Children.Add(child);
             }
@@ -189,6 +193,12 @@ namespace WorldExplorer
 
         protected override void LoadChildren()
         {
+            if (_world.worldData == null)
+            {
+                // Force loading the tree item
+                this.IsSelected = true;
+                return; // Return to prevent adding elements twice
+            }
             if (_world.worldData != null){
                 int i = 0;
                 foreach (var element in _world.worldData.worldElements)
