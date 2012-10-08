@@ -68,7 +68,7 @@ namespace WorldExplorer.DataExporters
                 {
                     writer.WriteLine("vt {0} {1}", 
                         FormatDouble(uv.X), 
-                        FormatDouble(uv.Y));
+                        FormatDouble(1 - uv.Y)); // Flip uv's vertically
                 }
                 writer.WriteLine("");
 
