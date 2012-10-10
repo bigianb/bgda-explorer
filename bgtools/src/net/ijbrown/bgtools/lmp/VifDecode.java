@@ -142,6 +142,10 @@ public class VifDecode
             }
 
             for (UV uv : chunk.uvs) {
+                // Write out the original for reference.
+                writer.write("# vt "+uv.u/16.0 + " " + uv.v/16.0);
+                writer.println();
+
                 writer.write("vt ");
                 writer.print(df.format(uv.u / (16.0 * texWidth)));
                 writer.write(" ");
@@ -302,7 +306,7 @@ public class VifDecode
                 case MSCAL_CMD:
                     System.out.print(HexUtil.formatHex(offset) + " ");
                     System.out.println("MSCAL: " + immCommand);
-                    if (immCommand != 66 && immCommand != 68){
+                    if (immCommand != 66 && immCommand != 68 && immCommand != 70){
                         System.out.println("**** Microcode " + immCommand + " not supported");
                     }
                     currentChunk.mscalID = immCommand;
