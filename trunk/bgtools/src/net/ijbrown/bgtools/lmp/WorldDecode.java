@@ -27,26 +27,23 @@ public class WorldDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String outDirTest = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
-        String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
+        String rootDir = "/emu/bgda/BG/DATA_extracted/";
+        String rootDirOrig = "/emu/bgda/BG/DATA/";
+        String lmpName = "tavern";
+        String worldName = "pub";
+
+
+        String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
         WorldDecode obj = new WorldDecode();
-        obj.read("cellar1.world", outDirFile);
+        obj.read(worldName + ".world", outDirFile);
         String txt;
-        txt = obj.disassemble(outDirFile);
-        obj.writeFile("cellar1.world.txt", outDirFile, txt);
-        obj.extractTexture("cellar1.world.png", outDirFile);
-
-        outDirFile = new File(outDirTest);
-        obj = new WorldDecode();
-        obj.read("test.world", outDirFile);
-        txt = obj.disassemble(outDirFile);
-        obj.writeFile("test.world.txt", outDirFile, txt);
-
-        obj.extractTexture("test.world.png", outDirFile);
+        txt = obj.disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
+        obj.writeFile(worldName + ".world.txt", outDirFile, txt);
+        obj.extractTexture(worldName + ".world.png", outDirFile);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -86,7 +83,7 @@ public class WorldDecode
         texDecode.extract(outDirFile, fileData, offsetTex6c, outputFilename);
     }
 
-    private String disassemble(File outDirFile)
+    private String disassemble(File outDirFile, File levelTexFile)
     {
         StringBuilder sb = new StringBuilder();
 
@@ -163,8 +160,8 @@ public class WorldDecode
 
         // Each entry is 2 integers. First one gives the offset into the texture file. Second one is the
         // data length. Each row is 100 entries long. The number of rows is given by the values in 0x58 and 0x5C
-        int offset64 = DataUtil.getLEInt(fileData, 0x64);
-        sb.append("Texture grid array offset: ").append(HexUtil.formatHex(offset64)).append("\r\n");
+        int textureArrayOffset = DataUtil.getLEInt(fileData, 0x64);
+        sb.append("Texture grid array offset: ").append(HexUtil.formatHex(textureArrayOffset)).append("\r\n");
 
         float offset68 = DataUtil.getLEFloat(fileData, 0x68);
         sb.append("Offset68: ").append(offset68).append("\r\n");
@@ -339,7 +336,58 @@ public class WorldDecode
             sb.append("\r\n");
         }
 
+        decodeTextureGrid(sb, levelTexFile, outDirFile);
+
         return sb.toString();
+    }
+
+    private void decodeTextureGrid(StringBuilder sb, File levelTexFile, File outDirFile)
+    {
+        sb.append("-----------------------------------------------------\r\n");
+        sb.append("\r\n");
+        sb.append("Texture grid\r\n");
+
+        int xymin =DataUtil.getLEInt(fileData, 0x58);
+        int xymax =DataUtil.getLEInt(fileData, 0x5C);
+
+        int xmin = xymin % 100;
+        int ymin = xymin / 100;
+        int xmax = xymax % 100;
+        int ymax = xymax / 100;
+
+        // Each entry is 2 integers. First one gives the offset into the texture file. Second one is the
+        // data length. Each row is 100 entries long. The number of rows is given by the values in 0x58 and 0x5C
+        int textureArrayOffset = DataUtil.getLEInt(fileData, 0x64);
+
+        LevelTexDecode levelTexDecoder = new LevelTexDecode();
+        boolean canExportTextures=true;
+        try {
+            levelTexDecoder.read(levelTexFile);
+        } catch (IOException ioe){
+            canExportTextures=false;
+        }
+        for (int y=ymin; y<=ymax; ++y){
+            for (int x=xmin; x <= xmax; ++x){
+                int entryOffset = textureArrayOffset + (x-xmin)*8 + 800 * (y-ymin);
+                int texOffset = DataUtil.getLEInt(fileData, entryOffset);
+                int texLen = DataUtil.getLEInt(fileData, entryOffset+4);
+                sb.append("Tex entry (").append(x).append(",").append(y).append(") = Offset ");
+                sb.append(HexUtil.formatHex(texOffset)).append(", len ").append(HexUtil.formatHex(texLen));
+                sb.append("\r\n");
+                if (canExportTextures){
+                    int n = levelTexDecoder.getNumEntries(texOffset);
+                    for (int i=1; i<=n; ++i){
+                        File outFile = new File(outDirFile, Integer.toString(x)+Integer.toString(y)+'_'+Integer.toString(i)+".png");
+                        try {
+                            levelTexDecoder.extract(outFile, texOffset + 0x40*i);
+                        } catch (IOException ioe){
+                            sb.append("Failed to export " + outFile.getName());
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
 }

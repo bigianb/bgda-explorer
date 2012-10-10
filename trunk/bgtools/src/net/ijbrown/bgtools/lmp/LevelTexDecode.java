@@ -27,7 +27,7 @@ public class LevelTexDecode
     public static void main(String[] args) throws IOException
     {
         String inDir="/emu/bgda/BG/DATA/";
-        String outDirTest = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
+
         String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
 
         File outDirFile = new File(outDir);
@@ -51,30 +51,6 @@ public class LevelTexDecode
         obj.extract(new File(outDirFile, "cellar1_7.tex.png"), 0x36900);
         obj.extract(new File(outDirFile, "cellar1_8.tex.png"), 0x36940);
         obj.extract(new File(outDirFile, "cellar1_9.tex.png"), 0x36980);
-
-        File outDirTestFile = new File(outDirTest);
-        outDirTestFile.mkdirs();
-
-        obj = new LevelTexDecode();
-        obj.read("test.tex", inDirFile);
-        txt = obj.disassemble(outDirTestFile);
-        obj.writeFile("test.tex.txt", outDirTestFile, txt);
-
-        obj.extract(new File(outDirTestFile, "test_1.tex.png"), 0x840);
-        obj.extract(new File(outDirTestFile, "test_2.tex.png"), 0x880);
-        obj.extract(new File(outDirTestFile, "test_3.tex.png"), 0x8C0);
-        obj.extract(new File(outDirTestFile, "test_4.tex.png"), 0x900);
-        obj.extract(new File(outDirTestFile, "test_5.tex.png"), 0x940);
-        obj.extract(new File(outDirTestFile, "test_6.tex.png"), 0x17840);
-        obj.extract(new File(outDirTestFile, "test_7.tex.png"), 0x17880);
-        obj.extract(new File(outDirTestFile, "test_8.tex.png"), 0x178C0);
-        obj.extract(new File(outDirTestFile, "test_9.tex.png"), 0x17900);
-        obj.extract(new File(outDirTestFile, "test_10.tex.png"), 0x17940);
-        obj.extract(new File(outDirTestFile, "test_11.tex.png"), 0x2f040);
-        obj.extract(new File(outDirTestFile, "test_12.tex.png"), 0x2f080);
-        obj.extract(new File(outDirTestFile, "test_13.tex.png"), 0x2f0C0);
-        obj.extract(new File(outDirTestFile, "test_14.tex.png"), 0x2f100);
-        obj.extract(new File(outDirTestFile, "test_15.tex.png"), 0x2f140);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -88,9 +64,14 @@ public class LevelTexDecode
     private int fileLength;
     private byte[] fileData;
 
-    private void read(String filename, File outDirFile) throws IOException
+    public void read(String filename, File dir) throws IOException
     {
-        File file = new File(outDirFile, filename);
+        File file = new File(dir, filename);
+        read(file);
+    }
+
+    public void read(File file) throws IOException
+    {
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
 
         fileLength = (int) file.length();
@@ -108,8 +89,20 @@ public class LevelTexDecode
         }
     }
 
-    private void extract(File outputfile, int offset) throws IOException
+    /**
+     * Given the offset to the start of a chunk, returns the number of entries in that chunk.
+     * @param offset The offset to the start of a chunk.
+     * @return The number of entries in that chunk.
+     */
+    public int getNumEntries(int offset)
     {
+        return DataUtil.getLEInt(fileData, offset);
+    }
+
+    public void extract(File outputfile, int offset) throws IOException
+    {
+        int xsizePixels = DataUtil.getLEUShort(fileData, offset);
+        int ysizePixels = DataUtil.getLEUShort(fileData, offset+2);
         int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
         int headerOffset10 = header10 + offset;
         int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
@@ -124,13 +117,13 @@ public class LevelTexDecode
         int x1 = fileData[p+2];
         int y1 = fileData[p+3];
         p += 4;
-        int wBlocks = x1 - x0 + 1;
-        int hBlocks = y1 - y0 + 1;
+        int wBlocks = x1 + 1;
+        int hBlocks = y1 + 1;
 
         BufferedImage image = new BufferedImage(wBlocks*16, hBlocks*16, BufferedImage.TYPE_INT_ARGB);
 
-        for (int yblock=0; yblock < hBlocks; ++yblock){
-            for (int xblock=0; xblock < wBlocks; ++xblock){
+        for (int yblock=y0; yblock < hBlocks; ++yblock){
+            for (int xblock=x0; xblock < wBlocks; ++xblock){
                 int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
                 decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
                 p+=4;

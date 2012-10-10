@@ -79,7 +79,10 @@ namespace WorldExplorer.DataLoaders
 
                 if (EngineVersion.DarkAlliance == engineVersion)
                 {
-                    reader.Skip(4);
+                    int tex2 = reader.ReadInt32();
+                    if (tex2 != 0) {
+                        log.LogLine("Tex2=" + tex2);
+                    }
                 }
 
                 int vifLen = reader.ReadInt32();
