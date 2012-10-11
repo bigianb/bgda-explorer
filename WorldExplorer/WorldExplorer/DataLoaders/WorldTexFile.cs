@@ -53,20 +53,25 @@ namespace WorldExplorer.DataLoaders
             // Return to arms (more sensibly) encodes pointers as offsets from the current chunk loaded from the disc.
             int deltaOffset = EngineVersion.DarkAlliance == _engineVersion ? offset : chunkStartOffset;
 
-            int header0 = DataUtil.getLEUShort(fileData, offset);
+            int pixelWidth = DataUtil.getLEUShort(fileData, offset);
+            int pixelHeight = DataUtil.getLEUShort(fileData, offset+2);
             int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
-            int headerOffset10 = header10 + deltaOffset;
-            if (headerOffset10 <= 0 || headerOffset10 >= fileData.Length)
+            int compressedDataLen = DataUtil.getLEInt(fileData, offset + 0x14);
+            int compressedDataOffset = header10 + deltaOffset;
+            if (compressedDataOffset <= 0 || compressedDataOffset >= fileData.Length)
             {
                 return null;
             }
-            int palOffset = DataUtil.getLEInt(fileData, headerOffset10) + deltaOffset;
+            int palOffset = DataUtil.getLEInt(fileData, compressedDataOffset) + deltaOffset;
 
             PalEntry[] palette = PalEntry.readPalette(fileData, palOffset, 16, 16);
             palette = PalEntry.unswizzlePalette(palette);
             HuffVal[] huffVals = decodeHuff(palOffset+0xc00);
 
-            int p = headerOffset10+4;
+            // I suspect this gives us a clue as to the missing data blocks.
+            int unknownWord = fileData[compressedDataOffset];
+
+            int p = compressedDataOffset+4;
             int x0 = fileData[p];
             int y0 = fileData[p+1];
             int x1 = fileData[p+2];
@@ -76,7 +81,7 @@ namespace WorldExplorer.DataLoaders
             int hBlocks = y1 + 1;
 
             WriteableBitmap image = new WriteableBitmap(
-                    wBlocks * 16, hBlocks * 16,
+                    (pixelWidth + 0x0f) & ~0x0f, (pixelHeight + 0x0f) & ~0x0f,
                     96, 96,
                     PixelFormats.Bgr32,
                     null);
