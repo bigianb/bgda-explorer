@@ -68,61 +68,35 @@ namespace WorldExplorer.DataLoaders
             palette = PalEntry.unswizzlePalette(palette);
             HuffVal[] huffVals = decodeHuff(palOffset+0xc00);
 
-            // I suspect this gives us a clue as to the missing data blocks.
-            int unknownWord = fileData[compressedDataOffset];
-
             int p = compressedDataOffset+4;
-            int x0 = fileData[p];
-            int y0 = fileData[p+1];
-            int x1 = fileData[p+2];
-            int y1 = fileData[p+3];
-            p += 4;
-            int wBlocks = x1 + 1;
-            int hBlocks = y1 + 1;
+
+            int width = (pixelWidth + 0x0f) & ~0x0f;
+            int height = (pixelHeight + 0x0f) & ~0x0f;
 
             WriteableBitmap image = new WriteableBitmap(
-                    (pixelWidth + 0x0f) & ~0x0f, (pixelHeight + 0x0f) & ~0x0f,
+                    width, height,
                     96, 96,
                     PixelFormats.Bgr32,
                     null);
             image.Lock();
 
-            for (int yblock = y0; yblock <= y1; ++yblock)
-            {
-                for (int xblock = x0; xblock <= x1; ++xblock)
-                {
-                    int blockDataStart = DataUtil.getLEInt(fileData, p) + deltaOffset;
-                    decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
-                    p += 4;
-                }
-            }
-            
-            // Specify the area of the bitmap that changed.
-            image.AddDirtyRect(new Int32Rect(0, 0, wBlocks * 16, hBlocks * 16));
-/*
- * This is rubbish but I think something similar may be required, so I am leaving the code here as an aide-memoir until I am sure it is not needed.
- * 
-            WriteableBitmap croppedImage = new WriteableBitmap(
-                    x1-x0+1, y1-y0+1,
-                    96, 96,
-                    PixelFormats.Bgr32,
-                    null);
-
-            croppedImage.Lock();
-            int pSrc = (int)image.BackBuffer;
-            int pDest = (int)croppedImage.BackBuffer;
-            for (int y = y0; y <= y1; ++y) {
-                for (int x = x0; x <= x1; ++x) {
-                    unsafe {
-                        int* pSrcPixel = (int*)(pSrc + y * image.BackBufferStride + x * 4);
-                        int* pDestPixel = (int*)(pDest + (y - y0) * croppedImage.BackBufferStride + (x - x0) * 4);
-                        *pDestPixel = *pSrcPixel;
+            while (fileData[p] != 0xFF) {
+                int x0 = fileData[p];
+                int y0 = fileData[p + 1];
+                int x1 = fileData[p + 2];
+                int y1 = fileData[p + 3];
+                p += 4;
+                for (int yblock = y0; yblock <= y1; ++yblock) {
+                    for (int xblock = x0; xblock <= x1; ++xblock) {
+                        int blockDataStart = DataUtil.getLEInt(fileData, p) + deltaOffset;
+                        decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
+                        p += 4;
                     }
                 }
             }
-            croppedImage.AddDirtyRect(new Int32Rect(0, 0, x1 - x0 + 1, y1 - y0 + 1));
-            croppedImage.Unlock();
-*/
+            // Specify the area of the bitmap that changed.
+            image.AddDirtyRect(new Int32Rect(0, 0, width, height));
+
             // Release the back buffer and make it available for display.
             image.Unlock();
 
