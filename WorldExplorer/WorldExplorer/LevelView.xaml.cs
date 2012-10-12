@@ -49,10 +49,6 @@ namespace WorldExplorer
 
             if (model == null)
                 return;
-
-            var trackball = new Trackball();
-            trackball.EventSource = trackballSource;
-            model.CameraTransform = trackball.Transform;
         }
     }
 }

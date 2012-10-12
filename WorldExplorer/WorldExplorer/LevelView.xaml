@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:hvd="clr-namespace:HelixToolkit;assembly=HelixToolkit"
              xmlns:local="clr-namespace:WorldExplorer"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"  DataContext="{Binding}">
@@ -16,10 +17,10 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">           
-            <Viewport3D Camera="{Binding Camera}" ClipToBounds="True" Name="viewport">
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">
+            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False">
                 <local:SceneVisual3D Scene="{Binding Scene}" />
-            </Viewport3D>            
+            </hvd:HelixViewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Content="{Binding InfoText}"/>
     </Grid>

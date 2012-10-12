@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:hvd="clr-namespace:HelixToolkit;assembly=HelixToolkit"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"  DataContext="{Binding}">
     <Grid>
@@ -17,7 +18,7 @@
         <Slider Name="frameSlider" Minimum="-1" Maximum="{Binding MaximumFrame}" Value="{Binding CurrentFrame}"/>
         <Label Grid.Column="1" Content="{Binding CurrentFrame}"/>
         <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">
-            <Viewport3D Camera="{Binding Camera}" ClipToBounds="True" Name="viewport" >
+            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False">
                 <ModelVisual3D>
                     <ModelVisual3D.Content>
                         <AmbientLight Color="#808080" />
@@ -29,7 +30,7 @@
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
                 <ModelVisual3D Content="{Binding Model}" />
-            </Viewport3D>
+            </hvd:HelixViewport3D>
         </Border>
     </Grid>
 </UserControl>

@@ -198,15 +198,17 @@ namespace WorldExplorer
                                                            SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
                         _modelViewModel.VifModel = model;
 
-                        // Load animation data
+                        /*// Load animation data
                         var animData = LoadFirstAnim(lmpFile);
                         // Make sure the animation will work with the model
                         if (animData.Count > 0 && animData[0].NumBones == model.CountBones())
-                            _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();
+                            _modelViewModel.AnimData = animData.Count == 0 ? null : animData.First();*/
 
                         LogText += log.ToString();
 
                         _window.tabControl.SelectedIndex = 1; // Model View
+                        _window.ResetCamera();
+                        _window.SetViewportText(1, lmpEntry.Text, "");
                     }
                     break;
                 case ".anm":
@@ -226,19 +228,25 @@ namespace WorldExplorer
                                 if (_window.tabControl.SelectedIndex != 1) // Model View
                                 {
                                     _window.tabControl.SelectedIndex = 2; // Skeleton View
+                                    _window.ResetCamera();
                                 }
                             }
                             else
                             {
                                 // Bone count doesn't match, switch to skeleton view
                                 _window.tabControl.SelectedIndex = 2; // Skeleton View
+                                _window.ResetCamera();
                             }
                         }
                         else
                         {
                             _window.tabControl.SelectedIndex = 2; // Skeleton View
+                            _window.ResetCamera();
                         }
                     }
+
+                    _window.SetViewportText(2, lmpEntry.Text, ""); // Set Skeleton View Text
+
                     break;
             }
         }
@@ -256,7 +264,9 @@ namespace WorldExplorer
             LogText = log.ToString();
             LogText += _world.worldData.ToString();
 
-            _window.tabControl.SelectedIndex = 3; // World View
+            _window.tabControl.SelectedIndex = 3; // Level View
+            _window.ResetCamera();
+            _window.SetViewportText(3, worldFileModel.Text, ""); // Set Skeleton View Text
         }
 
         private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
@@ -270,6 +280,8 @@ namespace WorldExplorer
             if (SelectedNodeImage != null)
             {
                 _window.tabControl.SelectedIndex = 1; // Model View
+                _window.ResetCamera();
+                _window.SetViewportText(1, worldElementModel.Text, ""); // Set Skeleton View Text
             }
         }
 
