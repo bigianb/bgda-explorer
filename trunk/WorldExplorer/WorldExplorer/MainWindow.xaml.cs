@@ -27,6 +27,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
@@ -45,6 +46,7 @@ namespace WorldExplorer
         public MainWindow()
         {
             InitializeComponent();
+            SetupViewports();
 
             App.LoadSettings();
 
@@ -63,6 +65,57 @@ namespace WorldExplorer
             }
         }
 
+        public void ResetCamera()
+        {
+            switch(tabControl.SelectedIndex)
+            {
+                case 1:
+                    modelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    break;
+                case 2:
+                    skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    break;
+                case 3:
+                    levelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    break;
+            }
+        }
+        public void SetViewportText(int index, string title, string subTitle)
+        {
+            switch (index)
+            {
+                case 1:
+                    if (title != null)
+                        modelView.viewport.Title = title;
+                    if (subTitle != null)
+                        modelView.viewport.SubTitle = subTitle;
+                    break;
+                case 2:
+                    if (title != null)
+                        skeletonView.viewport.Title = title;
+                    if (subTitle != null)
+                        skeletonView.viewport.SubTitle = subTitle;
+                    break;
+                case 3:
+                    if (title != null)
+                        levelView.viewport.Title = title;
+                    if (subTitle != null)
+                        levelView.viewport.SubTitle = subTitle;
+                    break;
+            }
+        }
+        
+        private void SetupViewports()
+        {
+            var viewports = new[] {modelView.viewport, skeletonView.viewport, levelView.viewport};
+
+            foreach (var viewport in viewports)
+            {
+                viewport.RotateGesture = new MouseGesture(MouseAction.LeftClick);
+                viewport.PanGesture = new MouseGesture(MouseAction.MiddleClick);
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             App.SaveSettings();
@@ -72,7 +125,6 @@ namespace WorldExplorer
         {
             e.CanExecute = true;
         }
-
         private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var window = new SettingsWindow();

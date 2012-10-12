@@ -140,7 +140,7 @@ namespace WorldExplorer.DataLoaders
                 int tc = reader.ReadInt16();
                 int td = reader.ReadInt16();
 
-                log.LogLine("        : " + tb + ", " + tc + ", " + td);
+                log.LogLine("Position : " + tb + ", " + tc + ", " + td);
 
                 element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
 

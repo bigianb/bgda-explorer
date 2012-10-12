@@ -70,13 +70,13 @@
                     <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
                 </TabItem>
                 <TabItem Header="3D View">
-                    <local:ModelView DataContext="{Binding TheModelViewModel}"/>
+                    <local:ModelView x:Name="modelView" DataContext="{Binding TheModelViewModel}"/>
                 </TabItem>
                 <TabItem Header="Skeleton">
-                    <local:SkeletonView DataContext="{Binding TheSkeletonViewModel}"/>
+                    <local:SkeletonView x:Name="skeletonView" DataContext="{Binding TheSkeletonViewModel}"/>
                 </TabItem>
                 <TabItem Header="Level">
-                    <local:LevelView DataContext="{Binding TheLevelViewModel}"/>
+                    <local:LevelView x:Name="levelView" DataContext="{Binding TheLevelViewModel}"/>
                 </TabItem>
                 <TabItem Header="Log">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
