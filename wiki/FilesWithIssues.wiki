@@ -1,0 +1,12 @@
+#summary A list of files with known issues and the possible solutions.
+
+<wiki:toc max_depth="2" />
+<hr/>
+
+
+= Baldur's Gate Dark Alliance =
+
+== BThrone.gob ==
+ * Some of the walls are missing
+ * Objects are misplaced
+ || <a href="http://i.imgur.com/BSYV2.png"><img src="http://i.imgur.com/BSYV2.png" width="130px" /></a><br> Missing Walls||
