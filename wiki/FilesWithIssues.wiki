@@ -9,7 +9,7 @@
 == BThrone.gob ==
  * Some of the walls are missing
  * Objects are misplaced
- || <a href="http://i.imgur.com/BSYV2.png"><img src="http://i.imgur.com/BSYV2.png" width="130px" alt="Current Status" /></a><br> Current Status||
+ || <a href="http://i.imgur.com/BSYV2.jpg"><img src="http://i.imgur.com/BSYV2.jpg" width="130px" alt="Current Status" /></a><br> Current Status||
 
 == Bog1.gob ==
  * Objects are misaligned
