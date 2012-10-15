@@ -170,7 +170,7 @@ namespace WorldExplorer.DataLoaders
 
                     prevPixel = pix8 & 0xFF;
                     PalEntry pixel = palette[pix8  & 0xFF];
-                    int pBackBuffer = (int)image.BackBuffer;
+                    var pBackBuffer = image.BackBuffer;
                     int xpos = xblock * 16 + x;
                     int ypos = yblock * 16 + y;
                     var p = pBackBuffer + ypos * image.BackBufferStride + xpos * 4;
