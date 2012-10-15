@@ -7,7 +7,7 @@
 = Baldur's Gate Dark Alliance =
 
 == BThrone.gob ==
- * Some of the walls are missing
+ * Some of the walls are missing. Possibly due to microcode 72 being used.
  * Objects are misplaced
  || <a href="http://i.imgur.com/BSYV2.jpg"><img src="http://i.imgur.com/BSYV2.jpg" width="130px" alt="Current Status" /></a><br> Current Status||
 
