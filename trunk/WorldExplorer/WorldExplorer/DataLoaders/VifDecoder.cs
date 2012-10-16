@@ -50,6 +50,19 @@ namespace WorldExplorer.DataLoaders
             return meshes;
         }
 
+        public static List<Chunk> DecodeChunks(ILogger log, byte[] data, int startOffset, int length, int texturePixelWidth, int texturePixelHeight)
+        {
+            int numMeshes = data[startOffset + 0x12] & 0xFF;
+            List<Chunk> chunks = new List<Chunk>();
+            for (int meshNum = 0; meshNum < numMeshes; ++meshNum)
+            {
+                int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + meshNum * 4);
+                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + meshNum * 4);
+                chunks.AddRange(ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts));
+            }
+            return chunks;
+        }
+
         public static Mesh DecodeMesh(ILogger log, byte[] data, int startOffset, int length, int texturePixelWidth, int texturePixelHeight)
         {           
             var chunks = ReadVerts(log, data, startOffset, startOffset + length);

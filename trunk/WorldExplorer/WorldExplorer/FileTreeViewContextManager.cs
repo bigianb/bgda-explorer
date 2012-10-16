@@ -8,7 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
+using WorldExplorer.DataExporters;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.Logging;
 
 namespace WorldExplorer
 {
@@ -17,6 +19,10 @@ namespace WorldExplorer
         MainWindow _window;
         TreeView _treeView;
         ContextMenu _menu = new ContextMenu();
+
+        // Menu Items
+        MenuItem _saveRawData;
+        MenuItem _saveParsedVifData;
         
         public FileTreeViewContextManager(MainWindow window, TreeView treeView)
         {
@@ -28,7 +34,8 @@ namespace WorldExplorer
 
 
             // Setup Menu
-            AddItem("Save Raw Data", SaveRawDataClicked);
+            _saveRawData = AddItem("Save Raw Data", SaveRawDataClicked);
+            _saveParsedVifData = AddItem("Save Parsed Data", SaveParsedDataClicked);
         }
 
         void MenuOnContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -40,22 +47,27 @@ namespace WorldExplorer
                 return;
             }
             var dataContext = child.DataContext;
+            _menu.DataContext = null;
 
-            if (dataContext is LmpEntryTreeViewModel)
+            // Hide menu items at the start
+            _saveParsedVifData.Visibility = Visibility.Collapsed;
+
+            if (dataContext is LmpEntryTreeViewModel) // files in .lmp files
             {
                 var lmpEntryItem = (LmpEntryTreeViewModel) dataContext;
 
+                if ((Path.GetExtension(lmpEntryItem.Text) ?? "").ToLower() == ".vif")
+                {
+                    _saveParsedVifData.Visibility = Visibility.Visible;
+                }
+
                 _menu.DataContext = lmpEntryItem;
-                _menu.PlacementRectangle = new Rect(Mouse.GetPosition(_window), new Size(0, 0));
-                _menu.IsOpen = true;
             }
-            else if (dataContext is LmpTreeViewModel)
+            else if (dataContext is LmpTreeViewModel) // .lmp files in .gob files
             {
                 var lmpItem = (LmpTreeViewModel)dataContext;
 
                 _menu.DataContext = lmpItem;
-                _menu.PlacementRectangle = new Rect(Mouse.GetPosition(_window), new Size(0, 0));
-                _menu.IsOpen = true;
             }
             else
             {
@@ -108,6 +120,49 @@ namespace WorldExplorer
 
                         stream.Flush();
                     }
+                }
+            }
+        }
+
+        void SaveParsedDataClicked(object sender, RoutedEventArgs e)
+        {
+            if (_menu.DataContext == null)
+                return;
+
+            if (_menu.DataContext is LmpEntryTreeViewModel)
+            {
+                var lmpEntry = (LmpEntryTreeViewModel)_menu.DataContext;
+                var lmpFile = lmpEntry.LmpFileProperty;
+
+                var entry = lmpFile.Directory[lmpEntry.Text];
+                var texEntry = lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text)+".tex"];
+
+                var tex = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
+
+                if ((Path.GetExtension(lmpEntry.Text) ?? "").ToLower() != ".vif")
+                {
+                    MessageBox.Show("Not a .vif file!", "Error");
+                    return;
+                }
+
+                var dialog = new SaveFileDialog();
+                dialog.FileName = lmpEntry.Text+".txt";
+
+                bool? result = dialog.ShowDialog();
+                if (result.GetValueOrDefault(false))
+                {
+                    var exporter = new VifExporter();
+
+                    var logger = new StringLogger();
+                    var chunks = VifDecoder.DecodeChunks(
+                        logger, 
+                        lmpFile.FileData, 
+                        entry.StartOffset, 
+                        entry.Length, 
+                        tex.PixelWidth,
+                        tex.PixelHeight);
+
+                    exporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
         }
