@@ -42,6 +42,7 @@ namespace WorldExplorer
     public partial class MainWindow : Window
     {
         MainWindowViewModel _viewModel;
+        FileTreeViewContextManager _fileTreeMenu;
 
         public MainWindow()
         {
@@ -50,6 +51,7 @@ namespace WorldExplorer
 
             App.LoadSettings();
 
+            _fileTreeMenu = new FileTreeViewContextManager(this, treeView);
             _viewModel = new MainWindowViewModel(this, App.Settings.Get<string>("Files.DataPath", ""));
             DataContext = _viewModel;
 
