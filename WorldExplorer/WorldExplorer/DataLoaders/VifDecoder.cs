@@ -444,6 +444,7 @@ namespace WorldExplorer.DataLoaders
             public List<UV> uvs = new List<UV>();
             public List<VertexWeight> vertexWeights = new List<VertexWeight>();
             public ushort[] extraVlocs;
+            public List<byte[]> DIRECTBytes = new List<byte[]>(); 
         }
 
         private const int NOP_CMD = 0;
@@ -515,7 +516,10 @@ namespace WorldExplorer.DataLoaders
                         Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("DIRECT, " + immCommand*16 + " bytes");
 
-                        // TODO: copy these direct bytes to the chunk for parsing etc.
+                        // TODO: Parse these bytes
+                        byte[] directBytes = new byte[immCommand*16];
+                        Array.Copy(fileData, offset+4, directBytes, 0, immCommand*16);
+                        currentChunk.DIRECTBytes.Add(directBytes);
 
                         offset += 4;
                         offset += immCommand * 16;
@@ -605,6 +609,7 @@ namespace WorldExplorer.DataLoaders
                                 if (1 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
+                                    Debug.Write(HexUtil.formatHex(offset) + " ");
                                     Debug.WriteLine("GifTag: " + currentChunk.gifTag0.ToString());
                                 } else if (2 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
@@ -612,7 +617,9 @@ namespace WorldExplorer.DataLoaders
                                     currentChunk.gifTag1 = new GIFTag();
                                     currentChunk.gifTag1.parse(fileData, offset + 16);
 
+                                    Debug.Write(HexUtil.formatHex(offset) + " ");
                                     Debug.WriteLine("GifTag0: " + currentChunk.gifTag0.ToString());
+                                    Debug.Write(HexUtil.formatHex(offset) + " ");
                                     Debug.WriteLine("GifTag1: " + currentChunk.gifTag1.ToString());
                                 } else {
                                     log.LogLine("unknown number of gif commands.");

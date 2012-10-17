@@ -53,9 +53,9 @@ namespace WorldExplorer
             switch (ext)
             {
                 case ".gob":
+                    var texFileName = Path.GetFileNameWithoutExtension(Name) + ".tex";
                     WorldGob = new GobFile(EngineVersion, Path.Combine(DataPath, Name));
-                    var bareName = Path.GetFileNameWithoutExtension(Name) + ".tex";
-                    WorldTex = new WorldTexFile(EngineVersion, Path.Combine(DataPath, bareName));
+                    WorldTex = new WorldTexFile(EngineVersion, Path.Combine(DataPath, texFileName));
                     break;
                 case ".lmp":
                     // TODO: Support just passing the filepath instead of having to load data here
