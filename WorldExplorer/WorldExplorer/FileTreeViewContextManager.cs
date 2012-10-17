@@ -49,7 +49,8 @@ namespace WorldExplorer
             var dataContext = child.DataContext;
             _menu.DataContext = null;
 
-            // Hide menu items at the start
+            // Set default menu item visibilty
+            _saveRawData.Visibility = Visibility.Visible;
             _saveParsedVifData.Visibility = Visibility.Collapsed;
 
             if (dataContext is LmpEntryTreeViewModel) // files in .lmp files
@@ -68,6 +69,15 @@ namespace WorldExplorer
                 var lmpItem = (LmpTreeViewModel)dataContext;
 
                 _menu.DataContext = lmpItem;
+            }
+            else if (dataContext is WorldElementTreeViewModel)
+            {
+                var worldElement = (WorldElementTreeViewModel) dataContext;
+
+                _saveRawData.Visibility = Visibility.Collapsed;
+                _saveParsedVifData.Visibility = Visibility.Visible;
+
+                _menu.DataContext = worldElement;
             }
             else
             {
@@ -122,6 +132,13 @@ namespace WorldExplorer
                     }
                 }
             }
+            else if (_menu.DataContext is WorldElementTreeViewModel)
+            {
+                MessageBox.Show(
+                    "Saving raw world element data is not supported due to the scattered layout of the data.",
+                    "Error");
+                return;
+            }
         }
 
         void SaveParsedDataClicked(object sender, RoutedEventArgs e)
@@ -161,6 +178,30 @@ namespace WorldExplorer
                         entry.Length, 
                         tex.PixelWidth,
                         tex.PixelHeight);
+
+                    exporter.WriteChunks(dialog.FileName, chunks);
+                }
+            }
+            else if (_menu.DataContext is WorldElementTreeViewModel)
+            {
+                var worldElement = (WorldElementTreeViewModel)_menu.DataContext;
+                var lmpEntry = (LmpTreeViewModel)worldElement.Parent;
+                var lmpFile = lmpEntry.LmpFileProperty;
+
+                var dialog = new SaveFileDialog();
+                dialog.FileName = worldElement.Text + ".txt";
+
+                bool? result = dialog.ShowDialog();
+                if (result.GetValueOrDefault(false))
+                {
+                    var exporter = new VifExporter();
+
+                    var logger = new StringLogger();
+                    var chunks = VifDecoder.ReadVerts(
+                        logger,
+                        lmpFile.FileData,
+                        worldElement.WorldElement.VifDataOffset,
+                        worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength);
 
                     exporter.WriteChunks(dialog.FileName, chunks);
                 }

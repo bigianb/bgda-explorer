@@ -134,6 +134,8 @@ namespace WorldExplorer.DataLoaders
 
                 byte nregs = data[startOffset + vifDataOffset + 0x10];
                 int vifStartOffset = (nregs + 2) * 0x10;
+                element.VifDataOffset = startOffset + vifDataOffset + vifStartOffset;
+                element.VifDataLength = vifLen*0x10 - vifStartOffset;
                 element.model = decodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
                 int tb = reader.ReadInt16();

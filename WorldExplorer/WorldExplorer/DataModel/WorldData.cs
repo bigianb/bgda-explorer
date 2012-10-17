@@ -44,5 +44,9 @@ namespace WorldExplorer.DataModel
         public double sinAlpha;
         // Whether we should flip the y axis (when not using rot flags)
         public Boolean negYaxis;
+
+        // Store info to access again
+        public int VifDataOffset;
+        public int VifDataLength;
     }
 }
