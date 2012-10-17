@@ -453,7 +453,7 @@ namespace WorldExplorer.DataLoaders
         private const int MSCAL_CMD = 0x14;
         private const int STMASK_CMD = 0x20;
 
-        private static List<Chunk> ReadVerts(ILogger log, byte[] fileData, int offset, int endOffset)
+        public static List<Chunk> ReadVerts(ILogger log, byte[] fileData, int offset, int endOffset)
         {
             var chunks = new List<Chunk>();
             Chunk currentChunk = new Chunk();
