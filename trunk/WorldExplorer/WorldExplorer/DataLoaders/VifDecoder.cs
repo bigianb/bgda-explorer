@@ -450,8 +450,10 @@ namespace WorldExplorer.DataLoaders
         private const int STCYCL_CMD = 1;
         private const int ITOP_CMD = 4;
         private const int STMOD_CMD = 5;
+        private const int FLUSH_CMD = 0x11;
         private const int MSCAL_CMD = 0x14;
         private const int STMASK_CMD = 0x20;
+        private const int DIRECT_CMD = 0x50;
 
         public static List<Chunk> ReadVerts(ILogger log, byte[] fileData, int offset, int endOffset)
         {
@@ -464,27 +466,27 @@ namespace WorldExplorer.DataLoaders
                 int immCommand = DataUtil.getLEShort(fileData, offset);
                 switch (vifCommand) {
                     case NOP_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("NOP");
                         offset += 4;
                         break;
                     case STCYCL_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("STCYCL: WL: " + (immCommand >> 8) + " CL: " + (immCommand & 0xFF));
                         offset += 4;
                         break;
                     case ITOP_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("ITOP: " + immCommand);
                         offset += 4;
                         break;
                     case STMOD_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("STMOD: " + immCommand);
                         offset += 4;
                         break;
                     case MSCAL_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("MSCAL: " + immCommand);
                         if (immCommand != 66 && immCommand != 68 && immCommand != 70)
                         {
@@ -498,11 +500,25 @@ namespace WorldExplorer.DataLoaders
                         offset += 4;
                         break;
                     case STMASK_CMD:
-                        Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
                         offset += 4;
                         int stmask = DataUtil.getLEInt(fileData, offset);
                         Debug.WriteLine("STMASK: " + stmask);
                         offset += 4;
+                        break;
+                    case FLUSH_CMD:
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
+                        Debug.WriteLine("FLUSH");
+                        offset += 4;                       
+                        break;
+                    case DIRECT_CMD:
+                        Debug.Write(HexUtil.formatHex(offset) + " ");
+                        Debug.WriteLine("DIRECT, " + immCommand*16 + " bytes");
+
+                        // TODO: copy these direct bytes to the chunk for parsing etc.
+
+                        offset += 4;
+                        offset += immCommand * 16;
                         break;
                     default:
                         if ((vifCommand & 0x60) == 0x60) {
@@ -514,7 +530,7 @@ namespace WorldExplorer.DataLoaders
                             bool flag = (immCommand & 0x8000) == 0x8000;
                             bool usn = (immCommand & 0x4000) == 0x4000;
 
-                            Debug.WriteLine(HexUtil.formatHex(offset) + " ");
+                            Debug.Write(HexUtil.formatHex(offset) + " ");
                             String debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
 
                             if (flag) {
