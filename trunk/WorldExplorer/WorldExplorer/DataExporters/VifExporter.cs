@@ -134,26 +134,33 @@ namespace WorldExplorer.DataExporters
                     writer.WriteLine("==== VLocs ====");
                     foreach (var vloc in chunk.vlocs)
                     {
-                        writer.WriteLine("V1: {0}, V2: {1}, V3: {2}", vloc.v1, vloc.v2, vloc.v3);
+                        writer.WriteLine(
+                            "V1: {0}, V2: {1}, V3: {2}",
+                            FormatFlagShort(vloc.v1),
+                            FormatFlagShort(vloc.v2),
+                            FormatFlagShort(vloc.v3));
                     }
 
                     writer.WriteLine("");
                     writer.WriteLine("==== Extra VLocs ====");
-                    for (int o = 0; o < chunk.extraVlocs.Length; o += 4)
+                    for (int o = 0; o + 3 < chunk.extraVlocs.Length; o += 4)
                     {
                         writer.WriteLine(
                             "V1: {0}, V2: {1}, V3: {2}, V4: {3}",
-                            chunk.extraVlocs[o],
-                            chunk.extraVlocs[o + 1],
-                            chunk.extraVlocs[o + 2],
-                            chunk.extraVlocs[o + 3]);
+                            FormatFlagShort(chunk.extraVlocs[o]),
+                            FormatFlagShort(chunk.extraVlocs[o + 1]),
+                            FormatFlagShort(chunk.extraVlocs[o + 2]),
+                            FormatFlagShort(chunk.extraVlocs[o + 3]));
                     }
 
                     writer.WriteLine("");
                     writer.WriteLine("==== UVs ====");
                     foreach (var uv in chunk.uvs)
                     {
-                        writer.WriteLine("U: {0}, V: {1}", uv.u, uv.v);
+                        writer.WriteLine(
+                            "U: {0}, V: {1}", 
+                            FormatDouble(uv.u/16.0), 
+                            FormatDouble(uv.v/16.0));
                     }
 
                     writer.WriteLine("");
@@ -187,6 +194,17 @@ namespace WorldExplorer.DataExporters
                     }
 
                     writer.WriteLine("");
+                    writer.WriteLine("==== Direct Bytes ====");
+                    foreach (var bytes in chunk.DIRECTBytes)
+                    {
+                        foreach(var b in bytes)
+                        {
+                            writer.Write("{0:X2} ", b);
+                        }
+                        writer.WriteLine("");
+                    }
+
+                    writer.WriteLine("");
                 }
             }
         }
@@ -194,6 +212,14 @@ namespace WorldExplorer.DataExporters
         private static string FormatDouble(double d)
         {
             return d.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        private static string FormatFlagShort(int i)
+        {
+            return "0x" + i.ToString("X4");
+        }
+        private static string FormatFlag(int i)
+        {
+            return "0x"+i.ToString("X8");
         }
     }
 }
