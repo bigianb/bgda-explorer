@@ -25,8 +25,10 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WorldExplorer.DataLoaders;
 using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
@@ -41,6 +43,33 @@ namespace WorldExplorer
             InitializeComponent();
 
             DataContextChanged += new DependencyPropertyChangedEventHandler(ModelView_DataContextChanged);
+
+            viewport.MouseUp += new MouseButtonEventHandler(viewport_MouseUp);
+        }
+
+        void viewport_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                var hitResult = GetHitTestResult(e.GetPosition(viewport));
+
+                var levelViewModel = (LevelViewModel) DataContext;
+                var worldNode = levelViewModel.WorldNode;
+
+                if (!worldNode.IsExpanded)
+                {
+                    worldNode.IsExpanded = true;
+                }
+
+                for (int i = 2; i < levelViewModel.Scene.Count; i++)
+                {
+                    if (levelViewModel.Scene[i] == hitResult)
+                    {
+                        worldNode.Children[i-2].IsSelected = true;
+                        break;
+                    }
+                }
+            }
         }
 
         void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -49,6 +78,18 @@ namespace WorldExplorer
 
             if (model == null)
                 return;
+        }
+
+        ModelVisual3D GetHitTestResult(Point location)
+        {
+            HitTestResult result = VisualTreeHelper.HitTest(viewport, location);
+            if (result != null && result.VisualHit is ModelVisual3D)
+            {
+                ModelVisual3D visual = (ModelVisual3D)result.VisualHit;
+                return visual;
+            }
+
+            return null;
         }
     }
 }

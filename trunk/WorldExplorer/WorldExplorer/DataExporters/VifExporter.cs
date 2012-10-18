@@ -194,14 +194,10 @@ namespace WorldExplorer.DataExporters
                     }
 
                     writer.WriteLine("");
-                    writer.WriteLine("==== Direct Bytes ====");
-                    foreach (var bytes in chunk.DIRECTBytes)
+                    writer.WriteLine("==== Direct Gif Tags ====");
+                    foreach (var tag in chunk.DIRECTGifTags)
                     {
-                        foreach(var b in bytes)
-                        {
-                            writer.Write("{0:X2} ", b);
-                        }
-                        writer.WriteLine("");
+                        writer.WriteLine(tag.ToString());
                     }
 
                     writer.WriteLine("");

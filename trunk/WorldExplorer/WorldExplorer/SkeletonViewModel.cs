@@ -24,7 +24,7 @@ using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
 {
-    public class SkeletonViewModel : INotifyPropertyChanged
+    public class SkeletonViewModel : BaseViewModel
     {
 
         private AnimData _animData;
@@ -40,6 +40,11 @@ namespace WorldExplorer
                 this.OnPropertyChanged("AnimData");
                 this.OnPropertyChanged("MaximumFrame");
             }
+        }
+
+        public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
+        {
+            
         }
 
         private void UpdateModel()
@@ -122,18 +127,5 @@ namespace WorldExplorer
             oCam.LookDirection = new Vector3D(0, 1, -1);
 
         }
-
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion // INotifyPropertyChanged Members
     }
 }

@@ -444,7 +444,7 @@ namespace WorldExplorer.DataLoaders
             public List<UV> uvs = new List<UV>();
             public List<VertexWeight> vertexWeights = new List<VertexWeight>();
             public ushort[] extraVlocs;
-            public List<byte[]> DIRECTBytes = new List<byte[]>(); 
+            public List<GIFTag> DIRECTGifTags = new List<GIFTag>(); 
         }
 
         private const int NOP_CMD = 0;
@@ -516,10 +516,14 @@ namespace WorldExplorer.DataLoaders
                         Debug.Write(HexUtil.formatHex(offset) + " ");
                         Debug.WriteLine("DIRECT, " + immCommand*16 + " bytes");
 
-                        // TODO: Parse these bytes
-                        byte[] directBytes = new byte[immCommand*16];
-                        Array.Copy(fileData, offset+4, directBytes, 0, immCommand*16);
-                        currentChunk.DIRECTBytes.Add(directBytes);
+                        GIFTag[] tags = new GIFTag[immCommand];
+
+                        for (int i = 0; i < immCommand; i++)
+                        {
+                            tags[i] = new GIFTag();
+                            tags[i].parse(fileData, offset + 4 + i*16);
+                        }
+                        currentChunk.DIRECTGifTags.AddRange(tags);
 
                         offset += 4;
                         offset += immCommand * 16;

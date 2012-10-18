@@ -41,13 +41,11 @@ namespace WorldExplorer
         {
             _window = window;
             _dataPath = dataPath;
-            /*_selectedNodeImage = new WriteableBitmap(
-                100,   // width
-                100,   // height
-                96,
-                96,
-                PixelFormats.Bgr32,
-                null);*/
+
+            // Create View Models
+            _modelViewModel = new ModelViewModel(this);
+            _skeletonViewModel = new SkeletonViewModel(this);
+            _levelViewModel = new LevelViewModel(this);
         }
 
         public void LoadFile(string file)
@@ -96,7 +94,7 @@ namespace WorldExplorer
             }
         }
 
-        private SkeletonViewModel _skeletonViewModel = new SkeletonViewModel();
+        private SkeletonViewModel _skeletonViewModel;
 
         public SkeletonViewModel TheSkeletonViewModel
         {
@@ -108,7 +106,7 @@ namespace WorldExplorer
             }
         }
 
-        private ModelViewModel _modelViewModel = new ModelViewModel();
+        private ModelViewModel _modelViewModel;
 
         public ModelViewModel TheModelViewModel
         {
@@ -120,7 +118,7 @@ namespace WorldExplorer
             }
         }
 
-        private LevelViewModel _levelViewModel = new LevelViewModel();
+        LevelViewModel _levelViewModel;
 
         public LevelViewModel TheLevelViewModel
         {
@@ -156,6 +154,11 @@ namespace WorldExplorer
                 }
                 this.OnPropertyChanged("SelectedNode");
             }
+        }
+
+        public MainWindow MainWindow
+        {
+            get { return _window; }
         }
 
         public string _logText;
@@ -260,13 +263,14 @@ namespace WorldExplorer
             var log = new StringLogger();
             _world.worldData = decoder.Decode(engineVersion, _worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
             worldFileModel.ReloadChildren();
+            _levelViewModel.WorldNode = worldFileModel;
             _levelViewModel.WorldData = _world.worldData;
             LogText = log.ToString();
             LogText += _world.worldData.ToString();
 
             _window.tabControl.SelectedIndex = 3; // Level View
             _window.ResetCamera();
-            _window.SetViewportText(3, worldFileModel.Text, ""); // Set Skeleton View Text
+            _window.SetViewportText(3, worldFileModel.Text, ""); // Set Level View Text
         }
 
         private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
@@ -281,7 +285,7 @@ namespace WorldExplorer
             {
                 _window.tabControl.SelectedIndex = 1; // Model View
                 _window.ResetCamera();
-                _window.SetViewportText(1, worldElementModel.Text, ""); // Set Skeleton View Text
+                _window.SetViewportText(1, worldElementModel.Text, ""); // Set Model View Text
             }
         }
 
