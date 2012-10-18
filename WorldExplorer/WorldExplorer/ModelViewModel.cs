@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-/*  Copyright (C) 2012 Ian Brown
+﻿/*  Copyright (C) 2012 Ian Brown
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,6 +14,10 @@ using System.Text;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
 using WorldExplorer.DataLoaders;
@@ -26,7 +26,7 @@ using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
-    public class ModelViewModel : INotifyPropertyChanged
+    public class ModelViewModel : BaseViewModel
     {
         private AnimData _animData;
 
@@ -65,6 +65,11 @@ namespace WorldExplorer
                 UpdateModel(true);
                 this.OnPropertyChanged("VifModel");
             }
+        }
+
+        public ModelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
+        {
+            
         }
 
         private void UpdateModel(Boolean updateCamera)
@@ -163,18 +168,5 @@ namespace WorldExplorer
             oCam.LookDirection = new Vector3D(0, 1, 0);
             oCam.UpDirection = new Vector3D(0, 0, 1);
         }
-
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion // INotifyPropertyChanged Members
     }
 }

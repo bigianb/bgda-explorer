@@ -27,10 +27,11 @@ using System.Windows.Media;
 
 namespace WorldExplorer
 {
-    public class LevelViewModel : INotifyPropertyChanged
+    public class LevelViewModel : BaseViewModel
     {
-
         private WorldData _worldData;
+
+        public WorldFileTreeViewModel WorldNode { get; set; }
 
         public WorldData WorldData
         {
@@ -52,6 +53,11 @@ namespace WorldExplorer
                 _infoText = value;
                 this.OnPropertyChanged("InfoText");
             }
+        }
+
+        public LevelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
+        {
+            
         }
 
         private void rebuildScene()
@@ -162,17 +168,5 @@ namespace WorldExplorer
                 this.OnPropertyChanged("Camera");
             }
         }
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion // INotifyPropertyChanged Members
     }
 }
