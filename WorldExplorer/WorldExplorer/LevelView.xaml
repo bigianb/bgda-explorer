@@ -6,22 +6,39 @@
              xmlns:hvd="clr-namespace:HelixToolkit;assembly=HelixToolkit"
              xmlns:local="clr-namespace:WorldExplorer"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300"  DataContext="{Binding}">
+             d:DesignHeight="500" d:DesignWidth="500"  DataContext="{Binding}">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">
-            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False">
+        <Border Background="Transparent" Name="trackballSource" Margin="0,23,0,0" d:LayoutOverrides="GridBox">
+            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0">
                 <local:SceneVisual3D Scene="{Binding Scene}" />
             </hvd:HelixViewport3D>            
         </Border>
-        <Label Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Content="{Binding InfoText}"/>
+        <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox"/>
+        <Expander x:Name="editorExpander" Header="Properties" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
+        	<Grid Height="280" Width="248">
+        		<TextBlock HorizontalAlignment="Left" Margin="8,8,0,0" TextWrapping="Wrap" Text="UsesRotFlags" VerticalAlignment="Top"/>
+        		<TextBlock HorizontalAlignment="Left" Margin="8,33.96,0,0" TextWrapping="Wrap" Text="XYZRotFlags" VerticalAlignment="Top"/>
+        		<TextBlock HorizontalAlignment="Left" Margin="8,61.039,0,0" TextWrapping="Wrap" Text="Cos" VerticalAlignment="Top"/>
+        		<TextBlock HorizontalAlignment="Left" Margin="8,86.999,0,0" TextWrapping="Wrap" Text="Sin" VerticalAlignment="Top"/>
+				<TextBlock HorizontalAlignment="Left" Margin="8,111.04,0,0" TextWrapping="Wrap" Text="X" VerticalAlignment="Top"/>
+				<TextBlock HorizontalAlignment="Left" Margin="8,137,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
+				<TextBlock HorizontalAlignment="Left" Margin="8,162.96,0,0" TextWrapping="Wrap" Text="Z" VerticalAlignment="Top"/>
+        		<CheckBox x:Name="editor_UseRotFlagsBox" Content="Value" VerticalAlignment="Top" Margin="87,8,8,0"/>
+        		<TextBox x:Name="editor_XYZRotFlagsBox" Margin="87,30.96,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<TextBox x:Name="editor_CosBox" Margin="87,58.039,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<TextBox x:Name="editor_SinBox" Margin="87,83.999,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<TextBox x:Name="editor_PosXBox" Margin="87,108.04,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<TextBox x:Name="editor_PosYBox" Margin="87,134,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<TextBox x:Name="editor_PosZBox" Margin="87,159.96,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        		<Button x:Name="editor_ApplyChangesButton" Content="Apply Changes" Margin="0,0,8,8" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Click="ApplyChangesClicked"/>
+        	</Grid>
+        </Expander>
     </Grid>
 </UserControl>
