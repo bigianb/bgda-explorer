@@ -166,7 +166,7 @@ namespace WorldExplorer.DataLoaders
                     pixels = new PalEntry[numDestBytes];
                 }
                 int idx = startOffset;
-                for (int y = 0; y < rrh; ++y) {
+                for (int y = 0; y < rrh && (y+starty) < dbh; ++y) {
                     for (int x = 0; x < rrw; ++x) {
                         int destIdx = (y+starty) * widthBytes + (x + startx) * 4;
                         pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
