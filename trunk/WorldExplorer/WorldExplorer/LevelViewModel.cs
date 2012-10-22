@@ -39,7 +39,7 @@ namespace WorldExplorer
             set
             {
                 _worldData = value;
-                rebuildScene();
+                RebuildScene();
             }
         }
 
@@ -60,7 +60,7 @@ namespace WorldExplorer
             
         }
 
-        private void rebuildScene()
+        public void RebuildScene()
         {
             List<ModelVisual3D> scene = buildLights();
 

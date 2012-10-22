@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -42,8 +43,6 @@ namespace WorldExplorer
         {
             InitializeComponent();
 
-            DataContextChanged += new DependencyPropertyChangedEventHandler(ModelView_DataContextChanged);
-
             viewport.MouseUp += new MouseButtonEventHandler(viewport_MouseUp);
         }
 
@@ -65,19 +64,89 @@ namespace WorldExplorer
                 {
                     if (levelViewModel.Scene[i] == hitResult)
                     {
-                        worldNode.Children[i-2].IsSelected = true;
+                        ElementSelected((WorldElementTreeViewModel)worldNode.Children[i - 2]);
+                        //worldNode.Children[i-2].IsSelected = true;
                         break;
                     }
                 }
             }
         }
 
-        void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        WorldElementTreeViewModel _selectedElement;
+        private void ElementSelected(WorldElementTreeViewModel ele)
         {
-            var model = DataContext as LevelViewModel;
+            if (!editorExpander.IsExpanded)
+                editorExpander.IsExpanded = true;
 
-            if (model == null)
+            if (ele == null)
+            {
                 return;
+            }
+
+            _selectedElement = ele;
+
+            editor_UseRotFlagsBox.IsChecked = ele.WorldElement.usesRotFlags;
+            editor_XYZRotFlagsBox.Text = "0x"+ele.WorldElement.xyzRotFlags.ToString("X4");
+            editor_CosBox.Text = ele.WorldElement.cosAlpha.ToString(CultureInfo.InvariantCulture);
+            editor_SinBox.Text = ele.WorldElement.sinAlpha.ToString(CultureInfo.InvariantCulture);
+            editor_PosXBox.Text = ele.WorldElement.pos.X.ToString(CultureInfo.InvariantCulture);
+            editor_PosYBox.Text = ele.WorldElement.pos.Y.ToString(CultureInfo.InvariantCulture);
+            editor_PosZBox.Text = ele.WorldElement.pos.Z.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private void ApplyChangesClicked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (_selectedElement == null)
+                return;
+
+            int tempIntValue;
+            double tempDoubleValue;
+
+            _selectedElement.WorldElement.usesRotFlags = 
+                editor_UseRotFlagsBox.IsChecked.GetValueOrDefault(); // Uses Rot Flags
+            if (GetIntHex(editor_XYZRotFlagsBox.Text, out tempIntValue)) // XYZ Rot Flags
+                _selectedElement.WorldElement.xyzRotFlags = tempIntValue;
+            if (GetDouble(editor_CosBox.Text, out tempDoubleValue)) // Cos
+                _selectedElement.WorldElement.cosAlpha = tempDoubleValue;
+            if (GetDouble(editor_SinBox.Text, out tempDoubleValue)) // Sin
+                _selectedElement.WorldElement.sinAlpha = tempDoubleValue;
+            if (GetDouble(editor_PosXBox.Text, out tempDoubleValue)) // X
+                _selectedElement.WorldElement.pos.X = tempDoubleValue;
+            if (GetDouble(editor_PosYBox.Text, out tempDoubleValue)) // Y
+                _selectedElement.WorldElement.pos.Y = tempDoubleValue;
+            if (GetDouble(editor_PosZBox.Text, out tempDoubleValue)) // Z
+                _selectedElement.WorldElement.pos.Z = tempDoubleValue;
+
+            var levelViewModel = (LevelViewModel)DataContext;
+            levelViewModel.RebuildScene();
+        }
+
+        bool GetDouble(string text, out double value)
+        {
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            {
+                return true;
+            }
+            value = 0;
+            return false;
+        }
+        bool GetInt(string text, out int value)
+        {
+            if (int.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+            {
+                return true;
+            }
+            value = 0;
+            return false;
+        }
+        bool GetIntHex(string text, out int value)
+        {
+            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
+            {
+                return true;
+            }
+            value = 0;
+            return false;
         }
 
         ModelVisual3D GetHitTestResult(Point location)
