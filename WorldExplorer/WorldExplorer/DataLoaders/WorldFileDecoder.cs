@@ -150,7 +150,7 @@ namespace WorldExplorer.DataLoaders
                 if ((flags & 0x01) == 0)
                 {
                     log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
-                    element.cosAlpha = reader.ReadInt16() / 32767.0;
+                    element.cosAlpha = (flags >> 16) / 32767.0;
                     element.sinAlpha = reader.ReadInt16() / 32767.0;
                     log.LogLine("cos alpha : " + element.cosAlpha);
                     log.LogLine("sin alpha : " + element.sinAlpha);
@@ -160,6 +160,7 @@ namespace WorldExplorer.DataLoaders
                 }
                 else
                 {
+                    reader.ReadInt16();     // not necessary but makes the code more obvious.
                     log.LogLine("Flags   : " + HexUtil.formatHex(flags));
                     element.xyzRotFlags = (flags >> 16) & 7;
                     element.usesRotFlags = true;
