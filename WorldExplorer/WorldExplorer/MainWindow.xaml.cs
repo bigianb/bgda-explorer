@@ -113,8 +113,20 @@ namespace WorldExplorer
 
             foreach (var viewport in viewports)
             {
+                viewport.ResetCameraGesture = null;
+                viewport.ResetCameraKeyGesture = null;
                 viewport.RotateGesture = new MouseGesture(MouseAction.LeftClick);
                 viewport.PanGesture = new MouseGesture(MouseAction.MiddleClick);
+
+                viewport.PreviewMouseDown += (sender, e) =>
+                    {
+                        if (e.ChangedButton == MouseButton.Middle && e.ClickCount > 1)
+                        {
+                            var view = (HelixToolkit.HelixViewport3D) sender;
+                            view.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 1000);
+                            e.Handled = true;
+                        }
+                    };
             }
         }
 
