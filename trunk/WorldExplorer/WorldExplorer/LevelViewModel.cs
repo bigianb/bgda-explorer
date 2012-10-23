@@ -95,6 +95,22 @@ namespace WorldExplorer
                         mtx.M12 = -mtx.M12;
                         mtx.M22 = -mtx.M22;
                     }
+
+                    if (element.xyzRotFlags == 2)
+                    {
+                        mtx.M11 = -mtx.M11;
+                        mtx.M12 = -mtx.M12;
+                        mtx.M21 = -mtx.M21;
+                        mtx.M22 = -mtx.M22;
+                    }
+
+                    if (element.xyzRotFlags == 1)
+                    {
+                        mtx.M12 = -mtx.M12;
+                        mtx.M22 = -mtx.M22;
+                        mtx.M11 = -mtx.M11;
+                        mtx.M21 = -mtx.M21;
+                    }
                 } else {
                     // Change handedness by reversing angle (sign on sin)
                     mtx.M11 = element.cosAlpha;

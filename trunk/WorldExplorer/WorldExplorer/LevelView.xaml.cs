@@ -29,6 +29,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HelixToolkit;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.Tools3D;
 
@@ -55,10 +56,10 @@ namespace WorldExplorer
                 var levelViewModel = (LevelViewModel) DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
-                if (!worldNode.IsExpanded)
+                /*if (!worldNode.IsExpanded)
                 {
                     worldNode.IsExpanded = true;
-                }
+                }*/
 
                 for (int i = 2; i < levelViewModel.Scene.Count; i++)
                 {
@@ -75,11 +76,11 @@ namespace WorldExplorer
         WorldElementTreeViewModel _selectedElement;
         private void ElementSelected(WorldElementTreeViewModel ele)
         {
-            if (!editorExpander.IsExpanded)
-                editorExpander.IsExpanded = true;
-
             if (ele == null)
             {
+                // Reset Values
+                _selectedElement = null;
+
                 return;
             }
 
@@ -92,6 +93,10 @@ namespace WorldExplorer
             editor_PosXBox.Text = ele.WorldElement.pos.X.ToString(CultureInfo.InvariantCulture);
             editor_PosYBox.Text = ele.WorldElement.pos.Y.ToString(CultureInfo.InvariantCulture);
             editor_PosZBox.Text = ele.WorldElement.pos.Z.ToString(CultureInfo.InvariantCulture);
+
+            // Expand after values have changed
+            if (!editorExpander.IsExpanded)
+                editorExpander.IsExpanded = true;
         }
 
         private void ApplyChangesClicked(object sender, System.Windows.RoutedEventArgs e)
