@@ -141,6 +141,10 @@ namespace WorldExplorer
         }
         bool GetIntHex(string text, out int value)
         {
+            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                text = text.Substring(2);
+            }
             if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
             {
                 return true;
