@@ -29,4 +29,3 @@ The list is in no specific order and some may be in progress, already completed,
 == Level View == 
  * Add support for objects
  * Add some sort of indication for which element is selected in the 3D view
- * Display the selected elements name (ex: Element 123)
