@@ -61,15 +61,19 @@ namespace WorldExplorer
                     worldNode.IsExpanded = true;
                 }*/
 
+                WorldElementTreeViewModel selectedElement = null;
+
                 for (int i = 2; i < levelViewModel.Scene.Count; i++)
                 {
                     if (levelViewModel.Scene[i] == hitResult)
                     {
-                        ElementSelected((WorldElementTreeViewModel)worldNode.Children[i - 2]);
+                        selectedElement = (WorldElementTreeViewModel) worldNode.Children[i - 2];
                         //worldNode.Children[i-2].IsSelected = true;
                         break;
                     }
                 }
+
+                ElementSelected(selectedElement);
             }
         }
 
@@ -81,11 +85,21 @@ namespace WorldExplorer
                 // Reset Values
                 _selectedElement = null;
 
+                editor_NameText.Text = "No Element Selected";
+                editor_UseRotFlagsBox.IsChecked = false;
+                editor_XYZRotFlagsBox.Text =
+                    editor_CosBox.Text =
+                        editor_SinBox.Text =
+                            editor_PosXBox.Text =
+                                editor_PosYBox.Text =
+                                    editor_PosZBox.Text = null;
+
                 return;
             }
 
             _selectedElement = ele;
 
+            editor_NameText.Text = ele.Text;
             editor_UseRotFlagsBox.IsChecked = ele.WorldElement.usesRotFlags;
             editor_XYZRotFlagsBox.Text = "0x"+ele.WorldElement.xyzRotFlags.ToString("X4");
             editor_CosBox.Text = ele.WorldElement.cosAlpha.ToString(CultureInfo.InvariantCulture);
