@@ -12,7 +12,6 @@ The list is in no specific order and some may be in progress, already completed,
 
 == Core Changes ==
  * Support texture transparency
- * Support .ob files
  * Fix when exporting models, every mesh has all the points instead of just the used ones
 
 == Texture View ==
