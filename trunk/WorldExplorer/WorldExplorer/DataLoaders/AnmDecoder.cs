@@ -26,7 +26,7 @@ namespace WorldExplorer.DataLoaders
 {
     public class AnmDecoder
     {
-        public static AnimData Decode(byte[] data, int startOffset, int length)
+        public static AnimData Decode(EngineVersion engineVersion, byte[] data, int startOffset, int length)
         {
             int endIndex = startOffset + length;
             AnimData animData = new AnimData();
@@ -45,6 +45,27 @@ namespace WorldExplorer.DataLoaders
                     -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
                     -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
                 );
+            }
+
+            if (engineVersion == EngineVersion.ReturnToArms)
+            {
+                var bitReader = new BitstreamReader(data, offset8Val, length - (offset8Val-startOffset));
+
+                for (int i = 0; i < animData.NumBones; i++)
+                {
+                    int length1 = bitReader.Read(4) + 1;
+                    int[] values3 = new int[3];
+                    for (int o = 0; o < 3; o++)
+                    {
+                        values3[o] = bitReader.Read(length1);
+                    }
+                    int length2 = bitReader.Read(4) + 1;
+                    int[] values4 = new int[4];
+                    for (int o = 0; o < 4; o++)
+                    {
+                        values4[o] = bitReader.Read(length2);
+                    }
+                }
             }
 
             // Skeleton structure
