@@ -22,8 +22,18 @@ namespace WorldExplorer.DataLoaders
                 throw new ArgumentNullException("data");
             }
 
-            _data = data;
-            _baseOffset = baseOffset;
+            _data = new byte[length];
+            Array.Copy(data, baseOffset, _data, 0, length);
+
+            byte tempByte;
+            for (int i = 0; i < length; i+= 2)
+            {
+                tempByte = _data[i];
+                _data[i] = _data[i + 1];
+                _data[i + 1] = tempByte;
+            }
+
+            _baseOffset = 0;
             _length = length;
 
             _bitPosition = 0;
@@ -74,11 +84,10 @@ namespace WorldExplorer.DataLoaders
         // Test routine.
         public static void Main()
         {
-            var reader = new BitstreamReader(new byte[]{0x12, 0x34, 0x56, 0x78});
+            var reader = new BitstreamReader(new byte[] { 0x34, 0x12, 0x78, 0x56 });
             ushort one = reader.Read(4);        // will return 0x01
             ushort twothree = reader.Read(8);   // will return 0x23
             ushort eight = reader.Read(5);      // will return 0x08
-
         }
     }
 }
