@@ -94,10 +94,10 @@ public class ObjectsDecode
             sb.append("    name: ").append(name).append("\r\n");
 
             int objLen = DataUtil.getLEUShort(fileData, objOffset+4);
-            sb.append("    Len: ").append(objLen).append("\r\n");
+            sb.append("    Len: ").append(HexUtil.formatHexUShort(objLen)).append("\r\n");
 
             int i6 = DataUtil.getLEUShort(fileData, objOffset+6);
-            sb.append("    i6: ").append(i6).append("\r\n");
+            sb.append("    i6: ").append(HexUtil.formatHexUShort(i6)).append("\r\n");
 
             float f1 = DataUtil.getLEFloat(fileData, objOffset + 8);
             float f2 = DataUtil.getLEFloat(fileData, objOffset + 12);
@@ -105,21 +105,28 @@ public class ObjectsDecode
 
             sb.append("    Floats: ").append(f1).append(", ").append(f2).append(", ").append(f3).append("\r\n");
 
-            int i20 = DataUtil.getLEInt(fileData, objOffset + 20);
-            sb.append("    i20: ").append(i20).append("\r\n");
-
+            int lenSoFar = 20;
+            while (lenSoFar < objLen){
+                int i = DataUtil.getLEInt(fileData, objOffset + lenSoFar);
+                if (i > 0){
+                    sb.append("    prop: ").append(DataUtil.collectString(fileData, stringOffset + i)).append("\r\n");
+                }
+                lenSoFar += 4;
+            }
             sb.append("\r\n");
             objOffset += objLen;
         }
 
+        sb.append("String Table\r\n\r\n");
         int off = stringOffset;
         while (off < fileLength){
+            sb.append(off - stringOffset).append(": '");
             String s = "";
             while (fileData[off] != 0){
                 s += (char)fileData[off];
                 ++off;
             }
-            sb.append(s).append("\r\n");
+            sb.append(s).append("'\r\n");
             ++off;
         }
 
