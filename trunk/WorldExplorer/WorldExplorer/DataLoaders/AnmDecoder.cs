@@ -28,6 +28,150 @@ namespace WorldExplorer.DataLoaders
     {
         public static AnimData Decode(EngineVersion engineVersion, byte[] data, int startOffset, int length)
         {
+            if (engineVersion == EngineVersion.ReturnToArms) {
+                return DecodeCRTA(engineVersion, data, startOffset, length);
+            } else {
+                return DecodeBGDA(engineVersion, data, startOffset, length);
+            }
+        }
+
+        public static AnimData DecodeCRTA(EngineVersion engineVersion, byte[] data, int startOffset, int length)
+        {
+            int endIndex = startOffset + length;
+            AnimData animData = new AnimData();
+            animData.NumBones = DataUtil.getLEInt(data, startOffset);
+            animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);
+            animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
+            animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
+            int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
+
+            int bindingPoseOffset = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
+            animData.bindingPose = new Point3D[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i) {
+                animData.bindingPose[i] = new Point3D(
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
+                );
+            }           
+
+            // Skeleton structure
+            int offset10Val = startOffset + DataUtil.getLEInt(data, startOffset + 0x10);
+            animData.skeletonDef = new int[animData.NumBones];
+            for (int i = 0; i < animData.NumBones; ++i) {
+                animData.skeletonDef[i] = data[offset10Val + i];
+            }
+
+            AnimMeshPose[] curPose = new AnimMeshPose[animData.NumBones];
+
+            AnimMeshPose pose = null;
+            var bitReader = new BitstreamReader(data, offset8Val, length - (offset8Val - startOffset));
+            for (int boneNum = 0; boneNum < animData.NumBones; ++boneNum) {
+                pose = new AnimMeshPose();
+                pose.BoneNum = boneNum;
+                pose.FrameNum = 0;
+                int frameOff = offset8Val + boneNum * 0x0e;
+
+                int posLen = bitReader.Read(4) + 1;
+                pose.Position = new Point3D(
+                    bitReader.Read(posLen) / 64.0,
+                    bitReader.Read(posLen) / 64.0,
+                    bitReader.Read(posLen) / 64.0);
+
+                int rotLen = bitReader.Read(4) + 1;
+                double a = bitReader.Read(rotLen) / 4096.0;
+                double b = bitReader.Read(rotLen) / 4096.0;
+                double c = bitReader.Read(rotLen) / 4096.0;
+                double d = bitReader.Read(rotLen) / 4096.0;
+
+                pose.Rotation = new Quaternion(b, c, d, a);
+
+                pose.Velocity = new Point3D(0, 0, 0);
+                pose.AngularVelocity = new Quaternion(0, 0, 0, 0);
+
+                // This may give us duplicate frame zero poses, but that's ok.
+                animData.MeshPoses.Add(pose);
+                curPose[boneNum] = new AnimMeshPose(pose);
+            }
+            int[] curAngVelFrame = new int[animData.NumBones];
+            int[] curVelFrame = new int[animData.NumBones];
+
+            animData.NumFrames = 1;
+
+            int totalFrame = 0;
+
+            pose = null;
+            while (bitReader.HasData()) {
+                int count = bitReader.Read(8);
+                int flag = bitReader.Read(1);
+                int boneNum = bitReader.Read(7);
+                
+                totalFrame += count;
+         
+                if (pose == null || pose.FrameNum != totalFrame || pose.BoneNum != boneNum) {
+                    if (pose != null) {
+                        animData.MeshPoses.Add(pose);
+                    }
+                    pose = new AnimMeshPose();
+                    pose.FrameNum = totalFrame;
+                    pose.BoneNum = boneNum;
+                    pose.Position = curPose[boneNum].Position;
+                    pose.Rotation = curPose[boneNum].Rotation;
+                    pose.AngularVelocity = curPose[boneNum].AngularVelocity;
+                    pose.Velocity = curPose[boneNum].Velocity;
+                }
+                if (flag == 1) {
+                    // xyz
+                    int posLen = bitReader.Read(4) + 1;
+                    
+                    int x = bitReader.Read(posLen);
+                    int y = bitReader.Read(posLen);
+                    int z = bitReader.Read(posLen);
+
+                    Point3D vel = new Point3D(x, y, z);
+                    Point3D prevVel = pose.Velocity;
+                    double coeff = (totalFrame - curVelFrame[boneNum]) / 512.0;
+                    Point3D posDelta = new Point3D(prevVel.X * coeff, prevVel.Y * coeff, prevVel.Z * coeff);
+                    pose.Position = new Point3D(pose.Position.X + posDelta.X, pose.Position.Y + posDelta.Y, pose.Position.Z + posDelta.Z);
+                    pose.FrameNum = totalFrame;
+                    pose.Velocity = vel;
+
+                    curPose[boneNum].Position = pose.Position;
+                    curPose[boneNum].Velocity = pose.Velocity;
+                    curVelFrame[boneNum] = totalFrame;
+                } else {
+                    // rot
+                    int rotLen = bitReader.Read(4) + 1;
+                    int a = bitReader.Read(rotLen);
+                    int b = bitReader.Read(rotLen);
+                    int c = bitReader.Read(rotLen);
+                    int d = bitReader.Read(rotLen);
+
+                    Quaternion angVel = new Quaternion(b, c, d, a);
+
+                    Quaternion prevAngVel = pose.AngularVelocity;
+                    double coeff = (totalFrame - curAngVelFrame[boneNum]) / 131072.0;
+                    Quaternion angDelta = new Quaternion(prevAngVel.X * coeff, prevAngVel.Y * coeff, prevAngVel.Z * coeff, prevAngVel.W * coeff);
+                    pose.Rotation = new Quaternion(pose.Rotation.X + angDelta.X, pose.Rotation.Y + angDelta.Y, pose.Rotation.Z + angDelta.Z, pose.Rotation.W + angDelta.W);
+
+                    pose.FrameNum = totalFrame;
+                    pose.AngularVelocity = angVel;
+
+                    curPose[boneNum].Rotation = pose.Rotation;
+                    curPose[boneNum].AngularVelocity = pose.AngularVelocity;
+                    curAngVelFrame[boneNum] = totalFrame;
+                }
+                
+            }
+            animData.MeshPoses.Add(pose);
+            animData.NumFrames = totalFrame + 1;
+            animData.BuildPerFramePoses();
+            animData.BuildPerFrameFKPoses();
+            return animData;
+        }
+
+        public static AnimData DecodeBGDA(EngineVersion engineVersion, byte[] data, int startOffset, int length)
+        {
             int endIndex = startOffset + length;
             AnimData animData = new AnimData();
             animData.NumBones = DataUtil.getLEInt(data, startOffset);
@@ -45,27 +189,6 @@ namespace WorldExplorer.DataLoaders
                     -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
                     -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
                 );
-            }
-
-            if (engineVersion == EngineVersion.ReturnToArms)
-            {
-                var bitReader = new BitstreamReader(data, offset8Val, length - (offset8Val-startOffset));
-
-                for (int i = 0; i < animData.NumBones; i++)
-                {
-                    int length1 = bitReader.Read(4) + 1;
-                    int[] values3 = new int[3];
-                    for (int o = 0; o < 3; o++)
-                    {
-                        values3[o] = bitReader.Read(length1);
-                    }
-                    int length2 = bitReader.Read(4) + 1;
-                    int[] values4 = new int[4];
-                    for (int o = 0; o < 4; o++)
-                    {
-                        values4[o] = bitReader.Read(length2);
-                    }
-                }
             }
 
             // Skeleton structure
