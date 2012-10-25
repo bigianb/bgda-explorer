@@ -216,7 +216,8 @@ namespace WorldExplorer
                     break;
                 case ".anm":
                     {
-                        var animData = AnmDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                        var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
+                        var animData = AnmDecoder.Decode(engineVersion, lmpFile.FileData, entry.StartOffset, entry.Length);
                         _skeletonViewModel.AnimData = animData;
                         LogText = animData.ToString();
 
@@ -319,7 +320,8 @@ namespace WorldExplorer
             var animEntry = lmpFile.FindFirstEntryWithSuffix(".anm");
             if (animEntry != null)
             {
-                animList.Add(AnmDecoder.Decode(lmpFile.FileData, animEntry.StartOffset, animEntry.Length));
+                var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
+                animList.Add(AnmDecoder.Decode(engineVersion, lmpFile.FileData, animEntry.StartOffset, animEntry.Length));
             }
             return animList;
         }
