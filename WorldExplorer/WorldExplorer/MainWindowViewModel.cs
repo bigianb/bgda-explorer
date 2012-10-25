@@ -251,6 +251,30 @@ namespace WorldExplorer
                     _window.SetViewportText(2, lmpEntry.Text, ""); // Set Skeleton View Text
 
                     break;
+                case ".ob":
+                    var objects = ObDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+
+                    var sb = new StringBuilder();
+
+                    foreach (var obj in objects)
+                    {
+                        sb.AppendFormat("Name: {0}\n", obj.Name);
+                        sb.AppendFormat("I6: {0}\n", obj.I6.ToString("X4"));
+                        sb.AppendFormat("Floats: {0},{1},{2}\n", obj.Floats[0], obj.Floats[1], obj.Floats[2]);
+                        if (obj.Properties != null)
+                        {
+                            foreach (var prop in obj.Properties)
+                            {
+                                sb.AppendFormat("Property: {0}\n", prop);
+                            }
+                        }
+                        sb.Append("\n");
+                    }
+
+                    LogText = sb.ToString();
+                    _window.tabControl.SelectedIndex = 4; // Log View
+
+                    break;
             }
         }
 
