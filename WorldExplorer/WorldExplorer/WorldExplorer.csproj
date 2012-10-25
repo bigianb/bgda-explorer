@@ -81,6 +81,7 @@
     </ApplicationDefinition>
     <Compile Include="BaseViewModel.cs" />
     <Compile Include="DataExporters\VifExporter.cs" />
+    <Compile Include="DataLoaders\BitstreamReader.cs" />
     <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="DataLoaders\EngineVersion.cs" />
     <Compile Include="DataLoaders\ObDecoder.cs" />
