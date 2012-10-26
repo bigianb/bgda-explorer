@@ -39,9 +39,9 @@ namespace WorldExplorer.DataLoaders
             _bitPosition = 0;
         }
 
-        public bool HasData()
+        public bool HasData(int requiredBits)
         {
-            return _bitPosition < (_length - _baseOffset) * 8;
+            return _bitPosition+requiredBits <= (_length - _baseOffset) * 8;
         }
 
         public ushort Read(int numBits)
