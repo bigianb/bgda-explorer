@@ -13,6 +13,10 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Open File" Click="MenuOpenFileClick" />
                 <Separator/>
+                <MenuItem x:Name="MenuRecentFiles" Header="Recent _Files" SubmenuOpened="MenuRecentFilesSubmenuOpened">
+                    <MenuItem/>
+                </MenuItem>
+                <Separator/>
                 <MenuItem Header="E_xit" Click="MenuExitClick" />
             </MenuItem>
             <MenuItem Header="_Edit">

@@ -130,6 +130,29 @@ namespace WorldExplorer
             }
         }
 
+        public void OpenFile(string file)
+        {
+            _viewModel.LoadFile(file);
+
+            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var list = recentFiles.ToList();
+
+            // Remove 1 from the end and anything else just in case
+            if (list.Count >= 10)
+            list.RemoveRange(9, list.Count - 9);
+
+            // If the file is already listed remove it and add it to the top
+            if (list.Contains(file))
+            {
+                list.Remove(file);
+            }
+            list.Insert(0,file);
+
+            App.Settings["Files.RecentFiles"] = string.Join(",", list);
+            App.Settings["Files.LastLoadedFile"] = file;
+            App.SaveSettings();
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             App.SaveSettings();
@@ -165,10 +188,7 @@ namespace WorldExplorer
             bool? result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
             {
-                _viewModel.LoadFile(dialog.FileName);
-
-                App.Settings["Files.LastLoadedFile"] = dialog.FileName;
-                App.SaveSettings();
+                OpenFile(dialog.FileName);
             }
         }
         private void MenuExitClick(object sender, RoutedEventArgs e)
@@ -224,6 +244,36 @@ namespace WorldExplorer
                 DataExporters.VifExporter exporter = new VifExporter();
 
                 exporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
+            }
+        }
+
+        private void MenuRecentFilesSubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            MenuRecentFiles.Items.Clear();
+
+            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries);
+
+            if (recentFiles.Length > 0)
+            {
+                foreach (var file in recentFiles)
+                {
+                    var menu = new MenuItem();
+
+                    menu.Header = file;
+                    menu.Tag = file;
+                    menu.Click += delegate(object o, RoutedEventArgs args)
+                        {
+                            var menuItem = (MenuItem) o;
+                            OpenFile((string) menuItem.Tag);
+                        };
+
+                    MenuRecentFiles.Items.Add(menu);
+                }
+            }
+            else
+            {
+                var menu = new MenuItem {Header = "No Recent Files", IsEnabled = false};
+                MenuRecentFiles.Items.Add(menu);
             }
         }
     }
