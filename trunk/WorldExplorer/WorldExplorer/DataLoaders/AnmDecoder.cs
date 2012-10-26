@@ -70,7 +70,6 @@ namespace WorldExplorer.DataLoaders
                 pose = new AnimMeshPose();
                 pose.BoneNum = boneNum;
                 pose.FrameNum = 0;
-                int frameOff = offset8Val + boneNum * 0x0e;
 
                 int posLen = bitReader.Read(4) + 1;
                 pose.Position = new Point3D(
@@ -101,10 +100,10 @@ namespace WorldExplorer.DataLoaders
             int totalFrame = 0;
 
             pose = null;
-            while (bitReader.HasData()) {
+            while (bitReader.HasData(16)) {
                 int count = bitReader.Read(8);
                 int flag = bitReader.Read(1);
-                int boneNum = bitReader.Read(7);
+                int boneNum = bitReader.Read(6);
                 
                 totalFrame += count;
          
@@ -130,7 +129,7 @@ namespace WorldExplorer.DataLoaders
 
                     Point3D vel = new Point3D(x, y, z);
                     Point3D prevVel = pose.Velocity;
-                    double coeff = (totalFrame - curVelFrame[boneNum]) / 512.0;
+                    double coeff = (totalFrame - curVelFrame[boneNum]) / 256.0;
                     Point3D posDelta = new Point3D(prevVel.X * coeff, prevVel.Y * coeff, prevVel.Z * coeff);
                     pose.Position = new Point3D(pose.Position.X + posDelta.X, pose.Position.Y + posDelta.Y, pose.Position.Z + posDelta.Z);
                     pose.FrameNum = totalFrame;
