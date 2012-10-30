@@ -26,7 +26,6 @@ using System.Windows.Media;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Media3D;
 using WorldExplorer.Logging;
-using WorldExplorer.Tools3D;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer
@@ -305,13 +304,9 @@ namespace WorldExplorer
             _modelViewModel.AnimData = null;
             _modelViewModel.VifModel = worldElementModel.WorldElement.model;
 
-            // If there is a texture that means there's a model
-            if (SelectedNodeImage != null)
-            {
-                _window.tabControl.SelectedIndex = 1; // Model View
-                _window.ResetCamera();
-                _window.SetViewportText(1, worldElementModel.Text, ""); // Set Model View Text
-            }
+            _window.tabControl.SelectedIndex = 1; // Model View
+            _window.ResetCamera();
+            _window.SetViewportText(1, worldElementModel.Text, ""); // Set Model View Text           
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
