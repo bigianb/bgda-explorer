@@ -32,7 +32,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using WorldExplorer.DataExporters;
-using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
 {

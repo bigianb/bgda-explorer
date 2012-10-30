@@ -74,7 +74,7 @@ namespace WorldExplorer
 
         private void UpdateModel(Boolean updateCamera)
         {
-            if (_vifModel != null && _texture != null)
+            if (_vifModel != null)
             {
                 Model = VifDecoder.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
                 if (updateCamera)

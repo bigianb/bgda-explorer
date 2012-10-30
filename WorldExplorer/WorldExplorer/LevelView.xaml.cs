@@ -31,7 +31,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HelixToolkit;
 using WorldExplorer.DataLoaders;
-using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
 {

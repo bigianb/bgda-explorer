@@ -388,9 +388,16 @@ namespace WorldExplorer.DataLoaders
             mesh3D.Normals = normals;
             model.Geometry = mesh3D;
             DiffuseMaterial dm = new DiffuseMaterial();
-            ImageBrush ib = new ImageBrush(texture);
-            ib.ViewportUnits = BrushMappingMode.Absolute;
-            dm.Brush = ib;
+            if (texture != null && texture.Width > 0 && texture.Height > 0)
+            {
+                ImageBrush ib = new ImageBrush(texture);
+                ib.ViewportUnits = BrushMappingMode.Absolute;
+                dm.Brush = ib;
+            }
+            else
+            {
+                dm.Brush = new SolidColorBrush(Colors.Violet);
+            }
             model.Material = dm;
             return model;
         }

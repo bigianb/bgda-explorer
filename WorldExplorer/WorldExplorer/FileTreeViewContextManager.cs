@@ -66,13 +66,15 @@ namespace WorldExplorer
             }
             else if (dataContext is LmpTreeViewModel) // .lmp files in .gob files
             {
-                var lmpItem = (LmpTreeViewModel)dataContext;
-
-                _menu.DataContext = lmpItem;
+                _menu.DataContext = dataContext;
+            }
+            else if (dataContext is WorldFileTreeViewModel)
+            {
+                _menu.DataContext = dataContext;
             }
             else if (dataContext is WorldElementTreeViewModel)
             {
-                var worldElement = (WorldElementTreeViewModel) dataContext;
+                var worldElement = (WorldElementTreeViewModel)dataContext;
 
                 _saveRawData.Visibility = Visibility.Collapsed;
                 _saveParsedVifData.Visibility = Visibility.Visible;
@@ -115,22 +117,12 @@ namespace WorldExplorer
             else if (_menu.DataContext is LmpEntryTreeViewModel)
             {
                 var lmpEntry = (LmpEntryTreeViewModel) _menu.DataContext;
-                var lmpFile = lmpEntry.LmpFileProperty;
-                var entry = lmpFile.Directory[lmpEntry.Text];
-
-                var dialog = new SaveFileDialog();
-                dialog.FileName = lmpEntry.Text;
-
-                bool? result = dialog.ShowDialog();
-                if (result.GetValueOrDefault(false))
-                {
-                    using (var stream = new FileStream(dialog.FileName, FileMode.Create))
-                    {
-                        stream.Write(lmpFile.FileData, entry.StartOffset, entry.Length);
-
-                        stream.Flush();
-                    }
-                }
+                SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Text);
+            }
+            else if (_menu.DataContext is WorldFileTreeViewModel)
+            {
+                var tvm = (WorldFileTreeViewModel)_menu.DataContext;
+                SaveLmpEntryData(tvm.LmpFileProperty, tvm.Text);
             }
             else if (_menu.DataContext is WorldElementTreeViewModel)
             {
@@ -138,6 +130,25 @@ namespace WorldExplorer
                     "Saving raw world element data is not supported due to the scattered layout of the data.",
                     "Error");
                 return;
+            }
+        }
+
+        void SaveLmpEntryData(LmpFile lmpFile, string entryName)
+        {
+            var entry = lmpFile.Directory[entryName];
+
+            var dialog = new SaveFileDialog();
+            dialog.FileName = entryName;
+
+            bool? result = dialog.ShowDialog();
+            if (result.GetValueOrDefault(false))
+            {
+                using (var stream = new FileStream(dialog.FileName, FileMode.Create))
+                {
+                    stream.Write(lmpFile.FileData, entry.StartOffset, entry.Length);
+
+                    stream.Flush();
+                }
             }
         }
 

@@ -27,7 +27,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using WorldExplorer.Tools3D;
 
 namespace WorldExplorer
 {
@@ -39,16 +38,7 @@ namespace WorldExplorer
         public SkeletonView()
         {
             InitializeComponent();
-
-            DataContextChanged += new DependencyPropertyChangedEventHandler(SkeletonView_DataContextChanged);
         }
-
-        void SkeletonView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var model = DataContext as SkeletonViewModel;
-
-            if (model == null)
-                return;
-        }
+      
     }
 }
