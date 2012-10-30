@@ -138,15 +138,31 @@ namespace WorldExplorer.DataLoaders
                 element.VifDataLength = vifLen*0x10 - vifStartOffset;
                 element.model = decodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
-                int tb = reader.ReadInt16();
-                int tc = reader.ReadInt16();
-                int td = reader.ReadInt16();
+                if (EngineVersion.ReturnToArms == engineVersion)
+                {
+                    int unk = reader.ReadInt16();
+                    log.LogLine("Unknown: " + unk);
+                }
 
-                log.LogLine("Position : " + tb + ", " + tc + ", " + td);
+                int posx = reader.ReadInt16();
+                int posy = reader.ReadInt16();
+                int posz = reader.ReadInt16();
 
-                element.pos = new Vector3D(tb / 16.0, tc / 16.0, td / 16.0);
+                log.LogLine("Position : " + posx + ", " + posy + ", " + posz);
+
+                element.pos = new Vector3D(posx / 16.0, posy / 16.0, posz / 16.0);
+
+                if (EngineVersion.ReturnToArms == engineVersion)
+                {
+                    // Just a guess, maybe wrong.
+                    element.pos = new Vector3D(posx / 16.0, posz / 16.0, posy / 16.0);
+                }
+
+                // I don't think RTA uses this flags scheme. From the data it looks like there are
+                // 2 shorts (or possibly floats) following.
 
                 int flags = reader.ReadInt32();
+                
                 if ((flags & 0x01) == 0)
                 {
                     log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
@@ -169,6 +185,12 @@ namespace WorldExplorer.DataLoaders
 
                 element.negYaxis = (flags & 0x40) == 0x40;
 
+                if (EngineVersion.ReturnToArms == engineVersion)
+                {
+                    flags = 0;
+                    element.usesRotFlags = true;
+                    log.LogLine("Forcing flags to 0 until we know the format better");
+                }
 
                 worldData.worldElements.Add(element);
             }
