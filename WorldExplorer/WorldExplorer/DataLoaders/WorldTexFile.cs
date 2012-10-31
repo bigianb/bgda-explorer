@@ -41,7 +41,7 @@ namespace WorldExplorer.DataLoaders
                 int _x = entry.CellOffset % 100;
                 if (_x == x && _y == y)
                 {
-                    return Decode(entry.DirectoryOffset, entry.DirectoryOffset);
+                    return GetBitmap(entry.DirectoryOffset, textureNumber);
                 }
             }
             return null;
