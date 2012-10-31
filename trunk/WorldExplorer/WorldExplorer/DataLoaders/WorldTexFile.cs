@@ -18,18 +18,34 @@ namespace WorldExplorer.DataLoaders
             _filepath = filepath;
             fileData = File.ReadAllBytes(filepath);
             Filename = Path.GetFileName(_filepath);
+
+            if (EngineVersion.ReturnToArms == _engineVersion)
+            {
+                _entries = ReadEntries();
+            }
         }
 
         private readonly EngineVersion _engineVersion;
-
+        private readonly TexEntry[] _entries;
         private string _filepath;
-
         public String Filename;
-
         public byte[] fileData;
 
-
         private Dictionary<int, WriteableBitmap> texMap = new Dictionary<int, WriteableBitmap>();
+
+        public WriteableBitmap GetBitmapRTA(int x, int y, int textureNumber)
+        {
+            foreach (var entry in _entries)
+            {
+                int _y = entry.CellOffset / 100;
+                int _x = entry.CellOffset % 100;
+                if (_x == x && _y == y)
+                {
+                    return Decode(entry.DirectoryOffset, entry.DirectoryOffset);
+                }
+            }
+            return null;
+        }
 
         public WriteableBitmap GetBitmap(int chunkStartOffset, int textureNumber)
         {
@@ -182,12 +198,6 @@ namespace WorldExplorer.DataLoaders
             }
         }
 
-        class HuffVal
-        {
-            public short val;
-            public short numBits;
-        }
-
         private HuffVal[] decodeHuff(int tableOffset)
         {
             HuffVal[] huffOut = new HuffVal[256];
@@ -219,6 +229,43 @@ namespace WorldExplorer.DataLoaders
             }
 
             return huffOut;
+        }
+
+        private TexEntry[] ReadEntries()
+        {
+            List<TexEntry> entries = new List<TexEntry>();
+
+            var reader = new DataReader(fileData);
+
+            // Unknown
+            reader.ReadInt32();
+
+            while (true)
+            {
+                var entry = new TexEntry();
+
+                entry.CellOffset = reader.ReadInt32();
+                entry.DirectoryOffset = reader.ReadInt32();
+                entry.Size = reader.ReadInt32();
+
+                if (entry.CellOffset < 0)
+                    break;
+
+                entries.Add(entry);
+            }
+
+            return entries.ToArray();
+        }
+        class HuffVal
+        {
+            public short val;
+            public short numBits;
+        }
+        class TexEntry
+        {
+            public int CellOffset;
+            public int DirectoryOffset;
+            public int Size;
         }
     }
 }
