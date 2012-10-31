@@ -115,7 +115,14 @@ namespace WorldExplorer.DataLoaders
 
                 if (textureNum != 0)
                 {
-                    element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
+                    if (EngineVersion.ReturnToArms == engineVersion)
+                    {
+                        element.Texture = texFile.GetBitmapRTA(x, y, textureNum);
+                    }
+                    else
+                    {
+                        element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
+                    }
                 }
 
                 if (element.Texture != null)
