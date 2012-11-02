@@ -21,7 +21,7 @@ namespace WorldExplorer.DataLoaders
 
             if (EngineVersion.ReturnToArms == _engineVersion)
             {
-                _entries = ReadEntries();
+                _entries = ReadEntries(fileData);
             }
         }
 
@@ -231,7 +231,7 @@ namespace WorldExplorer.DataLoaders
             return huffOut;
         }
 
-        private TexEntry[] ReadEntries()
+        public static TexEntry[] ReadEntries(byte[] fileData)
         {
             List<TexEntry> entries = new List<TexEntry>();
 
@@ -261,7 +261,7 @@ namespace WorldExplorer.DataLoaders
             public short val;
             public short numBits;
         }
-        class TexEntry
+        public class TexEntry
         {
             public int CellOffset;
             public int DirectoryOffset;

@@ -23,6 +23,7 @@ namespace WorldExplorer
         // Menu Items
         MenuItem _saveRawData;
         MenuItem _saveParsedVifData;
+        MenuItem _logTexData;
         
         public FileTreeViewContextManager(MainWindow window, TreeView treeView)
         {
@@ -36,6 +37,7 @@ namespace WorldExplorer
             // Setup Menu
             _saveRawData = AddItem("Save Raw Data", SaveRawDataClicked);
             _saveParsedVifData = AddItem("Save Parsed Data", SaveParsedDataClicked);
+            _logTexData = AddItem("Log .TEX Data", LogTexDataClicked);
         }
 
         void MenuOnContextMenuOpening(object sender, ContextMenuEventArgs e)
@@ -52,6 +54,7 @@ namespace WorldExplorer
             // Set default menu item visibilty
             _saveRawData.Visibility = Visibility.Visible;
             _saveParsedVifData.Visibility = Visibility.Collapsed;
+            _logTexData.Visibility = Visibility.Collapsed;
 
             if (dataContext is LmpEntryTreeViewModel) // files in .lmp files
             {
@@ -68,11 +71,13 @@ namespace WorldExplorer
             {
                 _menu.DataContext = dataContext;
             }
-            else if (dataContext is WorldFileTreeViewModel)
+            else if (dataContext is WorldFileTreeViewModel) // .world files
             {
                 _menu.DataContext = dataContext;
+
+                _logTexData.Visibility = Visibility.Visible;
             }
-            else if (dataContext is WorldElementTreeViewModel)
+            else if (dataContext is WorldElementTreeViewModel) // Elements of .world files
             {
                 var worldElement = (WorldElementTreeViewModel)dataContext;
 
@@ -217,6 +222,38 @@ namespace WorldExplorer
                     exporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
+        }
+
+        void LogTexDataClicked(object sender, RoutedEventArgs e)
+        {
+            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
+
+            if (EngineVersion.DarkAlliance == engineVersion)
+            {
+                MessageBox.Show(_window, "Not supported for Dark Alliance files.", "Error", MessageBoxButton.OK);
+                return;
+            }
+
+            var entries = WorldTexFile.ReadEntries(_window.ViewModel.World.WorldTex.fileData);
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Debug Info For: " + _window.ViewModel.World.WorldTex.Filename);
+            sb.AppendLine("");
+            for (int i= 0; i < entries.Length; i++)
+            {
+                sb.AppendLine("Entry " + i);
+                sb.AppendLine("Cell Offset: " + entries[i].CellOffset);
+                sb.AppendLine("Directory Offset: " + entries[i].DirectoryOffset);
+                sb.AppendLine("Size: " + entries[i].Size);
+
+                if (i < entries.Length - 1)
+                {
+                    sb.AppendLine("");
+                }
+            }
+
+            _window.ViewModel.LogText = sb.ToString();
+            _window.tabControl.SelectedIndex = 4; // Log View
         }
 
         #endregion
