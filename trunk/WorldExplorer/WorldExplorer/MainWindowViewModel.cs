@@ -155,6 +155,11 @@ namespace WorldExplorer
             }
         }
 
+        public World World
+        {
+            get { return _world; }
+        }
+
         public MainWindow MainWindow
         {
             get { return _window; }

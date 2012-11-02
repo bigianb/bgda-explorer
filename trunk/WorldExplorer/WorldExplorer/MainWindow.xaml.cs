@@ -66,6 +66,11 @@ namespace WorldExplorer
             }
         }
 
+        public MainWindowViewModel ViewModel
+        {
+            get { return _viewModel; }
+        }
+
         public void ResetCamera()
         {
             switch(tabControl.SelectedIndex)
