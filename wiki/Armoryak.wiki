@@ -13,7 +13,7 @@ The second integer is an offset to vif data.
 The third integer is the length of the vif data.
 
 so, something like this:
-
+{{{
 struct Child
 {
 int textureOffset;
@@ -25,5 +25,5 @@ struct Entry
 {
    Child[4] children;
 }
-
+}}}
 The start of the file then consists of an array of Entry structures.
