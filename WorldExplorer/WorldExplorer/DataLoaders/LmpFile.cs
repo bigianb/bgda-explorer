@@ -98,5 +98,14 @@ namespace WorldExplorer.DataLoaders
             EntryInfo entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
             return entry;
         }
+        public EntryInfo FindFile(string file)
+        {
+            foreach (var ent in Directory)
+            {
+                if (String.Compare(ent.Key, file, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return ent.Value;
+            }
+            return null;
+        }
     }
 }

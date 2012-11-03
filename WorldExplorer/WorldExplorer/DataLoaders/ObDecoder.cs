@@ -71,5 +71,18 @@ namespace WorldExplorer.DataLoaders
         public short I6;
         public float[] Floats;
         public List<string> Properties;
+
+        public string GetProperty(string name)
+        {
+            foreach (var prop in Properties)
+            {
+                int signIdx = prop.IndexOf('=');
+                if (signIdx != -1 && prop.Substring(0, signIdx) == name)
+                {
+                    return prop.Substring(signIdx + 1);
+                }
+            }
+            return null;
+        }
     }
 }

@@ -124,6 +124,9 @@
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="World.cs" />
+    <Compile Include="WorldDefs\ObjectDefinitions.cs" />
+    <Compile Include="WorldDefs\ObjectManager.cs" />
+    <Compile Include="WorldDefs\VisualObjectData.cs" />
     <Page Include="LevelView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
