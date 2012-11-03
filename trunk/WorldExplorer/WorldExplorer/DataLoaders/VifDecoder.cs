@@ -474,31 +474,31 @@ namespace WorldExplorer.DataLoaders
                 int immCommand = DataUtil.getLEShort(fileData, offset);
                 switch (vifCommand) {
                     case NOP_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("NOP");
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("NOP");
                         offset += 4;
                         break;
                     case STCYCL_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("STCYCL: WL: " + (immCommand >> 8) + " CL: " + (immCommand & 0xFF));
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("STCYCL: WL: " + (immCommand >> 8) + " CL: " + (immCommand & 0xFF));
                         offset += 4;
                         break;
                     case ITOP_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("ITOP: " + immCommand);
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("ITOP: " + immCommand);
                         offset += 4;
                         break;
                     case STMOD_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("STMOD: " + immCommand);
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("STMOD: " + immCommand);
                         offset += 4;
                         break;
                     case MSCAL_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("MSCAL: " + immCommand);
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("MSCAL: " + immCommand);
                         if (immCommand != 66 && immCommand != 68 && immCommand != 70)
                         {
-                            Debug.WriteLine("**** Microcode " + immCommand + " not supported");
+                            DebugWriteLine("**** Microcode " + immCommand + " not supported");
                         }
                         currentChunk.mscalID = immCommand;
                         chunks.Add(currentChunk);
@@ -508,20 +508,20 @@ namespace WorldExplorer.DataLoaders
                         offset += 4;
                         break;
                     case STMASK_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
                         offset += 4;
                         int stmask = DataUtil.getLEInt(fileData, offset);
-                        Debug.WriteLine("STMASK: " + stmask);
+                        DebugWriteLine("STMASK: " + stmask);
                         offset += 4;
                         break;
                     case FLUSH_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("FLUSH");
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("FLUSH");
                         offset += 4;                       
                         break;
                     case DIRECT_CMD:
-                        Debug.Write(HexUtil.formatHex(offset) + " ");
-                        Debug.WriteLine("DIRECT, " + immCommand*16 + " bytes");
+                        DebugWrite(HexUtil.formatHex(offset) + " ");
+                        DebugWriteLine("DIRECT, " + immCommand*16 + " bytes");
 
                         GIFTag[] tags = new GIFTag[immCommand];
 
@@ -545,7 +545,7 @@ namespace WorldExplorer.DataLoaders
                             bool flag = (immCommand & 0x8000) == 0x8000;
                             bool usn = (immCommand & 0x4000) == 0x4000;
 
-                            Debug.Write(HexUtil.formatHex(offset) + " ");
+                            DebugWrite(HexUtil.formatHex(offset) + " ");
                             String debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
 
                             if (flag) {
@@ -557,7 +557,7 @@ namespace WorldExplorer.DataLoaders
                             if (mask) {
                                 debugMsg += ", Mask";
                             }
-                            Debug.WriteLine(debugMsg);
+                            DebugWriteLine(debugMsg);
                             offset += 4;
                             if (vn == 1 && vl == 1) {
                                 // v2-16
@@ -620,18 +620,18 @@ namespace WorldExplorer.DataLoaders
                                 if (1 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
-                                    Debug.Write(HexUtil.formatHex(offset) + " ");
-                                    Debug.WriteLine("GifTag: " + currentChunk.gifTag0.ToString());
+                                    DebugWrite(HexUtil.formatHex(offset) + " ");
+                                    DebugWriteLine("GifTag: " + currentChunk.gifTag0.ToString());
                                 } else if (2 == numCommand) {
                                     currentChunk.gifTag0 = new GIFTag();
                                     currentChunk.gifTag0.parse(fileData, offset);
                                     currentChunk.gifTag1 = new GIFTag();
                                     currentChunk.gifTag1.parse(fileData, offset + 16);
 
-                                    Debug.Write(HexUtil.formatHex(offset) + " ");
-                                    Debug.WriteLine("GifTag0: " + currentChunk.gifTag0.ToString());
-                                    Debug.Write(HexUtil.formatHex(offset) + " ");
-                                    Debug.WriteLine("GifTag1: " + currentChunk.gifTag1.ToString());
+                                    DebugWrite(HexUtil.formatHex(offset) + " ");
+                                    DebugWriteLine("GifTag0: " + currentChunk.gifTag0.ToString());
+                                    DebugWrite(HexUtil.formatHex(offset) + " ");
+                                    DebugWriteLine("GifTag1: " + currentChunk.gifTag1.ToString());
                                 } else {
                                     log.LogLine("unknown number of gif commands.");
                                 }
@@ -694,17 +694,26 @@ namespace WorldExplorer.DataLoaders
                                 }
                                 
                             } else {
-                                Debug.WriteLine("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);
+                                DebugWriteLine("Unknown vnvl combination: vn=" + vn + ", vl=" + vl);
                                 offset = endOffset;
                             }
                         } else {
-                            Debug.WriteLine("Unknown command: " + vifCommand);
+                            DebugWriteLine("Unknown command: " + vifCommand);
                             offset = endOffset;
                         }
                         break;
                 }
             }
             return chunks;
+        }
+
+        private static void DebugWrite(string msg)
+        {
+            //Debug.Write(msg);
+        }
+        private static void DebugWriteLine(string msg)
+        {
+            //Debug.WriteLine(msg);
         }
     }
 }

@@ -62,12 +62,11 @@ namespace WorldExplorer
 
                 WorldElementTreeViewModel selectedElement = null;
 
-                for (int i = 2; i < levelViewModel.Scene.Count; i++)
+                for (int i = 0; i < worldNode.Children.Count; i++)
                 {
-                    if (levelViewModel.Scene[i] == hitResult)
+                    if (levelViewModel.Scene[i + 2] == hitResult)
                     {
-                        selectedElement = (WorldElementTreeViewModel) worldNode.Children[i - 2];
-                        //worldNode.Children[i-2].IsSelected = true;
+                        selectedElement = (WorldElementTreeViewModel)worldNode.Children[i];
                         break;
                     }
                 }

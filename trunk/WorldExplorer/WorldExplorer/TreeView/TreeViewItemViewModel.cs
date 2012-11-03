@@ -132,6 +132,22 @@ namespace WorldExplorer
 
         #endregion // LoadChildren
 
+        #region ForceLoadChildren
+
+        /// <summary>
+        /// Forces the item to load its children without expanding.
+        /// </summary>
+        public void ForceLoadChildren()
+        {
+            if (this.HasDummyChild)
+            {
+                Children.Remove(DummyChild);
+                LoadChildren();
+            }
+        }
+
+        #endregion
+
         #region Parent
 
         public TreeViewItemViewModel Parent

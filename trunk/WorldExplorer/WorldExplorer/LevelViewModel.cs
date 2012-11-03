@@ -24,15 +24,18 @@ using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
 using System.Windows.Media;
+using WorldExplorer.WorldDefs;
 
 namespace WorldExplorer
 {
     public class LevelViewModel : BaseViewModel
     {
         private WorldData _worldData;
+        private List<ModelVisual3D> _scene;
+        private String _infoText;
+        private ObjectManager _objectManager;
 
         public WorldFileTreeViewModel WorldNode { get; set; }
-
         public WorldData WorldData
         {
             get { return _worldData; }
@@ -42,9 +45,6 @@ namespace WorldExplorer
                 RebuildScene();
             }
         }
-
-        private String _infoText;
-
         public String InfoText
         {
             get { return _infoText; }
@@ -54,10 +54,23 @@ namespace WorldExplorer
                 this.OnPropertyChanged("InfoText");
             }
         }
+        public List<ModelVisual3D> Scene
+        {
+            get { return _scene; }
+            set
+            {
+                _scene = value;
+                this.OnPropertyChanged("Scene");
+            }
+        }
+        public ObjectManager ObjectManager
+        {
+            get { return _objectManager; }
+        }
 
         public LevelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
         {
-            
+            _objectManager = new ObjectManager(this);
         }
 
         public void RebuildScene()
@@ -129,10 +142,21 @@ namespace WorldExplorer
                 }
                 mv3d.Transform = transform3DGroup;
                 
-                scene.Add(mv3d);               
+                scene.Add(mv3d);
             }
 
             Scene = scene;
+
+            LoadObjects();
+        }
+        private void LoadObjects()
+        {
+            if (WorldNode.LmpFileProperty.Directory.ContainsKey("objects.ob"))
+            {
+                var obNode = WorldNode.LmpFileProperty.Directory["objects.ob"];
+
+                _objectManager.LoadScene(WorldNode.LmpFileProperty.FileData, obNode.StartOffset, obNode.Length);
+            }
         }
 
         private List<ModelVisual3D> buildLights()
@@ -146,43 +170,6 @@ namespace WorldExplorer
             scene.Add(directionalLight);
 
             return scene;
-        }
-
-        private List<ModelVisual3D> _scene;
-
-        public List<ModelVisual3D> Scene
-        {
-            get { return _scene; }
-            set
-            {
-                _scene = value;
-                this.OnPropertyChanged("Scene");
-            }
-        }
-
-        private Transform3D _cameraTransform;
-
-        public Transform3D CameraTransform
-        {
-            get { return _cameraTransform; }
-            set
-            {
-                _cameraTransform = value;
-                _camera.Transform = _cameraTransform;
-                this.OnPropertyChanged("CameraTransform");
-            }
-        }
-
-        private Camera _camera = new OrthographicCamera { Position = new Point3D(0, -10, 10), LookDirection = new Vector3D(0, 1, -1) };
-
-        public Camera Camera
-        {
-            get { return _camera; }
-            set
-            {
-                _camera = value;
-                this.OnPropertyChanged("Camera");
-            }
         }
     }
 }

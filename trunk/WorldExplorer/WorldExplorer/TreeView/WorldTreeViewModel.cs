@@ -127,7 +127,6 @@ namespace WorldExplorer
         {
             get { return _name; }
         }
-
     }
 
     /// <summary>
