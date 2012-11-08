@@ -16,6 +16,7 @@
 package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
+import java.util.HashMap;
 
 /**
  * Decodes a script file.
@@ -105,7 +106,7 @@ public class ScriptDecode
         sb.append(numExternals).append(" Externals:\n");
         sb.append("~~~~~~~~~~~~\n");
         for (int i = 0; i < numExternals; ++i) {
-            printExternal(sb, offsetExternals + 0x18 * i);
+            printExternal(sb, i, offsetExternals + 0x18 * i);
         }
         sb.append("\n");
 
@@ -147,23 +148,273 @@ public class ScriptDecode
     {
         for (int i = 0; i < len; i += 4) {
             int opcode = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
-            sb.append(HexUtil.formatHex(opcode)).append("\n");
+            String label = internalsMap.get(i);
+            if (label != null) {
+                sb.append("\n").append(label).append(":\n");
+            }
+            sb.append(HexUtil.formatHex(i)).append(": ");
+
+            int bytesConsumed = disassembleInstruction(sb, opcode, i, instructionsOffset);
+            if (bytesConsumed >= 0) {
+                i += bytesConsumed;
+            } else {
+                sb.append(HexUtil.formatHex(opcode));
+                if (opcode < opCodeArgs.length && opcode >= 0) {
+                    ARGS_TYPE type = opCodeArgs[opcode];
+                    switch (type) {
+                        case NO_ARGS:
+                            break;
+                        case ONE_ARG: {
+                            i += 4;
+                            int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" ").append(HexUtil.formatHex(arg1));
+                        }
+                        break;
+                        case ONE_ARG_INSTR: {
+                            i += 4;
+                            int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" inst ").append(HexUtil.formatHex(arg1));
+                        }
+                        break;
+                        case TWO_ARGS: {
+                            i += 4;
+                            int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" ").append(HexUtil.formatHex(arg1));
+                            i += 4;
+                            int arg2 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" ").append(HexUtil.formatHex(arg2));
+                        }
+                        break;
+                        case VAR_ARGS: {
+                            i += 4;
+                            int num = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" numArgs=").append(HexUtil.formatHex(num));
+                            for (int j = 0; j < num - 1; ++j) {
+                                i += 4;
+                                int arg = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                                sb.append(" ").append(HexUtil.formatHex(arg));
+                            }
+                        }
+                        break;
+                        case ARGS_130: {
+                            i += 4;
+                            int num = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append(" num=").append(HexUtil.formatHex(num));
+                            for (int j = 0; j < num; ++j) {
+                                i += 4;
+                                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                                i += 4;
+                                int arg2 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                                sb.append("\n            ").append(HexUtil.formatHex(arg1)).append(", ").append(arg2);
+                            }
+                            i += 4;
+                            int arg3 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
+                            sb.append("\n            ").append(HexUtil.formatHex(arg3));
+                        }
+                        break;
+                    }
+                } else {
+                    sb.append(" *** Instruction op code out of range");
+                }
+            }
+            sb.append("\n");
         }
     }
+
+    private int disassembleInstruction(StringBuilder sb, int opcode, int i, int instructionsOffset)
+    {
+        int bytesConsumed = -1;
+        switch (opcode) {
+            case 0x27: {
+                // pushes a number onto the stack
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("push ").append(HexUtil.formatHex(arg1));
+            }
+            break;
+            case 0x2C: {
+                // pops a number of bytes off the stack
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("pop bytes ").append(arg1);
+            }
+            break;
+            case 0x7B: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                String externalName = externalsMap.get(arg1);
+                sb.append(externalName);
+            }
+            break;
+        }
+        return bytesConsumed;
+    }
+
+    /**
+     * Maps an instruction address to a label.
+     */
+    private HashMap<Integer, String> internalsMap = new HashMap<>(64);
 
     private void printInternal(StringBuilder sb, int offset)
     {
         sb.append(HexUtil.formatHexUShort(offset)).append(": ");
-        int id = DataUtil.getLEInt(fileData, offset + bodyOffset);
-        sb.append(HexUtil.formatHex(id)).append(" - ");
-        sb.append(DataUtil.collectString(fileData, offset + bodyOffset + 4));
-        sb.append("\n");
+        int address = DataUtil.getLEInt(fileData, offset + bodyOffset);
+        sb.append(HexUtil.formatHex(address)).append(" - ");
+        String label = DataUtil.collectString(fileData, offset + bodyOffset + 4);
+        sb.append(label).append("\n");
+        internalsMap.put(address, label);
     }
 
-    private void printExternal(StringBuilder sb, int offset)
+    /**
+     * Maps an external id to a label.
+     */
+    private HashMap<Integer, String> externalsMap = new HashMap<>(64);
+
+    private void printExternal(StringBuilder sb, int id, int offset)
     {
-        sb.append(HexUtil.formatHexUShort(offset)).append(": ");
-        sb.append(DataUtil.collectString(fileData, offset + bodyOffset + 4));
-        sb.append("\n");
+        sb.append(HexUtil.formatHexUShort(id)).append(": ");
+        String label = DataUtil.collectString(fileData, offset + bodyOffset + 4);
+        sb.append(label).append("\n");
+        externalsMap.put(id, label);
     }
+
+    private enum ARGS_TYPE
+    {
+        NO_ARGS, ONE_ARG, ONE_ARG_INSTR, TWO_ARGS, VAR_ARGS, ARGS_130
+    }
+
+    private ARGS_TYPE[] opCodeArgs = new ARGS_TYPE[]
+            {
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.VAR_ARGS,
+                    ARGS_TYPE.TWO_ARGS,
+                    ARGS_TYPE.VAR_ARGS,
+                    ARGS_TYPE.TWO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG_INSTR,
+                    ARGS_TYPE.ARGS_130
+            };
 }
