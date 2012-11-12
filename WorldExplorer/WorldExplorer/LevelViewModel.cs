@@ -42,7 +42,7 @@ namespace WorldExplorer
             set
             {
                 _worldData = value;
-                RebuildScene();
+                NewWorldLoaded();
             }
         }
         public String InfoText
@@ -145,9 +145,15 @@ namespace WorldExplorer
                 scene.Add(mv3d);
             }
 
-            Scene = scene;
+            ObjectManager.AddObjectsToScene(scene);
 
+            Scene = scene;
+        }
+
+        private void NewWorldLoaded()
+        {
             LoadObjects();
+            RebuildScene();
         }
         private void LoadObjects()
         {

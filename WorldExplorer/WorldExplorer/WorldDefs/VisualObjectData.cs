@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
+using HelixToolkit;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
@@ -16,11 +17,11 @@ namespace WorldExplorer.WorldDefs
         public ObjectData ObjectData;
         public Vector3D Offset = new Vector3D(0, 0, 0);
         public ModelVisual3D Model;
-        
-        public void AddToScene(LevelViewModel levelView)
+
+        public void AddToScene(List<ModelVisual3D> scene)
         {
             Model.Transform = new TranslateTransform3D(Offset);
-            levelView.Scene.Add(Model);
+            scene.Add(Model);
         }
     }
 }
