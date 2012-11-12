@@ -38,7 +38,21 @@ namespace WorldExplorer.WorldDefs
             }
         }
 
-        public void ParseObject(ObjectData obj)
+        public void AddObjectsToScene(List<ModelVisual3D> scene)
+        {
+            foreach (var vod in _visualObjects)
+            {
+                vod.AddToScene(scene);
+            }
+        }
+
+        public void RemoveObjectFromList(VisualObjectData vod)
+        {
+            if (_visualObjects.Contains(vod))
+                _visualObjects.Remove(vod);
+        }
+
+        public VisualObjectData ParseObject(ObjectData obj)
         {
             var vod = new VisualObjectData();
             vod.ObjectData = obj;
@@ -49,14 +63,38 @@ namespace WorldExplorer.WorldDefs
             if (vod != null)
             {
                 _visualObjects.Add(vod);
-
-                vod.AddToScene(_levelViewModel);
             }
+
+            return vod;
         }
 
         public VisualObjectData HitTest(ModelVisual3D hitResult)
         {
+            foreach (var vod in _visualObjects)
+            {
+                if (HitTestModel(vod.Model, hitResult))
+                    return vod;
+            }
             return null;
+        }
+
+        private bool HitTestModel(ModelVisual3D obj, ModelVisual3D hitResult)
+        {
+            if (obj == hitResult)
+                return true;
+            foreach (var child in obj.Children)
+            {
+                if (child == hitResult)
+                    return true;
+
+                if (child is ModelVisual3D)
+                {
+                    if (HitTestModel((ModelVisual3D)child, hitResult))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         public ObjectData GetObjectByName(string name)

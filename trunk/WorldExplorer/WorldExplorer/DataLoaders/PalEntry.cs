@@ -32,9 +32,9 @@ namespace WorldExplorer.DataLoaders
             // in ps2 0x80 is fully transparent and 0 is opaque.
             // in java 0 is transparent and 0xFF is opaque.
 
-            byte java_a = (byte)(a == 0 ? 0 : (a << 1) - 1);
+            byte java_a = (byte)(256 - (byte)(a*2));
 
-            java_a = (byte)0xFF;
+            //java_a = (byte)0xFF;
 
             int argb = (java_a << 24) |
                     ((r << 16) & 0xFF0000) |

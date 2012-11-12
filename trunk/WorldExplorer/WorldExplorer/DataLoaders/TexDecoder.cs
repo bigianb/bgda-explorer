@@ -110,7 +110,7 @@ namespace WorldExplorer.DataLoaders
                     null);
                 image.Lock();
                 unsafe {
-                    int pBackBuffer = (int)image.BackBuffer;
+                    IntPtr pBackBuffer = image.BackBuffer;
                     for (int y = 0; y < sourceh; ++y) {
                         for (int x = 0; x < sourcew; ++x) {
                             PalEntry pixel = pixels[y * sourcew + x];
