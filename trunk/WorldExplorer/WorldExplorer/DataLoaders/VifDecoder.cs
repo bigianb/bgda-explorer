@@ -387,16 +387,38 @@ namespace WorldExplorer.DataLoaders
             mesh3D.TextureCoordinates = uvCoords;
             mesh3D.Normals = normals;
             model.Geometry = mesh3D;
-            DiffuseMaterial dm = new DiffuseMaterial();
+            var dm = new DiffuseMaterial();
             if (texture != null && texture.Width > 0 && texture.Height > 0)
             {
-                ImageBrush ib = new ImageBrush(texture);
+                var ib = new ImageBrush(texture);
                 ib.ViewportUnits = BrushMappingMode.Absolute;
+                // May be needed at a later point
+                //ib.TileMode = TileMode.Tile;
                 dm.Brush = ib;
             }
             else
             {
-                dm.Brush = new SolidColorBrush(Colors.Violet);
+                var dg = new DrawingGroup();
+                // Background
+                dg.Children.Add(new GeometryDrawing()
+                {
+                    Brush = new SolidColorBrush(Colors.Black),
+                    Geometry = new RectangleGeometry(new Rect(0, 0, 2, 2))
+                });
+
+                // Tiles
+                dg.Children.Add(new GeometryDrawing()
+                {
+                    Brush = new SolidColorBrush(Colors.Violet),
+                    Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
+                });
+                dg.Children.Add(new GeometryDrawing()
+                {
+                    Brush = new SolidColorBrush(Colors.Violet),
+                    Geometry = new RectangleGeometry(new Rect(1, 1, 1, 1))
+                });
+
+                dm.Brush = new DrawingBrush(dg){ TileMode = TileMode.Tile, Transform = new ScaleTransform(0.1,0.1)};
             }
             model.Material = dm;
             return model;
