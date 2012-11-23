@@ -225,6 +225,18 @@ public class ScriptDecode
     {
         int bytesConsumed = -1;
         switch (opcode) {
+            case 0xb: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("set return code to ").append(arg1);
+            }
+            break;
+            case 0xf: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("store retcode in local var ").append(arg1);
+            }
+            break;
             case 0x27: {
                 // pushes a number onto the stack
                 bytesConsumed = 4;
@@ -239,11 +251,66 @@ public class ScriptDecode
                 sb.append("pop bytes ").append(arg1);
             }
             break;
+            case 0x2E: {
+                // enters a routine
+                bytesConsumed=0;
+                sb.append("enter");
+            }
+            break;
+            case 0x30: {
+                bytesConsumed=0;
+                sb.append("return");
+            }
+            break;
+            case 0x33: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("Jump to ").append(HexUtil.formatHexUShort(arg1));
+            }
+            break;
+            case 0x35: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("Jump if return code is zero to ").append(HexUtil.formatHexUShort(arg1));
+            }
+            break;
+            case 0x54:
+            {
+                bytesConsumed=0;
+                sb.append("!return code");
+            }
+            break;
+            case 0x59:
+            {
+                bytesConsumed=0;
+                sb.append("set return code to 0");
+            }
+            break;
+            case 0x5B: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("clear local var ").append(HexUtil.formatHex(arg1));
+            }
+            break;
             case 0x7B: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
                 String externalName = externalsMap.get(arg1);
                 sb.append(externalName);
+            }
+            break;
+            case 0x7D: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                bytesConsumed += 4;
+                int arg2 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("Debug line no: ").append(arg1).append("  [").append(arg2).append("]");
+            }
+            break;
+            case 0x81: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("switch(retval) ... case statement defs as ").append(HexUtil.formatHex(arg1));
             }
             break;
         }
