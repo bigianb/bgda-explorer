@@ -16,7 +16,10 @@
 package net.ijbrown.bgtools.lmp;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Decodes a script file.
@@ -25,19 +28,25 @@ public class ScriptDecode
 {
     public static void main(String[] args) throws IOException
     {
+        ScriptDecode obj = new ScriptDecode();
+        obj.decode("tavern");
+        obj.decode("cellar1");
+    }
+
+    private void decode(String levelName) throws IOException
+    {
         String rootDir = "/emu/bgda/BG/DATA_extracted/";
-        String lmpName = "tavern";
+        String lmpName = levelName;
 
         String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
-        ScriptDecode obj = new ScriptDecode();
-        obj.read("script.scr", outDirFile);
+        read("script.scr", outDirFile);
         String txt;
-        txt = obj.disassemble(outDirFile);
-        obj.writeFile("script.scr.txt", outDirFile, txt);
+        txt = disassemble(outDirFile);
+        writeFile("script.scr.txt", outDirFile, txt);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -110,6 +119,9 @@ public class ScriptDecode
         }
         sb.append("\n");
 
+        StringBuilder sb3 = new StringBuilder();
+        dumpStrings(sb3, stringsOffset, offset3 - stringsOffset);
+
         sb.append("Instructions\n");
         sb.append("~~~~~~~~~~~~\n\n");
         dumpInstructions(sb, instructionsOffset, stringsOffset - instructionsOffset);
@@ -117,7 +129,7 @@ public class ScriptDecode
 
         sb.append("Strings\n");
         sb.append("~~~~~~~\n\n");
-        dumpStrings(sb, stringsOffset, offset3 - stringsOffset);
+        sb.append(sb3);
         sb.append("\n");
         return sb.toString();
     }
@@ -125,24 +137,32 @@ public class ScriptDecode
     private void dumpStrings(StringBuilder sb, int stringsOffset, int len)
     {
         boolean needsOffset = true;
+        int startOffset = 0;
+        StringBuilder sb2 = new StringBuilder(64);
         for (int i = 0; i < len; i += 4) {
             if (needsOffset) {
-                sb.append(HexUtil.formatHex(stringsOffset + i)).append(": ");
+                sb.append(HexUtil.formatHex(i)).append(": ");
                 needsOffset = false;
+                startOffset = i;
             }
             int ival = DataUtil.getLEInt(fileData, stringsOffset + i + bodyOffset);
             for (int b = 3; b >= 0; --b) {
                 int c = (ival >> (b * 8)) & 0xff;
                 if (0 == c) {
+                    stringTable.put(startOffset, sb2.toString());
+                    sb.append(sb2);
                     sb.append("\n");
+                    sb2 = new StringBuilder(64);
                     needsOffset = true;
                     break;
                 }
-                sb.append((char) c);
+                sb2.append((char) c);
             }
 
         }
     }
+
+    private Map<Integer, String> stringTable = new HashMap<>();
 
     private void dumpInstructions(StringBuilder sb, int instructionsOffset, int len)
     {
@@ -221,6 +241,8 @@ public class ScriptDecode
         }
     }
 
+    private List<Integer> stack = new ArrayList<>(20);
+
     private int disassembleInstruction(StringBuilder sb, int opcode, int i, int instructionsOffset)
     {
         int bytesConsumed = -1;
@@ -228,19 +250,20 @@ public class ScriptDecode
             case 0xb: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
-                sb.append("set return code to ").append(arg1);
+                sb.append("acc = ").append(arg1);
             }
             break;
             case 0xf: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
-                sb.append("store retcode in local var ").append(arg1);
+                sb.append("var ").append(arg1).append(" = acc");
             }
             break;
             case 0x27: {
                 // pushes a number onto the stack
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                stack.add(arg1);
                 sb.append("push ").append(HexUtil.formatHex(arg1));
             }
             break;
@@ -248,17 +271,22 @@ public class ScriptDecode
                 // pops a number of bytes off the stack
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                int numInts = arg1 / 4;
+                for (int idx = 0; idx < numInts && stack.size() > 0; ++idx) {
+                    stack.remove(stack.size() - 1);
+                }
                 sb.append("pop bytes ").append(arg1);
             }
             break;
             case 0x2E: {
                 // enters a routine
-                bytesConsumed=0;
+                bytesConsumed = 0;
+                stack.clear();
                 sb.append("enter");
             }
             break;
             case 0x30: {
-                bytesConsumed=0;
+                bytesConsumed = 0;
                 sb.append("return");
             }
             break;
@@ -271,19 +299,17 @@ public class ScriptDecode
             case 0x35: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
-                sb.append("Jump if return code is zero to ").append(HexUtil.formatHexUShort(arg1));
+                sb.append("Jump if acc == 0 to ").append(HexUtil.formatHexUShort(arg1));
             }
             break;
-            case 0x54:
-            {
-                bytesConsumed=0;
-                sb.append("!return code");
+            case 0x54: {
+                bytesConsumed = 0;
+                sb.append("acc = !acc");
             }
             break;
-            case 0x59:
-            {
-                bytesConsumed=0;
-                sb.append("set return code to 0");
+            case 0x59: {
+                bytesConsumed = 0;
+                sb.append("acc = 0");
             }
             break;
             case 0x5B: {
@@ -296,7 +322,7 @@ public class ScriptDecode
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
                 String externalName = externalsMap.get(arg1);
-                sb.append(externalName);
+                decodeExternalCall(sb, externalName);
             }
             break;
             case 0x7D: {
@@ -310,11 +336,43 @@ public class ScriptDecode
             case 0x81: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
-                sb.append("switch(retval) ... case statement defs as ").append(HexUtil.formatHex(arg1));
+                sb.append("switch(acc) ... case statement defs as ").append(HexUtil.formatHex(arg1));
             }
             break;
         }
         return bytesConsumed;
+    }
+
+    private void decodeExternalCall(StringBuilder sb, String name)
+    {
+        sb.append(name);
+        switch (name) {
+            case "getv":
+                if (stack.size() >= 2) {
+                    int iarg1 = stack.get(stack.size() - 2);
+                    int iarg2 = stack.get(stack.size() - 1);
+                    sb.append("(");
+                    printStringArg(sb, iarg1);
+                    sb.append(", ").append(iarg2).append(")");
+                }
+                break;
+            case "setv":
+                if (stack.size() >= 3) {
+                    int iarg1 = stack.get(stack.size() - 3);
+                    int iarg2 = stack.get(stack.size() - 2);
+                    int iarg3 = stack.get(stack.size() - 1);
+                    sb.append("(").append(iarg1).append(", ");
+                    printStringArg(sb, iarg2);
+                    sb.append(", ").append(iarg3).append(")");
+                }
+                break;
+        }
+    }
+
+    private void printStringArg(StringBuilder sb, int iarg)
+    {
+        String sArg = stringTable.get(iarg);
+        sb.append(sArg != null ? sArg : "?");
     }
 
     /**
