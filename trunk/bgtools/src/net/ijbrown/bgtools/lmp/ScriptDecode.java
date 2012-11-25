@@ -99,6 +99,18 @@ public class ScriptDecode
         int offset4 = DataUtil.getLEInt(fileData, bodyOffset + 0x18);
         int offset5 = DataUtil.getLEInt(fileData, bodyOffset + 0x1C);
 
+        sb.append("Header:\n");
+        sb.append("~~~~~~\n");
+        sb.append("address  0: ").append(HexUtil.formatHex(offset0)).append("\n");
+        sb.append("address  4: ").append(HexUtil.formatHex(hw1)).append("\n");
+        sb.append("address  6: ").append(HexUtil.formatHex(hw2)).append("\n");
+        sb.append("address  8: ").append(HexUtil.formatHex(hw3)).append("\n");
+        sb.append("address  A: ").append(HexUtil.formatHex(hw4)).append("\n");
+        sb.append("address 10 (string table): ").append(HexUtil.formatHex(stringsOffset)).append("\n");
+        sb.append("address 14: ").append(HexUtil.formatHex(offset3)).append("\n");
+        sb.append("address 18: ").append(HexUtil.formatHex(offset4)).append("\n");
+        sb.append("address 1C: ").append(HexUtil.formatHex(offset5)).append("\n");
+
         int numInternals = DataUtil.getLEUShort(fileData, bodyOffset + 0x20);
         int offsetInternals = DataUtil.getLEInt(fileData, bodyOffset + 0x24);
 
@@ -347,13 +359,31 @@ public class ScriptDecode
     {
         sb.append(name);
         switch (name) {
+            case "addQuest":
+                if (stack.size() >= 3) {
+                    int iarg1 = stack.get(stack.size() - 3);
+                    int iarg2 = stack.get(stack.size() - 2);
+                    int iarg3 = stack.get(stack.size() - 1);
+                    if (iarg3 != 8) {
+                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\n");
+                    }
+                    sb.append("(");
+                    printStringArg(sb, iarg1);
+                    sb.append(", ");
+                    printStringArg(sb, iarg2);
+                    sb.append(")");
+                }
+                break;
             case "getv":
                 if (stack.size() >= 2) {
                     int iarg1 = stack.get(stack.size() - 2);
                     int iarg2 = stack.get(stack.size() - 1);
+                    if (iarg2 != 4) {
+                        sb.append("*** Expected iarg2 to be 4 but it was ").append(iarg2).append(" ***\n");
+                    }
                     sb.append("(");
                     printStringArg(sb, iarg1);
-                    sb.append(", ").append(iarg2).append(")");
+                    sb.append(")");
                 }
                 break;
             case "setv":
@@ -361,9 +391,12 @@ public class ScriptDecode
                     int iarg1 = stack.get(stack.size() - 3);
                     int iarg2 = stack.get(stack.size() - 2);
                     int iarg3 = stack.get(stack.size() - 1);
+                    if (iarg3 != 8) {
+                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\n");
+                    }
                     sb.append("(").append(iarg1).append(", ");
                     printStringArg(sb, iarg2);
-                    sb.append(", ").append(iarg3).append(")");
+                    sb.append(")");
                 }
                 break;
         }
