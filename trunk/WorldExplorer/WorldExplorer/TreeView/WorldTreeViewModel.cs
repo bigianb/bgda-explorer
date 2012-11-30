@@ -52,6 +52,10 @@ namespace WorldExplorer
             {
                 base.Children.Add(new GobTreeViewModel(_world, this));
             }
+            else if (_world.WorldYak != null)
+            {
+                // TODO: process the yak file.
+            }
             else
             {
                 throw new NotSupportedException("Unknown or corrupted file");

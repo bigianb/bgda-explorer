@@ -42,6 +42,7 @@ namespace WorldExplorer
         public GobFile WorldGob = null;
         public WorldTexFile WorldTex = null;
         public LmpFile WorldLmp = null;
+        public YakFile WorldYak = null;
 
         // The parsed data from the various files.
         public WorldData worldData = null;
@@ -61,6 +62,10 @@ namespace WorldExplorer
                     // TODO: Support just passing the filepath instead of having to load data here
                     var data = File.ReadAllBytes(Path.Combine(DataPath, Name));
                     WorldLmp = new LmpFile(EngineVersion, Name, data, 0, data.Length);
+                    break;
+                case ".yak":
+                    var yakData = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                    WorldYak = new YakFile(EngineVersion, Name, yakData);
                     break;
                 default:
                     throw new NotSupportedException("Unsupported file type");
