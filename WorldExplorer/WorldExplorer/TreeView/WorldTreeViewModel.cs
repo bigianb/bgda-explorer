@@ -54,7 +54,7 @@ namespace WorldExplorer
             }
             else if (_world.WorldYak != null)
             {
-                // TODO: process the yak file.
+                base.Children.Add(new YakTreeViewModel(this, _world.WorldYak));
             }
             else
             {
@@ -105,6 +105,60 @@ namespace WorldExplorer
             {
                 Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
             }
+        }
+    }
+
+    /// <summary>
+    /// A simple model that displays a YAK file.
+    /// </summary>
+    public class YakTreeViewModel : TreeViewItemViewModel
+    {
+        public YakTreeViewModel(TreeViewItemViewModel parent, YakFile yakFile) : base(parent, true)
+        {
+            _parent = parent;
+            _yakFile = yakFile;
+            _name = yakFile.Name;
+        }
+
+        private TreeViewItemViewModel _parent;
+        private YakFile _yakFile;
+        private String _name;
+
+        public string Text
+        {
+            get { return _name; }
+        }
+
+        protected override void LoadChildren()
+        {
+            _yakFile.ReadEntries();
+            var entries = _yakFile.Entries;
+            int i = 0;
+            foreach (var entry in entries)
+            {
+                Children.Add(new YakTreeViewItem(this, _yakFile, entry, "Entry "+i));
+                ++i;
+            }
+        }
+    }
+
+    public class YakTreeViewItem : TreeViewItemViewModel
+    {
+        public YakTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.Entry entry, String name)
+            : base(parent, true)
+        {
+            _yakFile = yakFile;
+            _entry = entry;
+            _name = name;
+        }
+
+        private YakFile _yakFile;
+        private YakFile.Entry _entry;
+        private String _name;
+
+        public string Text
+        {
+            get { return _name; }
         }
     }
 
