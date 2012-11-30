@@ -42,6 +42,60 @@ namespace WorldExplorer.DataLoaders
         /// The raw data of the .yak file.
         /// </summary>
         public byte[] FileData;
-     
+
+        public class Child
+        {
+            public int TextureOffset;
+            public int VifOffset;
+            public int VifLength;
+        }
+
+        public class Entry
+        {
+            public Child[] children = new Child[4];
+        }
+
+        public List<Entry> Entries = new List<Entry>();
+
+        public void ReadEntries()
+        {
+            Entries.Clear();
+            DataReader reader = new DataReader(FileData);
+            Entry entry;
+            while ((entry = readEntry(reader)) != null)
+            {
+                Entries.Add(entry);
+            }
+        }
+
+        Entry readEntry(DataReader reader)
+        {
+            Child child1 = readChild(reader);
+            if (child1 == null)
+            {
+                return null;
+            }
+            Entry entry = new Entry();
+            entry.children[0] = child1;
+            entry.children[1] = readChild(reader);
+            entry.children[2] = readChild(reader);
+            entry.children[3] = readChild(reader);
+            return entry;
+        }
+
+        Child readChild(DataReader reader)
+        {
+            int t = reader.ReadInt32();
+            if (t == 0)
+            {
+                return null;
+            }
+            Child child = new Child();
+            child.TextureOffset = t;
+            child.VifOffset = reader.ReadInt32();
+            child.VifLength = reader.ReadInt32();
+            return child;
+        }
+
     }
 }
