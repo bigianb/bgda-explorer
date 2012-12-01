@@ -160,6 +160,53 @@ namespace WorldExplorer
         {
             get { return _name; }
         }
+
+        protected override void LoadChildren()
+        {
+            int i = 0;
+            foreach (var child in _entry.children)
+            {
+                Children.Add(new YakChildTreeViewItem(this, _yakFile, child, _entry, "Child " + i));
+                ++i;
+            }
+        }
+    }
+
+    public class YakChildTreeViewItem : TreeViewItemViewModel
+    {
+        public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.Child value, YakFile.Entry entry, String name)
+            : base(parent, false)
+        {
+            _yakFile = yakFile;
+            _value = value;
+            _entry = entry;
+            _name = name;
+        }
+
+        private YakFile _yakFile;
+        private YakFile.Child _value;
+        private YakFile.Entry _entry;
+        private String _name;
+
+        public YakFile.Child Value
+        {
+            get { return _value; }
+        }
+
+        public YakFile.Entry ParentEntry
+        {
+            get { return _entry; }
+        }
+
+        public YakFile YakFile
+        {
+            get { return _yakFile; }
+        }
+
+        public string Text
+        {
+            get { return _name; }
+        }
     }
 
     public abstract class AbstractLmpTreeViewModel : TreeViewItemViewModel
