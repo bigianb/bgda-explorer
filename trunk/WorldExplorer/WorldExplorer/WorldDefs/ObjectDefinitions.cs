@@ -40,6 +40,10 @@ namespace WorldExplorer.WorldDefs
             AddDef("charDirectional_Light2", ParseDirectionalObject);
             AddDef("charDirectional_LightD", ParseDirectionalObject);
             AddDef("charDirectional_LightD2", ParseDirectionalObject);
+            AddDef("clearColor", ParseLightObject);
+
+            AddDef("Trigger", ParseTriggerObject);
+            AddDef("PushTrigger", ParsePushTriggerObject);
 
             AddDef("SaveCrystal", ParseSaveCrystalObject);
 
@@ -137,6 +141,51 @@ namespace WorldExplorer.WorldDefs
             });
 
             //obj.Model = sphere;
+            return obj;
+        }
+
+        private VisualObjectData ParseTriggerObject(VisualObjectData obj)
+        {
+            var box = new BoxVisual3D();
+
+            double tempValue = 0;
+
+            if (!double.TryParse(obj.ObjectData.GetProperty("w"), out tempValue))
+            {
+                tempValue = 2.5 * 4;
+            }
+            box.Width = tempValue/4;
+            box.Length = tempValue / 4;
+            if (!double.TryParse(obj.ObjectData.GetProperty("h"), out tempValue))
+            {
+                tempValue = 2.5 * 4;
+            }
+            box.Height = tempValue/4;
+
+            box.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
+
+            obj.Model = box;
+            return obj;
+        }
+
+        private VisualObjectData ParsePushTriggerObject(VisualObjectData obj)
+        {
+            var sphere = new SphereVisual3D();
+
+            double tempRadius = 0;
+
+            if (!double.TryParse(obj.ObjectData.GetProperty("radius"), out tempRadius))
+            {
+                tempRadius = 2.5 * 4;
+            }
+
+            tempRadius =  tempRadius / 4;
+            sphere.Radius = tempRadius;
+            obj.Offset.Z += tempRadius / 2;
+
+            sphere.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128,255,171,0)));
+
+            obj.Model = sphere;
             return obj;
         }
 
