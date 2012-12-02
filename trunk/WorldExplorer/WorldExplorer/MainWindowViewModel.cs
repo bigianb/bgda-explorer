@@ -320,7 +320,8 @@ namespace WorldExplorer
 
         private void OnYakChildElementSelected(YakChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = null;
+            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData, childEntry.Value.TextureOffset + childEntry.Value.VifOffset,
+                childEntry.Value.VifLength - childEntry.Value.TextureOffset);
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
@@ -328,8 +329,8 @@ namespace WorldExplorer
             model.meshList = VifDecoder.Decode(
                 log, 
                 childEntry.YakFile.FileData, 
-                childEntry.Value.VifOffset, 
-                childEntry.Value.VifLength,
+                childEntry.Value.VifOffset,
+                childEntry.Value.TextureOffset,
                 128,
                 128);
             _modelViewModel.VifModel = model;
