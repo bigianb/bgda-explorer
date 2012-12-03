@@ -331,8 +331,8 @@ namespace WorldExplorer
                 childEntry.YakFile.FileData, 
                 childEntry.Value.VifOffset,
                 childEntry.Value.TextureOffset,
-                128,
-                128);
+                SelectedNodeImage.PixelWidth,
+                SelectedNodeImage.PixelHeight);
             _modelViewModel.VifModel = model;
 
             LogText += log.ToString();
