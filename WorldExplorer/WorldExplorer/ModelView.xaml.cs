@@ -49,5 +49,13 @@ namespace WorldExplorer
             if (model == null)
                 return;
         }
+
+        private void normalsBox_IsCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            var model = DataContext as ModelViewModel;
+
+            // Force Update
+            model.VifModel = model.VifModel;
+        }
     }
 }

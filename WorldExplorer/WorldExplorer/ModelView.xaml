@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:hvd="clr-namespace:HelixToolkit;assembly=HelixToolkit"
+             xmlns:local="clr-namespace:WorldExplorer"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"  DataContext="{Binding}">
     <Grid>
@@ -30,9 +31,10 @@
                         <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1" />
                     </ModelVisual3D.Content>
                 </ModelVisual3D>
-                <ModelVisual3D Content="{Binding Model}" />
+                <ModelVisual3D x:Name="modelObject" />
             </hvd:HelixViewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Content="{Binding InfoText}"/>
+        <CheckBox Content="Normals" Grid.Row="1" HorizontalAlignment="Right" Margin="0,0,8,8" Name="normalsBox" VerticalAlignment="Bottom" Checked="normalsBox_IsCheckedChanged" Unchecked="normalsBox_IsCheckedChanged" />
     </Grid>
 </UserControl>

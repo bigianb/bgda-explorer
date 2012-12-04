@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
+using HelixToolkit;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
@@ -29,6 +30,7 @@ namespace WorldExplorer
     public class ModelViewModel : BaseViewModel
     {
         private AnimData _animData;
+        private ModelView _modelView;
 
         public AnimData AnimData
         {
@@ -69,14 +71,27 @@ namespace WorldExplorer
 
         public ModelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
         {
-            
+            _modelView = MainViewModel.MainWindow.modelView;
         }
 
         private void UpdateModel(Boolean updateCamera)
         {
             if (_vifModel != null)
             {
-                Model = VifDecoder.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
+                var newModel = (GeometryModel3D)VifDecoder.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
+                var container = new ModelVisual3D();
+                container.Content = newModel;
+
+                if (_modelView.normalsBox.IsChecked.GetValueOrDefault())
+                {
+                    var normal = new MeshNormals3D();
+                    normal.Mesh = (MeshGeometry3D)newModel.Geometry;
+
+                    container.Children.Add(normal);
+                }
+
+                Model = container;
+
                 if (updateCamera)
                 {
                     UpdateCamera(_model);
@@ -115,15 +130,20 @@ namespace WorldExplorer
 
         }
 
-        private Model3D _model;
+        private ModelVisual3D _model;
 
-        public Model3D Model
+        public ModelVisual3D Model
         {
             get { return _model; }
             set
             {
                 _model = value;
-                InfoText = "Model Bounds: " + _model.Bounds.ToString();
+                InfoText = "Model Bounds: " + _model.Content.Bounds.ToString();
+
+                _modelView.viewport.Children.Remove(_modelView.modelObject);
+                _modelView.modelObject = _model;
+                _modelView.viewport.Children.Add(_modelView.modelObject);
+
                 this.OnPropertyChanged("Model");
             }
         }
@@ -153,11 +173,11 @@ namespace WorldExplorer
             }
         }
 
-        private void UpdateCamera(Model3D model)
+        private void UpdateCamera(ModelVisual3D model)
         {
             OrthographicCamera oCam = (OrthographicCamera)_camera;
 
-            var bounds = model.Bounds;
+            var bounds = model.Content.Bounds;
             Point3D centroid = new Point3D(0, 0, 0);
             double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
             double cameraDistance = radius * 3.0;
