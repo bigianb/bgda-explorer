@@ -431,11 +431,11 @@ namespace WorldExplorer.DataLoaders
             public short z;
         }
 
-        public class ByteVector
+        public class SByteVector
         {
-            public byte x;
-            public byte y;
-            public byte z;
+            public sbyte x;
+            public sbyte y;
+            public sbyte z;
         }
 
         public class VLoc
@@ -468,7 +468,7 @@ namespace WorldExplorer.DataLoaders
             public GIFTag gifTag0 = null;
             public GIFTag gifTag1 = null;
             public List<Vertex> vertices = new List<Vertex>();
-            public List<ByteVector> normals = new List<ByteVector>();
+            public List<SByteVector> normals = new List<SByteVector>();
             public List<VLoc> vlocs = new List<VLoc>();
             public List<UV> uvs = new List<UV>();
             public List<VertexWeight> vertexWeights = new List<VertexWeight>();
@@ -628,10 +628,10 @@ namespace WorldExplorer.DataLoaders
                                 // v3-8
                                 int idx = offset;
                                 for (int vnum = 0; vnum < numCommand; ++vnum) {
-                                    ByteVector vec = new ByteVector();
-                                    vec.x = fileData[idx++];
-                                    vec.y = fileData[idx++];
-                                    vec.z = fileData[idx++];
+                                    SByteVector vec = new SByteVector();
+                                    vec.x = (sbyte)fileData[idx++];
+                                    vec.y = (sbyte)fileData[idx++];
+                                    vec.z = (sbyte)fileData[idx++];
                                     currentChunk.normals.Add(vec);
                                 }
                                 int numBytes = ((numCommand * 3) + 3) & ~3;
