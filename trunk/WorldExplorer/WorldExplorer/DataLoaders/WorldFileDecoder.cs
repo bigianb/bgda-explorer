@@ -59,7 +59,7 @@ namespace WorldExplorer.DataLoaders
 
             reader.Skip(4);
             int worldTexOffsetsOffset = reader.ReadInt32();
-            worldData.textureChunkOffsets = readTextureChunkOffsets(engineVersion, data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1, texY1);
+            worldData.textureChunkOffsets = readTextureChunkOffsets(engineVersion, data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1+1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
 
             for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
@@ -229,16 +229,20 @@ namespace WorldExplorer.DataLoaders
                 for (int x = x1; x <= x2; ++x)
                 {
                     int cellOffset = ((y - y1) * 100 + x - x1) * 8;
-                    if (EngineVersion.ReturnToArms == engineVersion)
+                    // This test is needed to deal with town.world in BGDA which addresses textures outside of the maximum x range.
+                    if (data.Length >= offset + cellOffset + 4)
                     {
-                        // TODO: Figure out what this should really be
-                        addr = 0x800;
+                        if (EngineVersion.ReturnToArms == engineVersion)
+                        {
+                            // TODO: Figure out what this should really be
+                            addr = 0x800;
+                        }
+                        else
+                        {
+                            addr = DataUtil.getLEInt(data, offset + cellOffset);
+                        }
+                        chunkOffsets[y, x] = addr;
                     }
-                    else
-                    {
-                        addr = DataUtil.getLEInt(data, offset + cellOffset);
-                    }
-                    chunkOffsets[y, x] = addr;
                 }
             }
             return chunkOffsets;
