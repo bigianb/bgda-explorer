@@ -31,10 +31,11 @@ public class GobExtractor
         outDirFile.mkdirs();
 
         GobExtractor obj = new GobExtractor();
-        obj.extract("test", outDirFile, new File(inDir));
-        obj.extract("tavern", outDirFile, new File(inDir));
-        obj.extract("smlcave1", outDirFile, new File(inDir));
         obj.extract("cellar1", outDirFile, new File(inDir));
+        obj.extract("smlcave1", outDirFile, new File(inDir));
+        obj.extract("tavern", outDirFile, new File(inDir));
+        obj.extract("test", outDirFile, new File(inDir));
+        obj.extract("town", outDirFile, new File(inDir));
     }
 
     private void extract(String name, File outRoot, File inDir) throws IOException

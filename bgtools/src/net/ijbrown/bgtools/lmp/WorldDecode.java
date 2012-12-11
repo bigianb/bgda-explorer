@@ -29,21 +29,24 @@ public class WorldDecode
     {
         String rootDir = "/emu/bgda/BG/DATA_extracted/";
         String rootDirOrig = "/emu/bgda/BG/DATA/";
-        String lmpName = "tavern";
-        String worldName = "pub";
 
+        WorldDecode obj = new WorldDecode();
+        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
+        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
+    }
 
+    private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
+    {
         String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
-        WorldDecode obj = new WorldDecode();
-        obj.read(worldName + ".world", outDirFile);
+        read(worldName + ".world", outDirFile);
         String txt;
-        txt = obj.disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
-        obj.writeFile(worldName + ".world.txt", outDirFile, txt);
-        obj.extractTexture(worldName + ".world.png", outDirFile);
+        txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
+        writeFile(worldName + ".world.txt", outDirFile, txt);
+        extractTexture(worldName + ".world.png", outDirFile);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
