@@ -32,6 +32,7 @@ public class WorldDecode
 
         WorldDecode obj = new WorldDecode();
         obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
+        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
         obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
         obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
     }
