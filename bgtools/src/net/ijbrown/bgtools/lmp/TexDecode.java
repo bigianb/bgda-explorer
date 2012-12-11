@@ -120,7 +120,7 @@ public class TexDecode
             int rrw = DataUtil.getLEShort(fileData, curIdx + dimOffset);
             int rrh = DataUtil.getLEShort(fileData, curIdx + dimOffset + 4);
 
-            pixels = readPixels32(fileData, palette, curIdx + 0x70, rrw, rrh, rrw);
+            pixels = readPixels32(fileData, palette, curIdx + (gifTag3.nloop+1)*0x10, rrw, rrh, rrw);
 
             if (palLen != 64){
                 pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
@@ -208,10 +208,11 @@ public class TexDecode
             for (int y = 0; y < rrh; ++y) {
                 for (int x = 0; x < rrw; ++x) {
                     int destIdx = y * dbw + x;
-                    if (!lowbit){
+                    if (lowbit){
                         pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
+                        idx++;
                     } else {
-                        pixels[destIdx] = palette[fileData[idx++] & 0x0F];
+                        pixels[destIdx] = palette[fileData[idx] & 0x0F];
                     }
                     lowbit = !lowbit;
                 }
