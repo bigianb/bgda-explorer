@@ -26,7 +26,7 @@ public class LevelTexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String inDir="/emu/bgda/BG/DATA/";
+        String inDir = "/emu/bgda/BG/DATA/";
 
         String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
 
@@ -91,6 +91,7 @@ public class LevelTexDecode
 
     /**
      * Given the offset to the start of a chunk, returns the number of entries in that chunk.
+     *
      * @param offset The offset to the start of a chunk.
      * @return The number of entries in that chunk.
      */
@@ -101,38 +102,46 @@ public class LevelTexDecode
 
     public void extract(File outputfile, int offset) throws IOException
     {
-        int xsizePixels = DataUtil.getLEUShort(fileData, offset);
-        int ysizePixels = DataUtil.getLEUShort(fileData, offset+2);
-        int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
-        int headerOffset10 = header10 + offset;
-        int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
-
+        int pixelWidth = DataUtil.getLEUShort(fileData, offset);
+        int pixelHeight = DataUtil.getLEUShort(fileData, offset + 2);
+        int header10 = DataUtil.getLEInt(fileData, offset + 0x10);
+        int compressedDataLen = DataUtil.getLEInt(fileData, offset + 0x14);
+        int compressedDataOffset = header10 + offset;
+        int palOffset = DataUtil.getLEInt(fileData, compressedDataOffset) + offset;
+        if (compressedDataOffset <= 0 || compressedDataOffset >= fileData.length)
+        {
+            return;
+        }
         PalEntry[] palette = PalEntry.readPalette(fileData, palOffset, 16, 16);
         palette = PalEntry.unswizzlePalette(palette);
-        HuffVal[] huffVals = decode(palOffset+0xc00);
+        HuffVal[] huffVals = decode(palOffset + 0xc00);
 
-        int p = headerOffset10+4;
-        int x0 = fileData[p];
-        int y0 = fileData[p+1];
-        int x1 = fileData[p+2];
-        int y1 = fileData[p+3];
-        p += 4;
-        int wBlocks = x1 + 1;
-        int hBlocks = y1 + 1;
+        int width = (pixelWidth + 0x0f) & ~0x0f;
+        int height = (pixelHeight + 0x0f) & ~0x0f;
 
-        BufferedImage image = new BufferedImage(wBlocks*16, hBlocks*16, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        for (int yblock=y0; yblock < hBlocks; ++yblock){
-            for (int xblock=x0; xblock < wBlocks; ++xblock){
-                int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
-                decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
-                p+=4;
+        int p = compressedDataOffset + 4;
+
+        while (fileData[p] >= 0) {
+            int x0 = fileData[p];
+            int y0 = fileData[p + 1];
+            int x1 = fileData[p + 2];
+            int y1 = fileData[p + 3];
+            p += 4;
+
+            for (int yblock = y0; yblock <=y1; ++yblock) {
+                for (int xblock = x0; xblock <=x1; ++xblock) {
+                    int blockDataStart = DataUtil.getLEInt(fileData, p) + offset;
+                    decodeBlock(xblock, yblock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
+                    p += 4;
+                }
             }
         }
         ImageIO.write(image, "png", outputfile);
     }
 
-    private int[] backJumpTable = new int[] {-1, -16, -17, -15, -2};
+    private int[] backJumpTable = new int[]{-1, -16, -17, -15, -2};
 
     private void decodeBlock(int xblock, int yblock, int blockDataStart, int table0Start, BufferedImage image, PalEntry[] palette, HuffVal[] huffVals)
     {
@@ -142,12 +151,12 @@ public class LevelTexDecode
         int table2Start = table1Start + table1Len;
         int table3Start = table2Start + 0x48;
 
-        int[] pix8s = new int[16*16];
-        int curpix8=0;
-        int startBit=0;
-        int prevPixel=0;
-        for (int y=0; y<16; ++y){
-            for (int x=0; x < 16; ++x){
+        int[] pix8s = new int[16 * 16];
+        int curpix8 = 0;
+        int startBit = 0;
+        int prevPixel = 0;
+        for (int y = 0; y < 16; ++y) {
+            for (int x = 0; x < 16; ++x) {
                 int startWordIdx = startBit / 16;
                 int word1 = DataUtil.getLEUShort(fileData, blockDataStart + startWordIdx * 2);
                 int word2 = DataUtil.getLEUShort(fileData, blockDataStart + startWordIdx * 2 + 2);
@@ -158,34 +167,34 @@ public class LevelTexDecode
                 int byte1 = (word >> 8) & 0xff;
                 HuffVal hv = huffVals[byte1];
                 int pixCmd;
-                if (hv.numBits != 0){
+                if (hv.numBits != 0) {
                     pixCmd = hv.val;
                     startBit += hv.numBits;
                 } else {
                     // Must be more than an 8 bit code
-                    int bit=9;
-                    int a = word >> (16-bit);
-                    int v = DataUtil.getLEInt(fileData, table3Start + bit*4);
-                    while (v < a){
+                    int bit = 9;
+                    int a = word >> (16 - bit);
+                    int v = DataUtil.getLEInt(fileData, table3Start + bit * 4);
+                    while (v < a) {
                         ++bit;
-                        if (bit > 16){
+                        if (bit > 16) {
                             throw new RuntimeException("A decoding error occured");
                         }
-                        a = word >> (16-bit);
-                        v = DataUtil.getLEInt(fileData, table3Start + bit*4);
+                        a = word >> (16 - bit);
+                        v = DataUtil.getLEInt(fileData, table3Start + bit * 4);
                     }
                     startBit += bit;
-                    int val = DataUtil.getLEInt(fileData, table2Start + bit*4);
+                    int val = DataUtil.getLEInt(fileData, table2Start + bit * 4);
                     int table1Index = a + val;
 
-                    pixCmd = DataUtil.getLEShort(fileData, table1Start + table1Index*2);
+                    pixCmd = DataUtil.getLEShort(fileData, table1Start + table1Index * 2);
                 }
                 int pix8 = 0;
-                if (pixCmd < 0x100){
+                if (pixCmd < 0x100) {
                     pix8 = pixCmd;
-                } else if (pixCmd < 0x105){
+                } else if (pixCmd < 0x105) {
                     int backjump = backJumpTable[pixCmd - 0x100];
-                    if ((curpix8 + backjump) >= 0){
+                    if ((curpix8 + backjump) >= 0) {
                         pix8 = pix8s[curpix8 + backjump];
                     } else {
                         throw new RuntimeException("Something went wrong");
@@ -198,8 +207,8 @@ public class LevelTexDecode
                 pix8s[curpix8++] = pix8;
 
                 prevPixel = pix8 & 0xFF;
-                PalEntry pixel = palette[pix8  & 0xFF];
-                image.setRGB(xblock*16 + x, yblock*16 + y, pixel.argb());
+                PalEntry pixel = palette[pix8 & 0xFF];
+                image.setRGB(xblock * 16 + x, yblock * 16 + y, pixel.argb());
             }
         }
     }
@@ -213,21 +222,20 @@ public class LevelTexDecode
     {
         StringBuilder sb = new StringBuilder();
 
-        int header10 =  DataUtil.getLEInt(fileData, offset + 0x10);
+        int header10 = DataUtil.getLEInt(fileData, offset + 0x10);
         int headerOffset10 = header10 + offset;
 
         sb.append("Header 10: ").append(HexUtil.formatHex(header10)).append(" (").append(HexUtil.formatHex(headerOffset10)).append(")\r\n");
 
-        int palOffset =  DataUtil.getLEInt(fileData, headerOffset10) + offset;
+        int palOffset = DataUtil.getLEInt(fileData, headerOffset10) + offset;
 
         sb.append("Pal Offset:  ").append(HexUtil.formatHex(palOffset)).append("\r\n");
         sb.append("Palette:");
 
-        for (int i=0; i < 0x400; i += 4)
-        {
+        for (int i = 0; i < 0x400; i += 4) {
             int off = i + palOffset;
             int val = DataUtil.getLEInt(fileData, off);
-            if ((i & 0x1f) == 0){
+            if ((i & 0x1f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -236,11 +244,10 @@ public class LevelTexDecode
         }
         sb.append("\r\n");
         sb.append("\r\nUnknown:");
-        for (int i=0; i < 0x800; i += 4)
-        {
+        for (int i = 0; i < 0x800; i += 4) {
             int off = i + palOffset + 0x400;
             int val = DataUtil.getLEInt(fileData, off);
-            if ((i & 0x1f) == 0){
+            if ((i & 0x1f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -256,11 +263,10 @@ public class LevelTexDecode
         int c04_offset = palOffset + 0xc04;
         sb.append("pal + 0xc04:  ").append(HexUtil.formatHex(c04_offset));
 
-        for (int i=0; i < c00*2; i += 2)
-        {
+        for (int i = 0; i < c00 * 2; i += 2) {
             int off = i + c04_offset;
             int val = DataUtil.getLEUShort(fileData, off);
-            if ((i & 0x0f) == 0){
+            if ((i & 0x0f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -272,11 +278,10 @@ public class LevelTexDecode
         int bf84 = c04_offset + c00 * 2;
         sb.append("bf84:  ").append(HexUtil.formatHex(bf84)).append("\r\n");
 
-        for (int i=0; i < 0x48; i += 4)
-        {
+        for (int i = 0; i < 0x48; i += 4) {
             int off = i + c04_offset + c00 * 2;
             int val = DataUtil.getLEInt(fileData, off);
-            if ((i & 0x0f) == 0){
+            if ((i & 0x0f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -285,11 +290,10 @@ public class LevelTexDecode
         }
         sb.append("\r\n");
 
-        for (int i=0; i < 0x44; i += 4)
-        {
+        for (int i = 0; i < 0x44; i += 4) {
             int off = i + c04_offset + c00 * 2 + 0x48;
             int val = DataUtil.getLEInt(fileData, off);
-            if ((i & 0x0f) == 0){
+            if ((i & 0x0f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -298,11 +302,10 @@ public class LevelTexDecode
         }
         sb.append("\r\n").append("\r\n");
 
-        for (int i=0; i < 0x400; i += 2)
-        {
+        for (int i = 0; i < 0x400; i += 2) {
             int off = i + c04_offset + c00 * 2 + 0x48 + 0x44;
             int val = DataUtil.getLEUShort(fileData, off);
-            if ((i & 0x0f) == 0){
+            if ((i & 0x0f) == 0) {
                 sb.append("\r\n").append(HexUtil.formatHex(off)).append(": ");
             } else {
                 sb.append(", ");
@@ -311,13 +314,13 @@ public class LevelTexDecode
         }
 
         sb.append("\r\n").append("\r\n");
-        
-        int p = headerOffset10+4;
-        while (fileData[p] != -1){
+
+        int p = headerOffset10 + 4;
+        while (fileData[p] != -1) {
             int x0 = fileData[p];
-            int y0 = fileData[p+1];
-            int x1 = fileData[p+2];
-            int y1 = fileData[p+3];
+            int y0 = fileData[p + 1];
+            int x1 = fileData[p + 2];
+            int y1 = fileData[p + 3];
 
 
             sb.append(HexUtil.formatHex(p)).append(": x0, y0, x1, y1 ").append(x0).append(", ");
@@ -329,17 +332,17 @@ public class LevelTexDecode
             int wBlocks = x1 - x0 + 1;
             int hBlocks = y1 - y0 + 1;
 
-            for (int i=0; i < wBlocks * hBlocks; ++i){
-                int poff =  DataUtil.getLEInt(fileData, p) + offset;
+            for (int i = 0; i < wBlocks * hBlocks; ++i) {
+                int poff = DataUtil.getLEInt(fileData, p) + offset;
                 sb.append(HexUtil.formatHex(poff)).append("\r\n");
-                p+=4;
+                p += 4;
             }
         }
 
         sb.append("\r\nDecoded huffVals:\r\n");
-        HuffVal[] huffVals = decode(palOffset+0xc00);
-        int i=0;
-        for (HuffVal huffVal : huffVals){
+        HuffVal[] huffVals = decode(palOffset + 0xc00);
+        int i = 0;
+        for (HuffVal huffVal : huffVals) {
             sb.append(i++).append(": ").append(huffVal.val).append(", ").append(huffVal.numBits).append("\r\n");
         }
 
@@ -361,24 +364,24 @@ public class LevelTexDecode
         int table2Start = table1Start + table1Len;
         int table3Start = table2Start + 0x48;
 
-        for (int i=0; i<256; ++i){
-            int bit=1;
-            int a = i >> (8-bit);
-            int v = DataUtil.getLEInt(fileData, table3Start + bit*4);
-            while (v < a){
+        for (int i = 0; i < 256; ++i) {
+            int bit = 1;
+            int a = i >> (8 - bit);
+            int v = DataUtil.getLEInt(fileData, table3Start + bit * 4);
+            while (v < a) {
                 ++bit;
-                if (bit > 8){
+                if (bit > 8) {
                     break;
                 }
-                a = i >> (8-bit);
-                v = DataUtil.getLEInt(fileData, table3Start + bit*4);
+                a = i >> (8 - bit);
+                v = DataUtil.getLEInt(fileData, table3Start + bit * 4);
             }
             out[i] = new HuffVal();
-            if (bit <= 8){
-                int val = DataUtil.getLEInt(fileData, table2Start + bit*4);
+            if (bit <= 8) {
+                int val = DataUtil.getLEInt(fileData, table2Start + bit * 4);
                 int table1Index = a + val;
-                out[i].val = DataUtil.getLEShort(fileData, table1Start + table1Index * 2 );
-                out[i].numBits = (short)bit;
+                out[i].val = DataUtil.getLEShort(fileData, table1Start + table1Index * 2);
+                out[i].numBits = (short) bit;
             }
         }
 
