@@ -57,6 +57,7 @@ namespace WorldExplorer.WorldDefs
             var vod = new VisualObjectData();
             vod.ObjectData = obj;
             vod.Offset = new Vector3D(obj.Floats[0] / 4, obj.Floats[1] / 4, obj.Floats[2] / 4);
+            vod.zRotation = 22.5 * (obj.I6 >> 12);
 
             vod = _defs.Parse(vod);
 

@@ -15,8 +15,6 @@
 */
 package net.ijbrown.bgtools.lmp;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 
 /**
@@ -26,12 +24,16 @@ public class ObjectsDecode
 {
     public static void main(String[] args) throws IOException
     {
-//        String outDir = "/emu/bgda/BG/DATA_extracted/test/test_lmp/";
-//        String outDir = "/emu/bgda/BG/DATA_extracted/tavern/tavern_lmp/";
-        String outDir = "/emu/bgda/BG/DATA_extracted/cellar1/cellar1_lmp/";
+        decodeLmp("test");
+        decodeLmp("tavern");
+        decodeLmp("cellar1");
+        decodeLmp("town");
+    }
 
+    private static void decodeLmp(String lmpName) throws IOException
+    {
+        String outDir = "/emu/bgda/BG/DATA_extracted/" + lmpName + "/" + lmpName + "_lmp/";
         File outDirFile = new File(outDir);
-        outDirFile.mkdirs();
 
         ObjectsDecode obj = new ObjectsDecode();
         obj.read("objects.ob", outDirFile);
@@ -80,24 +82,28 @@ public class ObjectsDecode
         sb.append("Flags: ").append(flags);
         sb.append("\r\n");
         sb.append("\r\n");
-        int objOffset=8;
+        int objOffset = 8;
         // object data starts at offset 8
-        for (int objNum=0; objNum<numObjs; ++objNum){
+        for (int objNum = 0; objNum < numObjs; ++objNum) {
             sb.append("Object ").append(objNum).append("\r\n");
 
             // If >=0, this is the index into the string table.
             int strIdx = DataUtil.getLEInt(fileData, objOffset);
             String name = Integer.toString(strIdx);
-            if (strIdx >= 0){
+            if (strIdx >= 0) {
                 name = DataUtil.collectString(fileData, stringOffset + strIdx);
             }
             sb.append("    name: ").append(name).append("\r\n");
 
-            int objLen = DataUtil.getLEUShort(fileData, objOffset+4);
+            int objLen = DataUtil.getLEUShort(fileData, objOffset + 4);
             sb.append("    Len: ").append(HexUtil.formatHexUShort(objLen)).append("\r\n");
 
-            int i6 = DataUtil.getLEUShort(fileData, objOffset+6);
+            int i6 = DataUtil.getLEUShort(fileData, objOffset + 6);
             sb.append("    i6: ").append(HexUtil.formatHexUShort(i6)).append("\r\n");
+            int rot = i6 >> 12;
+            // 4 = 90 deg
+            double drot = 22.5 * rot;
+            sb.append("        rot = ").append(drot).append("\r\n");
 
             float f1 = DataUtil.getLEFloat(fileData, objOffset + 8);
             float f2 = DataUtil.getLEFloat(fileData, objOffset + 12);
@@ -106,9 +112,9 @@ public class ObjectsDecode
             sb.append("    Floats: ").append(f1).append(", ").append(f2).append(", ").append(f3).append("\r\n");
 
             int lenSoFar = 20;
-            while (lenSoFar < objLen){
+            while (lenSoFar < objLen) {
                 int i = DataUtil.getLEInt(fileData, objOffset + lenSoFar);
-                if (i > 0){
+                if (i > 0) {
                     sb.append("    prop: ").append(DataUtil.collectString(fileData, stringOffset + i)).append("\r\n");
                 }
                 lenSoFar += 4;
@@ -119,11 +125,11 @@ public class ObjectsDecode
 
         sb.append("String Table\r\n\r\n");
         int off = stringOffset;
-        while (off < fileLength){
+        while (off < fileLength) {
             sb.append(off - stringOffset).append(": '");
             String s = "";
-            while (fileData[off] != 0){
-                s += (char)fileData[off];
+            while (fileData[off] != 0) {
+                s += (char) fileData[off];
                 ++off;
             }
             sb.append(s).append("'\r\n");
