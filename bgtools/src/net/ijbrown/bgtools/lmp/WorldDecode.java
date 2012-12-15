@@ -31,9 +31,9 @@ public class WorldDecode
         String rootDirOrig = "/emu/bgda/BG/DATA/";
 
         WorldDecode obj = new WorldDecode();
-        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
-        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
-        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
+//        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
+//        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
+//        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
         obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
     }
 
@@ -45,10 +45,12 @@ public class WorldDecode
         outDirFile.mkdirs();
 
         read(worldName + ".world", outDirFile);
+
+        extractMiniMap(worldName + "_minimap.png", outDirFile);
+
         String txt;
         txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
         writeFile(worldName + ".world.txt", outDirFile, txt);
-        extractTexture(worldName + ".world.png", outDirFile);
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -81,11 +83,11 @@ public class WorldDecode
         }
     }
 
-    private void extractTexture(String outputFilename, File outDirFile) throws IOException
+    private void extractMiniMap(String outputFilename, File outDirFile) throws IOException
     {
-        int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
+        int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
         TexDecode texDecode = new TexDecode();
-        texDecode.extract(outDirFile, fileData, offsetTex6c, outputFilename);
+        texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename);
     }
 
     private String disassemble(File outDirFile, File levelTexFile)

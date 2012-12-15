@@ -48,6 +48,16 @@ public class GIFTag
         }
     }
 
+    public int getLength()
+    {
+        if (2 == flg){
+            // IMAGE mode
+            return (nloop+1)*0x10;
+        } else {
+            return (nloop*nreg+1)*0x10;
+        }
+    }
+
     @Override
     public String toString()
     {
