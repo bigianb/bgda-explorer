@@ -112,15 +112,14 @@ public class TexDecode
             GIFTag gifTag3 = new GIFTag();
             gifTag3.parse(fileData, curIdx);
 
-            int dimOffset = 0x30;
-            if (palLen == 64){
-                dimOffset = 0x20;
+            int trxregOffset = findADEntry(fileData, curIdx+0x10, gifTag3.nloop, 0x52);
+            if (trxregOffset == 0){
+                throw new RuntimeException("Failed to find TRXREG register");
             }
+            int rrw = DataUtil.getLEShort(fileData, trxregOffset);
+            int rrh = DataUtil.getLEShort(fileData, trxregOffset + 4);
 
-            int rrw = DataUtil.getLEShort(fileData, curIdx + dimOffset);
-            int rrh = DataUtil.getLEShort(fileData, curIdx + dimOffset + 4);
-
-            pixels = readPixels32(fileData, palette, curIdx + (gifTag3.nloop+1)*0x10, rrw, rrh, rrw);
+            pixels = readPixels32(fileData, palette, curIdx + gifTag3.getLength(), rrw, rrh, rrw);
 
             if (palLen != 64){
                 pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
@@ -154,6 +153,19 @@ public class TexDecode
             File outputfile = new File(outDirFile, filename + ".png");
             ImageIO.write(image, "png", outputfile);
         }
+    }
+
+    private int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
+    {
+        int retval = 0;
+        for (int i=0; i<nloop; ++i){
+            int reg = DataUtil.getLEInt(fileData, dataStartIdx + i * 0x10 + 0x08);
+            if (reg == registerId){
+                retval = dataStartIdx + i*0x10;
+                break;
+            }
+        }
+        return retval;
     }
 
     private PalEntry[] unswizzle8bpp(PalEntry[] pixels, int w, int h)
