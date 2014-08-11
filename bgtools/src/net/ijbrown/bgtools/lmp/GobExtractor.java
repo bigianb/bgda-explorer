@@ -32,6 +32,7 @@ public class GobExtractor
 
         GobExtractor obj = new GobExtractor();
         obj.extract("cellar1", outDirFile, new File(inDir));
+        obj.extract("cuttown", outDirFile, new File(inDir));
         obj.extract("smlcave1", outDirFile, new File(inDir));
         obj.extract("tavern", outDirFile, new File(inDir));
         obj.extract("test", outDirFile, new File(inDir));

@@ -31,6 +31,7 @@ public class ScriptDecode
         ScriptDecode obj = new ScriptDecode();
         obj.decode("tavern");
         obj.decode("cellar1");
+        obj.decode("cuttown");
     }
 
     private void decode(String levelName) throws IOException
