@@ -31,9 +31,9 @@ public class WorldDecode
         String rootDirOrig = "/emu/bgda/BG/DATA/";
 
         WorldDecode obj = new WorldDecode();
-//        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
-//        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
-//        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
+        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
+        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
+        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
         obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
     }
 
@@ -115,6 +115,7 @@ public class WorldDecode
         int offset18 = DataUtil.getLEInt(fileData, 0x18);
         sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n\r\n");
         // This is an array of 4 byte offsets
+        // size is given by rows and cols in offset 10 and 14
         // Each offset points to a -1 terminated array of shorts
 
         int count1c = DataUtil.getLEInt(fileData, 0x1C);

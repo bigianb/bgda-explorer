@@ -35,14 +35,14 @@ namespace WorldExplorer.DataLoaders
 
             var reader = new DataReader(data, startOffset, length);
 
-            int numElements = reader.ReadInt32();
+            int numElements = reader.ReadInt32();       // 0
 
             reader.Skip(12); // Skipping 3 ints
-            int numCols = reader.ReadInt32();
-            int numRows = reader.ReadInt32();
+            int numCols = reader.ReadInt32();           // x10        
+            int numRows = reader.ReadInt32();           // x14        
 
-            reader.Skip(12); // Skipping 3 ints
-            int elementArrayStart = reader.ReadInt32();
+            reader.Skip(12); // Skipping 3 ints         // x18 x1c x20
+            int elementArrayStart = reader.ReadInt32(); // x24
 
             reader.Skip(8); // Skipping 2 ints
             int off38Cols = reader.ReadInt32();

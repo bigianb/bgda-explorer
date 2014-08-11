@@ -28,6 +28,7 @@ public class ObjectsDecode
         decodeLmp("tavern");
         decodeLmp("cellar1");
         decodeLmp("town");
+        decodeLmp("cuttown");
     }
 
     private static void decodeLmp(String lmpName) throws IOException
