@@ -38,6 +38,7 @@ namespace WorldExplorer.DataLoaders
             int numElements = reader.ReadInt32();       // 0
 
             reader.Skip(12); // Skipping 3 ints
+
             int numCols = reader.ReadInt32();           // x10        
             int numRows = reader.ReadInt32();           // x14        
 

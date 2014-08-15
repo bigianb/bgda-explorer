@@ -24,9 +24,9 @@ public class LmpExtractor {
     
     public static void main(String[] args) throws IOException
     {
-        String filename = "/emu/bgda/BG/DATA/lever.lmp";
+        String filename = "/emu/bgda/BG/DATA/pend.lmp";
 
-        String outDir = "/emu/bgda/BG/DATA_extracted/";
+        String outDir = "/emu/bgda/BG/DATA_extracted/pend/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
