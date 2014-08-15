@@ -38,6 +38,7 @@ public class GobExtractor
         obj.extract("test", outDirFile, new File(inDir));
         obj.extract("town", outDirFile, new File(inDir));
         obj.extract("burneye1", outDirFile, new File(inDir));
+        obj.extract("cuttown", outDirFile, new File(inDir));
     }
 
     private void extract(String name, File outRoot, File inDir) throws IOException

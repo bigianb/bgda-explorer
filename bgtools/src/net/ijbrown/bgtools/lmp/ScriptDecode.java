@@ -29,8 +29,8 @@ public class ScriptDecode
     public static void main(String[] args) throws IOException
     {
         ScriptDecode obj = new ScriptDecode();
-        obj.decode("tavern");
-        obj.decode("cellar1");
+       // obj.decode("tavern");
+       // obj.decode("cellar1");
         obj.decode("cuttown");
     }
 
@@ -100,17 +100,17 @@ public class ScriptDecode
         int offset4 = DataUtil.getLEInt(fileData, bodyOffset + 0x18);
         int offset5 = DataUtil.getLEInt(fileData, bodyOffset + 0x1C);
 
-        sb.append("Header:\n");
-        sb.append("~~~~~~\n");
-        sb.append("address  0: ").append(HexUtil.formatHex(offset0)).append("\n");
-        sb.append("address  4: ").append(HexUtil.formatHex(hw1)).append("\n");
-        sb.append("address  6: ").append(HexUtil.formatHex(hw2)).append("\n");
-        sb.append("address  8: ").append(HexUtil.formatHex(hw3)).append("\n");
-        sb.append("address  A: ").append(HexUtil.formatHex(hw4)).append("\n");
-        sb.append("address 10 (string table): ").append(HexUtil.formatHex(stringsOffset)).append("\n");
-        sb.append("address 14: ").append(HexUtil.formatHex(offset3)).append("\n");
-        sb.append("address 18: ").append(HexUtil.formatHex(offset4)).append("\n");
-        sb.append("address 1C: ").append(HexUtil.formatHex(offset5)).append("\n");
+        sb.append("Header:\r\n");
+        sb.append("~~~~~~\r\n");
+        sb.append("address  0: ").append(HexUtil.formatHex(offset0)).append("\r\n");
+        sb.append("address  4: ").append(HexUtil.formatHex(hw1)).append("\r\n");
+        sb.append("address  6: ").append(HexUtil.formatHex(hw2)).append("\r\n");
+        sb.append("address  8: ").append(HexUtil.formatHex(hw3)).append("\r\n");
+        sb.append("address  A: ").append(HexUtil.formatHex(hw4)).append("\r\n");
+        sb.append("address 10 (string table): ").append(HexUtil.formatHex(stringsOffset)).append("\r\n");
+        sb.append("address 14: ").append(HexUtil.formatHex(offset3)).append("\r\n");
+        sb.append("address 18: ").append(HexUtil.formatHex(offset4)).append("\r\n");
+        sb.append("address 1C: ").append(HexUtil.formatHex(offset5)).append("\r\n");
 
         int numInternals = DataUtil.getLEUShort(fileData, bodyOffset + 0x20);
         int offsetInternals = DataUtil.getLEInt(fileData, bodyOffset + 0x24);
@@ -118,32 +118,32 @@ public class ScriptDecode
         int numExternals = DataUtil.getLEUShort(fileData, bodyOffset + 0x28);
         int offsetExternals = DataUtil.getLEInt(fileData, bodyOffset + 0x2C);
 
-        sb.append(numInternals).append(" Internals:\n");
-        sb.append("~~~~~~~~~~~~\n");
+        sb.append(numInternals).append(" Internals:\r\n");
+        sb.append("~~~~~~~~~~~~\r\n");
         for (int i = 0; i < numInternals; ++i) {
             printInternal(sb, offsetInternals + 0x18 * i);
         }
-        sb.append("\n");
+        sb.append("\r\n");
 
-        sb.append(numExternals).append(" Externals:\n");
-        sb.append("~~~~~~~~~~~~\n");
+        sb.append(numExternals).append(" Externals:\r\n");
+        sb.append("~~~~~~~~~~~~\r\n");
         for (int i = 0; i < numExternals; ++i) {
             printExternal(sb, i, offsetExternals + 0x18 * i);
         }
-        sb.append("\n");
+        sb.append("\r\n");
 
         StringBuilder sb3 = new StringBuilder();
         dumpStrings(sb3, stringsOffset, offset3 - stringsOffset);
 
-        sb.append("Instructions\n");
-        sb.append("~~~~~~~~~~~~\n\n");
+        sb.append("Instructions\r\n");
+        sb.append("~~~~~~~~~~~~\r\n\r\n");
         dumpInstructions(sb, instructionsOffset, stringsOffset - instructionsOffset);
-        sb.append("\n");
+        sb.append("\r\n");
 
-        sb.append("Strings\n");
-        sb.append("~~~~~~~\n\n");
+        sb.append("Strings\r\n");
+        sb.append("~~~~~~~\r\n\r\n");
         sb.append(sb3);
-        sb.append("\n");
+        sb.append("\r\n");
         return sb.toString();
     }
 
@@ -164,7 +164,7 @@ public class ScriptDecode
                 if (0 == c) {
                     stringTable.put(startOffset, sb2.toString());
                     sb.append(sb2);
-                    sb.append("\n");
+                    sb.append("\r\n");
                     sb2 = new StringBuilder(64);
                     needsOffset = true;
                     break;
@@ -183,7 +183,7 @@ public class ScriptDecode
             int opcode = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
             String label = internalsMap.get(i);
             if (label != null) {
-                sb.append("\n").append(label).append(":\n");
+                sb.append("\r\n").append(label).append(":\r\n");
             }
             sb.append(HexUtil.formatHex(i)).append(": ");
 
@@ -238,11 +238,11 @@ public class ScriptDecode
                                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
                                 i += 4;
                                 int arg2 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
-                                sb.append("\n            ").append(HexUtil.formatHex(arg1)).append(", ").append(arg2);
+                                sb.append("\r\n            ").append(HexUtil.formatHex(arg1)).append(", ").append(arg2);
                             }
                             i += 4;
                             int arg3 = DataUtil.getLEInt(fileData, instructionsOffset + i + bodyOffset);
-                            sb.append("\n            ").append(HexUtil.formatHex(arg3));
+                            sb.append("\r\n            ").append(HexUtil.formatHex(arg3));
                         }
                         break;
                     }
@@ -250,7 +250,7 @@ public class ScriptDecode
                     sb.append(" *** Instruction op code out of range");
                 }
             }
-            sb.append("\n");
+            sb.append("\r\n");
         }
     }
 
@@ -366,7 +366,7 @@ public class ScriptDecode
                     int iarg2 = stack.get(stack.size() - 2);
                     int iarg3 = stack.get(stack.size() - 1);
                     if (iarg3 != 8) {
-                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\n");
+                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\r\n");
                     }
                     sb.append("(");
                     printStringArg(sb, iarg1);
@@ -380,7 +380,7 @@ public class ScriptDecode
                     int iarg1 = stack.get(stack.size() - 2);
                     int iarg2 = stack.get(stack.size() - 1);
                     if (iarg2 != 4) {
-                        sb.append("*** Expected iarg2 to be 4 but it was ").append(iarg2).append(" ***\n");
+                        sb.append("*** Expected iarg2 to be 4 but it was ").append(iarg2).append(" ***\r\n");
                     }
                     sb.append("(");
                     printStringArg(sb, iarg1);
@@ -393,7 +393,7 @@ public class ScriptDecode
                     int iarg2 = stack.get(stack.size() - 2);
                     int iarg3 = stack.get(stack.size() - 1);
                     if (iarg3 != 8) {
-                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\n");
+                        sb.append("*** Expected iarg3 to be 8 but it was ").append(iarg3).append(" ***\r\n");
                     }
                     sb.append("(").append(iarg1).append(", ");
                     printStringArg(sb, iarg2);
@@ -420,7 +420,7 @@ public class ScriptDecode
         int address = DataUtil.getLEInt(fileData, offset + bodyOffset);
         sb.append(HexUtil.formatHex(address)).append(" - ");
         String label = DataUtil.collectString(fileData, offset + bodyOffset + 4);
-        sb.append(label).append("\n");
+        sb.append(label).append("\r\n");
         internalsMap.put(address, label);
     }
 
@@ -433,7 +433,7 @@ public class ScriptDecode
     {
         sb.append(HexUtil.formatHexUShort(id)).append(": ");
         String label = DataUtil.collectString(fileData, offset + bodyOffset + 4);
-        sb.append(label).append("\n");
+        sb.append(label).append("\r\n");
         externalsMap.put(id, label);
     }
 
