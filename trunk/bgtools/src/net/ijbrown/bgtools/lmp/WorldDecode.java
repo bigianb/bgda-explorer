@@ -179,7 +179,7 @@ public class WorldDecode
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
-        sb.append("Offsets (18) array. Each index points to an entry in array 20.\r\n \r\n");
+        sb.append("Per cell topo elements array. Each index points to an entry in array 20.\r\n \r\n");
         for (int i = 0; i < rows * cols; ++i) {
             int off = DataUtil.getLEInt(fileData, offset18 + i * 4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
@@ -201,7 +201,7 @@ public class WorldDecode
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
-        sb.append("Elements (20) array - ").append(count1c).append(" elements\r\n \r\n");
+        sb.append("Topo Element array - ").append(count1c).append(" elements\r\n \r\n");
         for (int i = 0; i < count1c; ++i) {
             int off = offset20 + i * 0x1c;
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
