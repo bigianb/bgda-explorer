@@ -31,10 +31,11 @@ public class WorldDecode
         String rootDirOrig = "/emu/bgda/BG/DATA/";
 
         WorldDecode obj = new WorldDecode();
-        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
-        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
-        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
-        obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
+        obj.decodeWorld(rootDir, rootDirOrig, "cuttown", "cuttown");
+//        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
+//        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
+//        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
+//        obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
     }
 
     private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
@@ -211,7 +212,7 @@ public class WorldDecode
             sb.append("    0x06: ").append(DataUtil.getLEShort(fileData, off + 0x06)).append("\r\n");
             sb.append("    0x08: ").append(DataUtil.getLEInt(fileData, off + 0x08)).append("\r\n");
 
-            // This points to an object - possibly a terrain patch / height map
+            // This points to a terrain patch / height map
             // offset 8 and C of it specify rows and cols. 16 bit values start at offset 14.
             // There are rows * cols values.
 
@@ -219,36 +220,42 @@ public class WorldDecode
             if (!linkedObjects.contains(linkedObjectOffset)) {
                 linkedObjects.add(linkedObjectOffset);
             }
-            sb.append("    0x0c: ").append(HexUtil.formatHex(linkedObjectOffset)).append("\r\n");
-            sb.append("    0x10: ").append(DataUtil.getLEShort(fileData, off + 0x10)).append("\r\n");
-            sb.append("    0x12: ").append(DataUtil.getLEShort(fileData, off + 0x12)).append("\r\n");
-            sb.append("    0x14: ").append(DataUtil.getLEShort(fileData, off + 0x14)).append("\r\n");
-            sb.append("    0x16: ").append(DataUtil.getLEShort(fileData, off + 0x16)).append("\r\n");
+            sb.append("    0x0c (patch addr): ").append(HexUtil.formatHex(linkedObjectOffset)).append("\r\n");
+            sb.append("    0x10 (flags): ").append(DataUtil.getLEShort(fileData, off + 0x10)).append("\r\n");
+            sb.append("    0x12 (x0): ").append(DataUtil.getLEShort(fileData, off + 0x12)).append("\r\n");
+            sb.append("    0x14 (y0): ").append(DataUtil.getLEShort(fileData, off + 0x14)).append("\r\n");
+            sb.append("    0x16 (base height): ").append(DataUtil.getLEShort(fileData, off + 0x16)).append("\r\n");
+            double cos_a = DataUtil.getLEShort(fileData, off + 0x18) / 32767.0;
+            double sin_a = DataUtil.getLEShort(fileData, off + 0x1A) / 32767.0;
+            sb.append("    0x18 (cos a): ").append(cos_a).append("\r\n");
+            sb.append("    0x1A (sin a): ").append(sin_a).append("\r\n");
+            double alpha = Math.atan2(sin_a, cos_a) * 180.0 / Math.PI;
+            sb.append("        alpha = ").append(alpha).append("\r\n");
             sb.append("}\r\n");
         }
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
 
-        sb.append("Found the following linked objects...").append("\r\n\r\n");
+        sb.append("Found the following height patches...").append("\r\n\r\n");
         for (int offset : linkedObjects) {
             sb.append("Offset: ").append(HexUtil.formatHex(offset)).append("\r\n");
 
-            sb.append(" 0x00: ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
-            sb.append(" 0x04: ").append(DataUtil.getLEInt(fileData, offset + 4)).append("\r\n");
+            sb.append(" 0x00 (x0): ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
+            sb.append(" 0x04 (y0): ").append(DataUtil.getLEInt(fileData, offset + 4)).append("\r\n");
 
             int patchWidth = DataUtil.getLEInt(fileData, offset + 0x08);
             int patchHeight = DataUtil.getLEInt(fileData, offset + 0x0C);
 
             sb.append(" Dimensions=").append(patchWidth).append(" x ").append(patchHeight).append("\r\n\r\n");
 
-            sb.append(" 0x10: ").append(DataUtil.getLEShort(fileData, offset + 0x10)).append("\r\n");
-            sb.append(" 0x12: ").append(DataUtil.getLEShort(fileData, offset + 0x12)).append("\r\n");
+            sb.append(" 0x10 (min height): ").append(DataUtil.getLEShort(fileData, offset + 0x10)).append("\r\n");
+            sb.append(" 0x12 (max height): ").append(DataUtil.getLEShort(fileData, offset + 0x12)).append("\r\n");
 
             for (int y = 0; y < patchHeight; ++y) {
                 for (int x = 0; x < patchWidth; ++x) {
                     int i = y * patchWidth + x;
-                    sb.append(DataUtil.getLEShort(fileData, offset + 0x14 + i * 2)).append("\r\n");
+                    sb.append(DataUtil.getLEShort(fileData, offset + 0x14 + i * 2) / 16).append("\r\n");
                 }
                 sb.append("--\r\n");
             }
