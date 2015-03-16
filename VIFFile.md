@@ -1,0 +1,117 @@
+# Introduction #
+
+VIF files (those with the extension .vif) contain chunks of data which are sent directly to to the vector units via the VIF. The data within these files represents 3D model data and because it is written by a tool we can apply a heuristic method of parsing the file rather than requiring a generic VIF parser.
+
+
+# Details #
+
+A number of data segments are transferred via the VIF. These are:
+
+  * Vertex x,y,z position data
+  * Vertex normal data
+  * A compressed tri-strip
+  * A set of per-face uv coords
+
+## Tri-Strip details ##
+
+A tri-strip is the way the GS draws polygons. The VU runs a program that processes the VIF data to generate a tri-strip which is then transferred to the GS. Each entry in the tri-strip has a number of elements. This is often 3 (position, colour and uv) but it can also be 4. Each entry has a flag which tells the GS whether to draw it or not.
+
+The decoding algorithm is simple but difficult to explain, so an example may help. The following is some compressed data:
+
+```
+05 00 00 00 05 00 
+05 00 00 00 05 00 
+29 00 01 00 01 00 
+09 00 29 00 31 00 
+11 00 29 00 39 00 
+35 00 29 00 41 00 
+81 00 11 00 59 00 
+B9 00 81 00 89 00 
+01 80 35 00 8D 00 
+0D 00 35 00 99 80 
+19 00 11 00 A5 80 
+```
+
+Each compressed entry is 3 16 bit signed numbers in size:
+
+```
+5,   0,   5
+5,   0,   5
+29,  1,   1
+9,   29,  31
+11,  29,  39
+35,  29,  41
+81,  11,  59
+b9,  81,  89
+8001, 35, 8d
+d,   35,  8099
+19,  11,  80a5
+```
+
+The VU program has 3 passes, so the first 2 entries can be ignored (but they do give us a good hint as to the number of elements per tri-strip entry). From looking at the data, we can also guess that each tri-strip entry is 4 elements long and the vertex position is the second element (the GIF tag transferred in the vif data defines the number of elements).
+
+To make the next step simpler, we divide the numbers by the the number of elements per strip entry (4 in this case), drop the first 2 lines and isolate the no-draw flag as 0x8000. This gives the following data (in decimal):
+
+```
+10, 0, 0
+2, 10, 12
+4, 10, 14
+13, 10, 16
+32, 4, 22
+46, 32, 34
+0+nodraw, 13, 35
+3, 13, 38+nodraw
+6, 4, 41+nodraw
+```
+
+for each entry (index i) a, b, c we apply the following logic:
+```
+triStrip[c] = triStrip[b]
+triStrip[a] = vertices[i]
+```
+
+Following this logic, the tri-strip array is built as follows for the example data:
+
+```
+triStrip[10] = vertices[0]
+
+triStrip[12] = triStrip[10] = vertices[0]
+triStrip[2] = vertices[1]
+
+triStrip[14] = triStrip[10] = vertices[0]
+triStrip[4] = vertices[2]
+
+triStrip[16] = triStrip[10] = vertices[0]
+triStrip[13] = vertices[3]
+
+triStrip[22] = triStrip[4] = vertices[2]
+triStrip[32] = vertices[4]
+
+triStrip[34] = triStrip[32] = vertices[4]
+triStrip[46] = vertices[5]
+
+triStrip[35] = triStrip[13] = vertices[3]
+triStrip[0] = vertices[6] + nodraw flag
+
+triStrip[38] = triStrip[13] = vertices[3] + nodraw flag
+triStrip[3] = vertices[7]
+
+triStrip[41] = triStrip[4] = vertices[2] + nodraw flag
+triStrip[6] = vertices[8]
+```
+
+If there are more entries than there are vertices, then there is a subsequent section:
+```
+unsigned 16 bit: count
+a, b, a2, b2
+a, b, a2, b2
+....
+```
+There are _count_ lines.
+
+The logic is:
+```
+triStrip[a] = triStrip[b]
+triStrip[a2] = triStrip[b2]
+```
+where again the no-draw flag is specified by bit 0x8000 on b and b2.

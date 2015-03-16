@@ -1,0 +1,32 @@
+
+
+
+&lt;hr/&gt;
+
+
+
+# Introduction #
+
+The list is in no specific order and some may be in progress, already completed, or canceled all together.
+
+
+# Todo List #
+
+## Core Changes ##
+  * Support texture transparency
+  * Fix when exporting models, every mesh has all the points instead of just the used ones
+
+## Texture View ##
+  * Show size information (Width x Height)
+  * Add a way to change the resizing method. (Don't fit to window, fit if larger, etc..)
+
+## Model View ##
+  * Frame model bounding box in view by default
+  * Add a play button for animations
+
+## Skeleton View ##
+  * Add a play button for animations
+
+## Level View ##
+  * Add support for objects
+  * Add some sort of indication for which element is selected in the 3D view

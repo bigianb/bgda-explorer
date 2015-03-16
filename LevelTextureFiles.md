@@ -1,0 +1,27 @@
+# Introduction #
+
+The level texture file contains all the textures used in the static geometry
+of a level. As the memory on the PS2 is limited, the level is split into a grid with a maximum size of 100 rows by 100 columns. Each cell in this grid is allocated a section in the level texture file.
+
+In Dark Alliance, the mapping from cell x, y to the start offset in the level texture file is stored in the .world file. That was a pretty odd design choice and so it's not surprising that in Return to Arms this mapping is stored in the .tex file itself.
+
+# Texture block mapping #
+
+A world element specifies a texture number and a texture cell. The texture cell is a single number calculated as 100\*y+x, so the number 4949 means cell 49,49.
+
+## Dark Alliance ##
+
+The .world file contains an array which maps each cell to an offset in the .tex file. To find the correct texture to use, the offset in the .tex file is looked up in this array. This offset points to a directory and the relevant texture number in this directory gives us our texture.
+
+## Return to Arms ##
+
+In Return to Arms, the cell and texture number are read in the same manner.
+The offset to the directory in the texture file though is found by looking at the start of the texture file itself. The start of the texture file has a number of entries where each entry is 3 little endian integers. They are:
+{{
+int unknown
+int cellAddress
+int directoryOffset
+}}
+The list is terminated by a negative number for the unknown element.
+
+To find the correct texture to use then, we iterate the list of entries at the start of the texture file until we find one with the correct cell address. Once we find it, we have the directoryOffset which we treat in the same manner as for Dark Alliance.
