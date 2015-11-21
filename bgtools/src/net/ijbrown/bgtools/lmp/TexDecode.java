@@ -29,19 +29,19 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String outDir = "/emu/bgda/BG/DATA_extracted/test/env_lmp/";
+        String outDir = "D:\\emu\\bgda\\BG\\DATA_extracted\\cuttown\\chest_lmp\\";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
         TexDecode obj = new TexDecode();
-        obj.extract("envtex.etex", outDirFile);
+        obj.extract("chest_large.tex", outDirFile);
 
 
-        outDir = "/emu/bgda/BG/DATA_extracted/cellar1/barrel_lmp/";
+        outDir = "d:\\emu/bgda/BG/DATA_extracted/frontend/";
         outDirFile = new File(outDir);
         obj = new TexDecode();
-        obj.extract("barrel.tex", outDirFile);
+        obj.extract("overlay.tex", outDirFile);
 
     }
 
@@ -87,7 +87,9 @@ public class TexDecode
         int sourceh = finalh;
         PalEntry[] pixels = null;
 
-        int curIdx = 0x80 + startOffset;
+        int offsetToGIF = DataUtil.getLEInt(fileData, startOffset + 16);
+
+        int curIdx = offsetToGIF + startOffset;
         GIFTag gifTag = new GIFTag();
         gifTag.parse(fileData, curIdx);
 
@@ -109,25 +111,34 @@ public class TexDecode
             int palLen = palw * palh * 4;
             curIdx += (palLen + 0x10);
 
+            GIFTag gifTag50 = new GIFTag();
+            gifTag50.parse(fileData, curIdx);
+            curIdx += gifTag50.getLength();
+
+            int dbw = (sourcew / 2 + 0x07) & ~0x07;
+            int dbh = (sourceh / 2 + 0x07) & ~0x07;
+
             GIFTag gifTag3 = new GIFTag();
             gifTag3.parse(fileData, curIdx);
 
             int trxregOffset = findADEntry(fileData, curIdx+0x10, gifTag3.nloop, 0x52);
+
             if (trxregOffset == 0){
                 throw new RuntimeException("Failed to find TRXREG register");
             }
+
             int rrw = DataUtil.getLEShort(fileData, trxregOffset);
             int rrh = DataUtil.getLEShort(fileData, trxregOffset + 4);
 
-            pixels = readPixels32(fileData, palette, curIdx + gifTag3.getLength(), rrw, rrh, rrw);
+            pixels = readPixels32(fileData, palette, curIdx + gifTag3.getLength(), rrw, rrh, dbw, dbh);
 
             if (palLen != 64){
-                pixels = unswizzle8bpp(pixels, rrw * 2, rrh * 2);
-                sourcew = rrw * 2;
-                sourceh = rrh * 2;
+                pixels = unswizzle8bpp(pixels, dbw * 2, dbh * 2);
+                sourcew = dbw * 2;
+                sourceh = dbh * 2;
             } else {
-                sourcew = rrw;
-                sourceh = rrh;
+                sourcew = dbw;
+                sourceh = dbh;
             }
 
         } else if (gifTag.nloop == 3) {
@@ -142,8 +153,8 @@ public class TexDecode
         }
         if (finalw != 0 && pixels != null) {
             BufferedImage image = new BufferedImage(finalw, finalh, BufferedImage.TYPE_INT_ARGB);
-            for (int y = 0; y < sourceh; ++y) {
-                for (int x = 0; x < sourcew; ++x) {
+            for (int y = 0; y < sourceh && y < finalh; ++y) {
+                for (int x = 0; x < sourcew && x < finalw; ++x) {
                     PalEntry pixel = pixels[y * sourcew + x];
                     if (pixel != null) {
                         image.setRGB(x, y, pixel.argb());
@@ -195,10 +206,10 @@ public class TexDecode
     }
 
 
-    private PalEntry[] readPixels32(byte[] fileData, PalEntry[] palette, int startOffset, int rrw, int rrh, int dbw)
+    private PalEntry[] readPixels32(byte[] fileData, PalEntry[] palette, int startOffset, int rrw, int rrh, int dbw, int dbh)
     {
         if (palette.length == 256){
-            int numDestBytes = rrh * dbw * 4;
+            int numDestBytes = dbh * dbw * 4;
             int widthBytes = dbw * 4;
             PalEntry[] pixels = new PalEntry[numDestBytes];
             int idx = startOffset;
@@ -213,7 +224,7 @@ public class TexDecode
             }
             return pixels;
         } else {
-            int numDestBytes = rrh * dbw;
+            int numDestBytes = dbh * dbw;
             PalEntry[] pixels = new PalEntry[numDestBytes];
             int idx = startOffset;
             boolean lowbit=false;
