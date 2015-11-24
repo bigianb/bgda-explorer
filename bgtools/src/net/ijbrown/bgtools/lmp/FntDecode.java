@@ -72,7 +72,8 @@ public class FntDecode
 
         TexDecode texDecode = new TexDecode();
         int textureOffset = DataUtil.getLEInt(fileData, 0x10);
-        texDecode.extract(outDirFile, fileData, textureOffset, filename);
+        int textureLength = fileLength - textureOffset;
+        texDecode.extract(outDirFile, fileData, textureOffset, filename, textureLength);
 
         return disassemble(fileData, 0);
     }

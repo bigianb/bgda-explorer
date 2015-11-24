@@ -88,7 +88,8 @@ public class WorldDecode
     {
         int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
         TexDecode texDecode = new TexDecode();
-        texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename);
+        int minimapLength = fileData.length - miniMapOffset; // TODO: fixme
+        texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
     }
 
     private String disassemble(File outDirFile, File levelTexFile)
