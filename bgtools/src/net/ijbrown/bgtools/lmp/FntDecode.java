@@ -1,4 +1,4 @@
-/*  Copyright (C) 2011 Ian Brown
+/*  Copyright (C) 2011-2016 Ian Brown
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -128,11 +128,11 @@ public class FntDecode
             sb.append("Glyph ").append(HexUtil.formatHexShort(glyphNum)).append(",  charId=").append(HexUtil.formatHexShort(charId));
             char c = (char)charId;
             sb.append("  '").append(c).append("'\n");
-            sb.append("            ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x02))).append("\n");
-            sb.append("            ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x04))).append("\n");
-            sb.append("            ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x06))).append("\n");
-            sb.append("            ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x08))).append("\n");
-            sb.append("            ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x0A))).append("\n");
+            sb.append("       x0 = ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x02))).append("\n");
+            sb.append("       x1 = ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x04))).append("\n");
+            sb.append("       y0 =  ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x06))).append("\n");
+            sb.append("       y1 =  ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x08))).append("\n");
+            sb.append(" y_offset =  ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x0A))).append("\n");
             sb.append("    width = ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x0C))).append("\n");
             sb.append("  kern id = ").append(HexUtil.formatHexShort(DataUtil.getLEShort(fileData, glyphOffset + 0x0E))).append("\n");
             sb.append("\n");

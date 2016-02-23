@@ -34,13 +34,13 @@ public class TexDecode
         File outDirFile = new File(outDir);
 
         TexDecode obj = new TexDecode();
-        obj.extract("chest_large.tex", outDirFile);
+        //obj.extract("chest_large.tex", outDirFile);
 
 
-        outDir = "d:\\emu/bgda/BG/DATA_extracted/frontend/";
+        outDir = "d:\\emu/bgda/BG/DATA_extracted/hud/";
         outDirFile = new File(outDir);
         obj = new TexDecode();
-        obj.extract("overlay.tex", outDirFile);
+        obj.extract("menulong.tex", outDirFile);
 
     }
 
@@ -49,7 +49,7 @@ public class TexDecode
     //    short width
     //    short height
 
-    // Then starting at address 0x80
+    // Then starting offset stored at address 0x10
     // GS Packet
 
     // Currently it is assumed that all the image data is in one GIFTag segment.
