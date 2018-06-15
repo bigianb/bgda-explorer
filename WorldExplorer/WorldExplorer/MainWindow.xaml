@@ -23,6 +23,7 @@
             	<MenuItem x:Name="Menu_Export" Header="_Export">
             		<MenuItem x:Name="Menu_Export_Texture" Header="Texture" Click="Menu_Export_Texture_Click"/>
                     <MenuItem x:Name="Menu_Export_Model" Header="Model" Click="Menu_Export_Model_Click"/>
+                    <MenuItem x:Name="Menu_Export_PosedModel" Header="Posed Model" Click="Menu_Export_PosedModel_Click"/>
             	</MenuItem>
             </MenuItem>
             <MenuItem Header="_Tools">

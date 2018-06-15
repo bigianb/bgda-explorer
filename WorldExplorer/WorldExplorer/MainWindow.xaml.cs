@@ -251,6 +251,29 @@ namespace WorldExplorer
             }
         }
 
+        private void Menu_Export_PosedModel_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.TheModelViewModel.Model == null)
+            {
+                MessageBox.Show(this, "No model currently loaded.", "Error", MessageBoxButton.OK);
+                return;
+            }
+
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "OBJ File|*.obj";
+            var result = dialog.ShowDialog(this);
+
+            if (result.GetValueOrDefault(false))
+            {
+                HelixToolkit.Wpf.ObjExporter exporter = new HelixToolkit.Wpf.ObjExporter();
+                using (var stream = new FileStream(dialog.FileName, FileMode.Create))
+                {
+                    exporter.MaterialsFile = dialog.FileName + ".material";
+                    exporter.Export(_viewModel.TheModelViewModel.Model, stream);
+                }
+            }
+        }
+
         private void MenuRecentFilesSubmenuOpened(object sender, RoutedEventArgs e)
         {
             MenuRecentFiles.Items.Clear();
