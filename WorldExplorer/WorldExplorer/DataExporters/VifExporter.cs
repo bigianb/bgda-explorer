@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
-using WorldExplorer.Logging;
+
 
 namespace WorldExplorer.DataExporters
 {

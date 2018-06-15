@@ -15,12 +15,6 @@
 */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Windows.Media.Imaging;
-using System.Windows.Media;
-using System.Windows;
 using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;

@@ -18,13 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Windows.Media.Imaging;
-using System.Windows.Media;
 using WorldExplorer.DataLoaders;
-using System.Windows.Media.Media3D;
 using WorldExplorer.Logging;
 using WorldExplorer.DataModel;
 
