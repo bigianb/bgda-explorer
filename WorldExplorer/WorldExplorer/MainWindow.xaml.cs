@@ -126,7 +126,7 @@ namespace WorldExplorer
                     {
                         if (e.ChangedButton == MouseButton.Middle && e.ClickCount > 1)
                         {
-                            var view = (HelixToolkit.HelixViewport3D) sender;
+                            var view = (HelixToolkit.Wpf.HelixViewport3D) sender;
                             view.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 1000);
                             e.Handled = true;
                         }

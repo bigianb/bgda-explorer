@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
-using HelixToolkit;
+using HelixToolkit.Wpf;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
@@ -84,7 +84,7 @@ namespace WorldExplorer
 
                 if (_modelView.normalsBox.IsChecked.GetValueOrDefault())
                 {
-                    var normal = new MeshNormals3D();
+                    var normal = new MeshNormalsVisual3D();
                     normal.Mesh = (MeshGeometry3D)newModel.Geometry;
 
                     container.Children.Add(normal);

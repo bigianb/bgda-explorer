@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using HelixToolkit;
+using HelixToolkit.Wpf;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.Logging;
 
