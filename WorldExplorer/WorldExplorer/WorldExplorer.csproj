@@ -92,6 +92,7 @@
     <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="DataLoaders\EngineVersion.cs" />
     <Compile Include="DataLoaders\ObDecoder.cs" />
+    <Compile Include="DataModel\AnimData.cs" />
     <Compile Include="FileTreeViewContextManager.cs" />
     <Compile Include="LevelViewModel.cs" />
     <Compile Include="LevelView.xaml.cs">
@@ -130,6 +131,7 @@
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Win3D\Conversions.cs" />
     <Compile Include="World.cs" />
     <Compile Include="WorldDefs\ObjectDefinitions.cs" />
     <Compile Include="WorldDefs\ObjectManager.cs" />

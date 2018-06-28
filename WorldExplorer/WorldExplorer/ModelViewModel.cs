@@ -20,6 +20,7 @@ using HelixToolkit.Wpf;
 using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
+using WorldExplorer.Win3D;
 
 namespace WorldExplorer
 {
@@ -74,14 +75,18 @@ namespace WorldExplorer
         {
             if (_vifModel != null)
             {
-                var newModel = (GeometryModel3D)VifDecoder.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
-                var container = new ModelVisual3D();
-                container.Content = newModel;
+                var newModel = (GeometryModel3D)Conversions.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
+                var container = new ModelVisual3D
+                {
+                    Content = newModel
+                };
 
                 if (_modelView.normalsBox.IsChecked.GetValueOrDefault())
                 {
-                    var normal = new MeshNormalsVisual3D();
-                    normal.Mesh = (MeshGeometry3D)newModel.Geometry;
+                    var normal = new MeshNormalsVisual3D
+                    {
+                        Mesh = (MeshGeometry3D)newModel.Geometry
+                    };
 
                     container.Children.Add(normal);
                 }

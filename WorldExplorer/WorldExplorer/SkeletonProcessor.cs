@@ -15,8 +15,8 @@
 */
 
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataLoaders;
 using System.Windows.Media;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {

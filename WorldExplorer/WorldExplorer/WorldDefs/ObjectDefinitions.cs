@@ -6,6 +6,7 @@ using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.Logging;
+using WorldExplorer.Win3D;
 
 namespace WorldExplorer.WorldDefs
 {
@@ -292,7 +293,7 @@ namespace WorldExplorer.WorldDefs
                             tex.PixelHeight);
 
                         var model = new ModelVisual3D();
-                        model.Content = VifDecoder.CreateModel3D(vifModel, tex, null, -1);
+                        model.Content = Conversions.CreateModel3D(vifModel, tex, null, -1);
                         model.Transform = new ScaleTransform3D(1.0 / 4, 1.0 / 4, 1.0 / 4);
                         return model;
                     }

@@ -10,7 +10,7 @@ namespace WorldExplorer.DataExporters
 {
     class VifExporter
     {
-        void WriteMtlFile(string mtlFile, String name)
+        static void WriteMtlFile(string mtlFile, String name)
         {
             using (var stream = new FileStream(mtlFile, FileMode.Create))
             using (var writer = new StreamWriter(stream))
@@ -22,7 +22,13 @@ namespace WorldExplorer.DataExporters
             }
         }
 
-        public void WriteObj(String savePath, Model model, WriteableBitmap texture, double scale)
+        internal void WritePosedObj(string fileName, Model vifModel, WriteableBitmap texture, AnimData animData, int currentFrame)
+        {
+            // TODO: Implement
+            throw new NotImplementedException();
+        }
+
+        public static void WriteObj(String savePath, Model model, WriteableBitmap texture, double scale)
         {
             string dir = Path.GetDirectoryName(savePath) ?? "";
             string name = Path.GetFileNameWithoutExtension(savePath);
@@ -104,7 +110,7 @@ namespace WorldExplorer.DataExporters
             writer.Close();
         }
 
-        public void WriteChunks(string savePath, List<VifDecoder.Chunk> chunks)
+        public static void WriteChunks(string savePath, List<VifDecoder.Chunk> chunks)
         {
             using (var objFile = File.Open(savePath, FileMode.Create))
             using (var writer = new StreamWriter(objFile))

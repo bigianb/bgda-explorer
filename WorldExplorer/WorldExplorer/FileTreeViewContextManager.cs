@@ -182,9 +182,7 @@ namespace WorldExplorer
                 bool? result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
                 {
-                    var exporter = new VifExporter();
-
-                    var logger = new StringLogger();
+                     var logger = new StringLogger();
                     var chunks = VifDecoder.DecodeChunks(
                         logger, 
                         lmpFile.FileData, 
@@ -193,7 +191,7 @@ namespace WorldExplorer
                         tex.PixelWidth,
                         tex.PixelHeight);
 
-                    exporter.WriteChunks(dialog.FileName, chunks);
+                    VifExporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
             else if (_menu.DataContext is WorldElementTreeViewModel)
@@ -208,16 +206,14 @@ namespace WorldExplorer
                 bool? result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
                 {
-                    var exporter = new VifExporter();
-
-                    var logger = new StringLogger();
+                     var logger = new StringLogger();
                     var chunks = VifDecoder.ReadVerts(
                         logger,
                         lmpFile.FileData,
                         worldElement.WorldElement.VifDataOffset,
                         worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength);
 
-                    exporter.WriteChunks(dialog.FileName, chunks);
+                    VifExporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
         }

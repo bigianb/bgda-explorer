@@ -245,9 +245,7 @@ namespace WorldExplorer
 
             if (result.GetValueOrDefault(false))
             {
-                DataExporters.VifExporter exporter = new VifExporter();
-
-                exporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
+                 VifExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
             }
         }
 
@@ -259,18 +257,20 @@ namespace WorldExplorer
                 return;
             }
 
-            var dialog = new SaveFileDialog();
-            dialog.Filter = "OBJ File|*.obj";
+            var dialog = new SaveFileDialog
+            {
+                Filter = "OBJ File|*.obj"
+            };
             var result = dialog.ShowDialog(this);
 
             if (result.GetValueOrDefault(false))
             {
-                HelixToolkit.Wpf.ObjExporter exporter = new HelixToolkit.Wpf.ObjExporter();
-                using (var stream = new FileStream(dialog.FileName, FileMode.Create))
-                {
-                    exporter.MaterialsFile = dialog.FileName + ".material";
-                    exporter.Export(_viewModel.TheModelViewModel.Model, stream);
-                }
+                VifExporter exporter = new VifExporter();
+                exporter.WritePosedObj(dialog.FileName,
+                                       _viewModel.TheModelViewModel.VifModel,
+                                       _viewModel.TheModelViewModel.Texture,
+                                       _viewModel.TheModelViewModel.AnimData,
+                                       _viewModel.TheModelViewModel.CurrentFrame);
             }
         }
 

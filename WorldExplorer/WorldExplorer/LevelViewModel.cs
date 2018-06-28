@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
 using System.Windows.Media;
 using WorldExplorer.WorldDefs;
+using WorldExplorer.Win3D;
 
 namespace WorldExplorer
 {
@@ -76,7 +76,7 @@ namespace WorldExplorer
             foreach (var element in _worldData.worldElements)
             {
                 ModelVisual3D mv3d = new ModelVisual3D();
-                var model3D = VifDecoder.CreateModel3D(element.model.meshList, element.Texture, null, 0);
+                var model3D = Conversions.CreateModel3D(element.model.meshList, element.Texture, null, 0);
                 mv3d.Content = model3D;
 
                 var modelBounds = model3D.Bounds;
