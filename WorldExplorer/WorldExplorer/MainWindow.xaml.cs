@@ -265,12 +265,12 @@ namespace WorldExplorer
 
             if (result.GetValueOrDefault(false))
             {
-                VifExporter exporter = new VifExporter();
-                exporter.WritePosedObj(dialog.FileName,
+                VifExporter.WritePosedObj(dialog.FileName,
                                        _viewModel.TheModelViewModel.VifModel,
                                        _viewModel.TheModelViewModel.Texture,
                                        _viewModel.TheModelViewModel.AnimData,
-                                       _viewModel.TheModelViewModel.CurrentFrame);
+                                       _viewModel.TheModelViewModel.CurrentFrame,
+                                       1.0);
             }
         }
 
