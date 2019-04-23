@@ -29,7 +29,7 @@ public class ScriptDecode
     public static void main(String[] args) throws IOException
     {
         ScriptDecode obj = new ScriptDecode();
-       // obj.decode("tavern");
+       obj.decode("tavern");
        // obj.decode("cellar1");
         obj.decode("cuttown");
     }
