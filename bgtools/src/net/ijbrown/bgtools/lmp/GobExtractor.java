@@ -24,8 +24,10 @@ public class GobExtractor
 {
     public static void main(String[] args) throws IOException
     {
-        String outDir = "/emu/bgda/BG/DATA_extracted/";
-        String inDir = "/emu/bgda/BG/DATA/";
+        String root = "/Users/ian/DARK_ALLIANCE/";
+
+        String outDir = root+"BG/DATA_extracted/";
+        String inDir = root+"BG/DATA/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();

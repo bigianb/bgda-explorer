@@ -28,18 +28,24 @@ public class ScriptDecode
 {
     public static void main(String[] args) throws IOException
     {
-        ScriptDecode obj = new ScriptDecode();
-       obj.decode("tavern");
-       // obj.decode("cellar1");
+        ScriptDecode obj = new ScriptDecode(new Config().getRootDir());
+        obj.decode("tavern");
+        obj.decode("cellar1");
         obj.decode("cuttown");
+    }
+
+    private final String rootDir;
+
+    public ScriptDecode(String rootDir) {
+        this.rootDir = rootDir;
     }
 
     private void decode(String levelName) throws IOException
     {
-        String rootDir = "/emu/bgda/BG/DATA_extracted/";
+
         String lmpName = levelName;
 
-        String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
+        String outDir = rootDir + "/BG/DATA_extracted/" + lmpName + "/" + lmpName + "_lmp/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
