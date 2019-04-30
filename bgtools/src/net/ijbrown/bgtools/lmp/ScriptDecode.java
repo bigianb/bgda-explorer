@@ -107,6 +107,7 @@ public class ScriptDecode
         sb.append("address  6: ").append(HexUtil.formatHex(hw2)).append("\r\n");
         sb.append("address  8: ").append(HexUtil.formatHex(hw3)).append("\r\n");
         sb.append("address  A: ").append(HexUtil.formatHex(hw4)).append("\r\n");
+        sb.append("address  C (inst table): ").append(HexUtil.formatHex(instructionsOffset)).append("\r\n");
         sb.append("address 10 (string table): ").append(HexUtil.formatHex(stringsOffset)).append("\r\n");
         sb.append("address 14: ").append(HexUtil.formatHex(offset3)).append("\r\n");
         sb.append("address 18: ").append(HexUtil.formatHex(offset4)).append("\r\n");
@@ -191,6 +192,7 @@ public class ScriptDecode
             if (bytesConsumed >= 0) {
                 i += bytesConsumed;
             } else {
+                System.out.println("Unknown opcode " + HexUtil.formatHex(opcode));
                 sb.append(HexUtil.formatHex(opcode));
                 if (opcode < opCodeArgs.length && opcode >= 0) {
                     ARGS_TYPE type = opCodeArgs[opcode];
@@ -260,6 +262,12 @@ public class ScriptDecode
     {
         int bytesConsumed = -1;
         switch (opcode) {
+            case 0x1: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("acc = var ").append(arg1);
+            }
+            break;
             case 0xb: {
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
@@ -270,6 +278,12 @@ public class ScriptDecode
                 bytesConsumed = 4;
                 int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
                 sb.append("var ").append(arg1).append(" = acc");
+            }
+            break;
+            case 0x11: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("t4 var ").append(arg1).append(" = acc");
             }
             break;
             case 0x27: {
@@ -315,9 +329,15 @@ public class ScriptDecode
                 sb.append("Jump if acc == 0 to ").append(HexUtil.formatHexUShort(arg1));
             }
             break;
+            case 0x36: {
+                bytesConsumed = 4;
+                int arg1 = DataUtil.getLEInt(fileData, instructionsOffset + i + bytesConsumed + bodyOffset);
+                sb.append("Jump if acc != 0 to ").append(HexUtil.formatHexUShort(arg1));
+            }
+            break;
             case 0x54: {
                 bytesConsumed = 0;
-                sb.append("acc = !acc");
+                sb.append("acc <= 0");
             }
             break;
             case 0x59: {
@@ -442,9 +462,11 @@ public class ScriptDecode
         NO_ARGS, ONE_ARG, ONE_ARG_INSTR, TWO_ARGS, VAR_ARGS, ARGS_130
     }
 
+    // Decoding routine is at 0x001000c8
+
     private ARGS_TYPE[] opCodeArgs = new ARGS_TYPE[]
             {
-                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,      // 0x00
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
@@ -460,7 +482,8 @@ public class ScriptDecode
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.ONE_ARG,
+
+                    ARGS_TYPE.ONE_ARG,      // 0x10
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
@@ -476,7 +499,8 @@ public class ScriptDecode
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.ONE_ARG,
+
+                    ARGS_TYPE.ONE_ARG,      // 0x20
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
@@ -492,7 +516,8 @@ public class ScriptDecode
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
+
+                    ARGS_TYPE.NO_ARGS,          // 0x30
                     ARGS_TYPE.ONE_ARG_INSTR,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.ONE_ARG_INSTR,
@@ -508,7 +533,8 @@ public class ScriptDecode
                     ARGS_TYPE.ONE_ARG_INSTR,
                     ARGS_TYPE.ONE_ARG_INSTR,
                     ARGS_TYPE.ONE_ARG_INSTR,
-                    ARGS_TYPE.ONE_ARG_INSTR,
+
+                    ARGS_TYPE.ONE_ARG_INSTR,    // 0x40
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
@@ -524,25 +550,8 @@ public class ScriptDecode
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
+
+                    ARGS_TYPE.NO_ARGS,          //0x50
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
@@ -558,6 +567,26 @@ public class ScriptDecode
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.NO_ARGS,
+
+                    ARGS_TYPE.NO_ARGS,      // 0x60
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.NO_ARGS,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.ONE_ARG,
+                    ARGS_TYPE.NO_ARGS,
+
+                    ARGS_TYPE.NO_ARGS,      // 0x70
+                    ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.NO_ARGS,
@@ -568,12 +597,26 @@ public class ScriptDecode
                     ARGS_TYPE.ONE_ARG,
                     ARGS_TYPE.NO_ARGS,
                     ARGS_TYPE.ONE_ARG,
-                    ARGS_TYPE.VAR_ARGS,
+                    ARGS_TYPE.VAR_ARGS,     // 0x7c
+                    ARGS_TYPE.TWO_ARGS,     // 0x7d
+                    ARGS_TYPE.VAR_ARGS,     // 0x7e
                     ARGS_TYPE.TWO_ARGS,
-                    ARGS_TYPE.VAR_ARGS,
-                    ARGS_TYPE.TWO_ARGS,
-                    ARGS_TYPE.NO_ARGS,
+
+                    ARGS_TYPE.NO_ARGS,      // 0x80
                     ARGS_TYPE.ONE_ARG_INSTR,
                     ARGS_TYPE.ARGS_130
             };
 }
+
+/*
+    Notes:
+
+    s0 = pc
+    a1 = 0(sp) = accumulator
+    s1
+    s2 = var base (also stack bottom)
+    s3
+    s6 = stack size (from s2)
+    t4 = var base + s8
+    s8 = 0
+ */
