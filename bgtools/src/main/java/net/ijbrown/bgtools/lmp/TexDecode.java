@@ -29,18 +29,14 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String outDir = "D:\\emu\\bgda\\BG\\DATA_extracted\\cuttown\\chest_lmp\\";
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
 
-        File outDirFile = new File(outDir);
+        Config config = new Config(gameType);
+        String inDir = config.getDataDir();
+        String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
-        //obj.extract("chest_large.tex", outDirFile);
-
-
-        outDir = "d:\\emu/bgda/BG/DATA_extracted/hud/";
-        outDirFile = new File(outDir);
-        obj = new TexDecode();
-        obj.extract("menulong.tex", outDirFile);
+        obj.extract("superman.tex", new File(outDir + "SUPERMAN_LMP"));
 
     }
 

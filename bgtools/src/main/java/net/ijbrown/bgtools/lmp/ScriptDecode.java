@@ -28,7 +28,7 @@ public class ScriptDecode
 {
     public static void main(String[] args) throws IOException
     {
-        ScriptDecode obj = new ScriptDecode(new Config().getRootDir());
+        ScriptDecode obj = new ScriptDecode(new Config(GameType.DARK_ALLIANCE).getRootDir());
         obj.decode("tavern");
         obj.decode("cellar1");
         obj.decode("cuttown");

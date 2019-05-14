@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/bgtools.iml" filepath="$PROJECT_DIR$/bgtools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vifview/vifview.iml" filepath="$PROJECT_DIR$/vifview/vifview.iml" />
     </modules>
   </component>
 </project>
-

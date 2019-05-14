@@ -22,17 +22,30 @@ import java.io.*;
  */
 public class GobExtractor
 {
+    private final GameType gameType;
+
+    public GobExtractor(GameType gameType)
+    {
+        this.gameType=gameType;
+    }
+
     public static void main(String[] args) throws IOException
     {
-        String root = "/Users/ian/DARK_ALLIANCE/";
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
 
-        String outDir = root+"BG/DATA_extracted/";
-        String inDir = root+"BG/DATA/";
+        Config config = new Config(gameType);
+
+        String inDir = config.getDataDir();
+
+        String outDir = inDir+"../DATA_extracted/";
 
         File outDirFile = new File(outDir);
         outDirFile.mkdirs();
 
-        GobExtractor obj = new GobExtractor();
+        GobExtractor obj = new GobExtractor(gameType);
+        obj.extract("intro", outDirFile, new File(inDir));
+        obj.extract("E1L1A", outDirFile, new File(inDir));
+        /*
         obj.extract("cellar1", outDirFile, new File(inDir));
         obj.extract("cuttown", outDirFile, new File(inDir));
         obj.extract("smlcave1", outDirFile, new File(inDir));
@@ -41,6 +54,8 @@ public class GobExtractor
         obj.extract("town", outDirFile, new File(inDir));
         obj.extract("burneye1", outDirFile, new File(inDir));
         obj.extract("cuttown", outDirFile, new File(inDir));
+        */
+
     }
 
     private void extract(String name, File outRoot, File inDir) throws IOException
@@ -67,7 +82,7 @@ public class GobExtractor
 
         offset=0;
         String lmpName = DataUtil.collectString(fileData, offset);
-        LmpExtractor lmpExtractor = new LmpExtractor();
+        LmpExtractor lmpExtractor = new LmpExtractor(gameType);
         while (!lmpName.isEmpty()){
             System.out.println("Extracting " + lmpName + " from " + file.getName());
             File lmpOutputDir = new File(outDir, lmpName.replace('.', '_'));

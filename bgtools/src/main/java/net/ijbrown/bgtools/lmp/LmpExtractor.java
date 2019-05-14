@@ -21,23 +21,31 @@ import java.io.*;
  * extracts files from a .lmp file.
  */
 public class LmpExtractor {
-    
-    public static void main(String[] args) throws IOException
-    {
-        String filename = "/emu/bgda/BG/DATA/pend.lmp";
 
-        String outDir = "/emu/bgda/BG/DATA_extracted/pend/";
+    private final GameType gameType;
 
-        File outDirFile = new File(outDir);
-        outDirFile.mkdirs();
-
-        LmpExtractor obj = new LmpExtractor();
-        obj.extractAll(filename, outDirFile);
+    public LmpExtractor(GameType gameType) {
+        this.gameType=gameType;
     }
 
-    private void extractAll(String filename, File outDir) throws IOException
+    public static void main(String[] args) throws IOException
     {
-        File file = new File(filename);
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+
+        Config config = new Config(gameType);
+        String inDir = config.getDataDir();
+        String outDir = inDir+"../DATA_extracted/";
+
+        LmpExtractor obj = new LmpExtractor(gameType);
+        obj.extractAll(inDir, outDir, "SUPERMAN.LMP");
+    }
+
+    private void extractAll(String inDirname, String outDirname, String lmpFilename) throws IOException
+    {
+        File outDir = new File(outDirname+lmpFilename.replace('.', '_'));
+        outDir.mkdirs();
+
+        File file = new File(inDirname+lmpFilename);
         BufferedInputStream is = new BufferedInputStream(new FileInputStream(file));
 
         int fileLength = (int) file.length();
@@ -61,13 +69,26 @@ public class LmpExtractor {
         int numFiles = DataUtil.getLEInt(fileData, fileStartOffset);
         System.out.println("LMP contains " + numFiles + " Files.");
 
+        int headerOffset = fileStartOffset+4;
         for (int fileNo=0; fileNo < numFiles; ++fileNo){
-            int headerOffset = fileStartOffset + 4 + fileNo * 0x40;
-            String subfileName = DataUtil.collectString(fileData, headerOffset);
-
-            int subOffset = DataUtil.getLEInt(fileData, headerOffset + 0x38);
-            int subLen = DataUtil.getLEInt(fileData, headerOffset + 0x3C);
-
+            int stringOffset=0;
+            int subOffset=0;
+            int subLen=0;
+            String subfileName;
+            if (gameType == GameType.DARK_ALLIANCE) {
+                // Name inline with header
+                subfileName = DataUtil.collectString(fileData, headerOffset);
+                subOffset = DataUtil.getLEInt(fileData, headerOffset + 0x38);
+                subLen = DataUtil.getLEInt(fileData, headerOffset + 0x3C);
+                headerOffset += 0x40;
+            } else {
+                // name referenced from header
+                stringOffset = DataUtil.getLEInt(fileData, headerOffset);
+                subOffset = DataUtil.getLEInt(fileData, headerOffset+4);
+                subLen = DataUtil.getLEInt(fileData, headerOffset+8);
+                subfileName = DataUtil.collectString(fileData, fileStartOffset+stringOffset);
+                headerOffset += 0x0C;
+            }
             System.out.println("Extracting: " + subfileName + ", offset=" + subOffset + ", length=" + subLen);
 
             File outFile = new File(outDir, subfileName);

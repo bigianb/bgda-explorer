@@ -25,17 +25,22 @@ import java.util.List;
  */
 public class WorldDecode
 {
+    private final GameType gameType;
+
+    public WorldDecode(GameType gameType) {
+        this.gameType = gameType;
+    }
+
     public static void main(String[] args) throws IOException
     {
-        String rootDir = "/emu/bgda/BG/DATA_extracted/";
-        String rootDirOrig = "/emu/bgda/BG/DATA/";
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
 
-        WorldDecode obj = new WorldDecode();
-        obj.decodeWorld(rootDir, rootDirOrig, "cuttown", "cuttown");
-//        obj.decodeWorld(rootDir, rootDirOrig, "tavern", "pub");
-//        obj.decodeWorld(rootDir, rootDirOrig, "test", "test");
-//        obj.decodeWorld(rootDir, rootDirOrig, "town", "town");
-//        obj.decodeWorld(rootDir, rootDirOrig, "burneye1", "burneye1");
+        Config config = new Config(gameType);
+        String dataDir = config.getDataDir();
+        String extractedDataDir = dataDir+"../DATA_extracted/";
+
+        WorldDecode obj = new WorldDecode(gameType);
+        obj.decodeWorld(extractedDataDir, dataDir, "E1L1A", "e1l1a");
     }
 
     private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
@@ -89,12 +94,18 @@ public class WorldDecode
         int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
         TexDecode texDecode = new TexDecode();
         int minimapLength = fileData.length - miniMapOffset; // TODO: fixme
-        texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
+        try {
+            texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
+        } catch (RuntimeException e){
+
+        }
     }
 
     private String disassemble(File outDirFile, File levelTexFile)
     {
         StringBuilder sb = new StringBuilder();
+
+        File worldMeshDir = new File(outDirFile, "world_meshes");
 
         int numElements = DataUtil.getLEInt(fileData, 0);
         sb.append("Num Elements: ").append(HexUtil.formatHex(numElements)).append("\r\n");
@@ -185,17 +196,17 @@ public class WorldDecode
         for (int i = 0; i < rows * cols; ++i) {
             int off = DataUtil.getLEInt(fileData, offset18 + i * 4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
-
-            int u = DataUtil.getLEShort(fileData, off);
-            while (u >= 0) {
-                sb.append(u);
-                off += 2;
-                u = DataUtil.getLEShort(fileData, off);
-                if (u >= 0) {
-                    sb.append(", ");
+            if (gameType == GameType.DARK_ALLIANCE) {
+                int u = DataUtil.getLEShort(fileData, off);
+                while (u >= 0) {
+                    sb.append(u);
+                    off += 2;
+                    u = DataUtil.getLEShort(fileData, off);
+                    if (u >= 0) {
+                        sb.append(", ");
+                    }
                 }
             }
-
             sb.append("\r\n");
         }
 
@@ -241,24 +252,26 @@ public class WorldDecode
         sb.append("Found the following height patches...").append("\r\n\r\n");
         for (int offset : linkedObjects) {
             sb.append("Offset: ").append(HexUtil.formatHex(offset)).append("\r\n");
+            if (offset > 0 && offset < fileData.length-0x16) {
+                sb.append(" 0x00 (x0): ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
+                sb.append(" 0x04 (y0): ").append(DataUtil.getLEInt(fileData, offset + 4)).append("\r\n");
 
-            sb.append(" 0x00 (x0): ").append(DataUtil.getLEInt(fileData, offset)).append("\r\n");
-            sb.append(" 0x04 (y0): ").append(DataUtil.getLEInt(fileData, offset + 4)).append("\r\n");
+                int patchWidth = DataUtil.getLEInt(fileData, offset + 0x08);
+                int patchHeight = DataUtil.getLEInt(fileData, offset + 0x0C);
 
-            int patchWidth = DataUtil.getLEInt(fileData, offset + 0x08);
-            int patchHeight = DataUtil.getLEInt(fileData, offset + 0x0C);
+                sb.append(" Dimensions=").append(patchWidth).append(" x ").append(patchHeight).append("\r\n\r\n");
 
-            sb.append(" Dimensions=").append(patchWidth).append(" x ").append(patchHeight).append("\r\n\r\n");
-
-            sb.append(" 0x10 (min height): ").append(DataUtil.getLEShort(fileData, offset + 0x10)).append("\r\n");
-            sb.append(" 0x12 (max height): ").append(DataUtil.getLEShort(fileData, offset + 0x12)).append("\r\n");
-
-            for (int y = 0; y < patchHeight; ++y) {
-                for (int x = 0; x < patchWidth; ++x) {
-                    int i = y * patchWidth + x;
-                    sb.append(DataUtil.getLEShort(fileData, offset + 0x14 + i * 2) / 16).append("\r\n");
+                sb.append(" 0x10 (min height): ").append(DataUtil.getLEShort(fileData, offset + 0x10)).append("\r\n");
+                sb.append(" 0x12 (max height): ").append(DataUtil.getLEShort(fileData, offset + 0x12)).append("\r\n");
+                if (gameType == GameType.DARK_ALLIANCE) {
+                    for (int y = 0; y < patchHeight; ++y) {
+                        for (int x = 0; x < patchWidth; ++x) {
+                            int i = y * patchWidth + x;
+                            sb.append(DataUtil.getLEShort(fileData, offset + 0x14 + i * 2) / 16).append("\r\n");
+                        }
+                        sb.append("--\r\n");
+                    }
                 }
-                sb.append("--\r\n");
             }
         }
 
@@ -270,24 +283,34 @@ public class WorldDecode
         sb.append("\r\n");
         sb.append("Elements (24) array - ").append(numElements).append(" elements\r\n \r\n");
         for (int i = 0; i < numElements; ++i) {
-            int off = elementBase + i * 0x38;
+            int off=0;
+            if (gameType == GameType.DARK_ALLIANCE) {
+                off = elementBase + i * 0x38;
+            } else {
+                off = elementBase + i * 0x3C;
+            }
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append("{\r\n");
             // offset 0 points to a vif mesh object. Mesh data starts at offset 0x20.
             int meshOffset = DataUtil.getLEInt(fileData, off);
 
             sb.append("    vif Data: ").append(HexUtil.formatHex(meshOffset)).append("\r\n");
-            sb.append("    0x04: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off + 4))).append("\r\n");
-
+            off +=4;
+            if (gameType == GameType.DARK_ALLIANCE) {
+                sb.append("    tex2: ").append(HexUtil.formatHex(DataUtil.getLEInt(fileData, off))).append("\r\n");
+                off += 4;
+            }
             // in 16 byte units
-            int meshDataLen = DataUtil.getLEInt(fileData, off + 8);
+            int meshDataLen = DataUtil.getLEInt(fileData, off);
+            off += 4;
             sb.append("    vif Data Len: ").append(HexUtil.formatHex(meshDataLen)).append("\r\n");
 
-            float bbx1 = DataUtil.getLEFloat(fileData, off + 0x0C);
-            float bby1 = DataUtil.getLEFloat(fileData, off + 0x10);
-            float bbz1 = DataUtil.getLEFloat(fileData, off + 0x14);
-            float bbx2 = DataUtil.getLEFloat(fileData, off + 0x18);
-            float bby2 = DataUtil.getLEFloat(fileData, off + 0x1C);
-            float bbz2 = DataUtil.getLEFloat(fileData, off + 0x20);
+            float bbx1 = DataUtil.getLEFloat(fileData, off);
+            float bby1 = DataUtil.getLEFloat(fileData, off + 0x04);
+            float bbz1 = DataUtil.getLEFloat(fileData, off + 0x08);
+            float bbx2 = DataUtil.getLEFloat(fileData, off + 0x0C);
+            float bby2 = DataUtil.getLEFloat(fileData, off + 0x10);
+            float bbz2 = DataUtil.getLEFloat(fileData, off + 0x14);
+            off += 0x18;
 
 
             sb.append("    Bounding Box: ").append(bbx1).append(", ").append(bby1).append(", ").append(bbz1).append("; ");
@@ -303,18 +326,23 @@ public class WorldDecode
             sb.append(cellx2).append(", ").append(celly2).append("\r\n");
 
             // Chunk in texture
-            sb.append("    tex num: ").append(DataUtil.getLEInt(fileData, off + 0x24)/0x40).append("\r\n");
-            sb.append("    tex cell: ").append(DataUtil.getLEShort(fileData, off + 0x28)).append("\r\n");
-
-            sb.append("    0x2A: ").append(DataUtil.getLEShort(fileData, off + 0x2A)).append("\r\n");
-            sb.append("    0x2C: ").append(DataUtil.getLEShort(fileData, off + 0x2C)).append("\r\n");
-            sb.append("    0x2E: ").append(DataUtil.getLEShort(fileData, off + 0x2E)).append("\r\n");
-
-            int member30 = DataUtil.getLEUShort(fileData, off + 0x30);
+            sb.append("    tex num: ").append(DataUtil.getLEInt(fileData, off)/0x40).append("\r\n");
+            sb.append("    tex cell: ").append(DataUtil.getLEShort(fileData, off + 4)).append("\r\n");
+            off += 6;
+            if (gameType != GameType.DARK_ALLIANCE) {
+                off += 2;
+            }
+            sb.append("    pos x: ").append(DataUtil.getLEShort(fileData, off)).append("\r\n");
+            sb.append("    pos y: ").append(DataUtil.getLEShort(fileData, off + 0x2)).append("\r\n");
+            sb.append("    pos z: ").append(DataUtil.getLEShort(fileData, off + 0x4)).append("\r\n");
+            off += 6;
+            int flags = DataUtil.getLEInt(fileData, off);
+            off += 4;
             // test 0x800 for a flag.
-            sb.append("    flags30: ").append(HexUtil.formatHexUShort(member30)).append("\r\n");
-            sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off + 0x32))).append("\r\n");
-            sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off + 0x34))).append("\r\n");
+            sb.append("    flags30: ").append(HexUtil.formatHexUShort(flags)).append("\r\n");
+
+            sb.append("    0x32: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off ))).append("\r\n");
+            sb.append("    0x34: ").append(HexUtil.formatHexUShort(DataUtil.getLEShort(fileData, off + 4))).append("\r\n");
             sb.append("}\r\n");
 
             if (!meshOffsets.contains(meshOffset)) {
@@ -334,7 +362,7 @@ public class WorldDecode
                 byte nregs = fileData[meshOffset + 0x10];
                 int startOffset = (nregs + 2) * 0x10;
                 vifDecode.readVerts(fileData, meshOffset + startOffset, meshOffset + len * 0x10);
-                vifDecode.writeObj(meshName, outDirFile, 240, 48, 128.0);
+                vifDecode.writeObj(meshName, worldMeshDir, 240, 48, 128.0);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -24,17 +24,18 @@ public class ObjectsDecode
 {
     public static void main(String[] args) throws IOException
     {
-        decodeLmp("test");
-        decodeLmp("tavern");
-        decodeLmp("cellar1");
-        decodeLmp("town");
-        decodeLmp("cuttown");
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+
+        Config config = new Config(gameType);
+        String inDir = config.getDataDir();
+        String outDir = inDir+"../DATA_extracted/";
+
+        decode(outDir+"intro/intro_lmp/");
     }
 
-    private static void decodeLmp(String lmpName) throws IOException
+    private static void decode(String dirName) throws IOException
     {
-        String outDir = "/emu/bgda/BG/DATA_extracted/" + lmpName + "/" + lmpName + "_lmp/";
-        File outDirFile = new File(outDir);
+        File outDirFile = new File(dirName);
 
         ObjectsDecode obj = new ObjectsDecode();
         obj.read("objects.ob", outDirFile);

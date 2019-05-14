@@ -27,23 +27,14 @@ public class VifDecode
 {
     public static void main(String[] args) throws IOException
     {
-        String outDir = "/emu/bgda/BG/DATA_extracted/";
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
 
-        File outDirFile = new File(outDir);
-        outDirFile.mkdirs();
+        Config config = new Config(gameType);
+        String inDir = config.getDataDir();
+        String outDir = inDir+"../DATA_extracted/";
 
         VifDecode obj = new VifDecode();
-        obj.extract("barrel", outDirFile, 264, 128);
-        obj = new VifDecode();
-        obj.extract("snowflag", outDirFile, 32, 128);
-        obj = new VifDecode();
-        obj.extract("lever", outDirFile, 16, 128);
-        obj = new VifDecode();
-        obj.extract("chest_large", outDirFile, 16, 128);
-        obj = new VifDecode();
-        obj.extract("w_bands", outDirFile, 214, 150);
-        obj = new VifDecode();
-        obj.extract("book", outDirFile, 169, 64);
+        obj.extract("superman", new File(outDir + "SUPERMAN_LMP"), 264, 128);
     }
 
     public void extract(String name, File outDir, int texw, int texh) throws IOException
