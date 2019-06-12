@@ -99,22 +99,29 @@ namespace WorldExplorer.DataLoaders
                 }
             }
             WriteableBitmap image = null;
-            if (finalw != 0 && pixels != null) {
+            if (finalw != 0) {
                 image = new WriteableBitmap(
                     finalw, finalh,
                     96, 96,
                     PixelFormats.Bgr32,
                     null);
                 image.Lock();
-                unsafe {
-                    IntPtr pBackBuffer = image.BackBuffer;
-                    for (int y = 0; y < sourceh; ++y) {
-                        for (int x = 0; x < sourcew; ++x) {
-                            PalEntry pixel = pixels[y * sourcew + x];
-                            if (pixel != null) {
-                                if (x < finalw && y < finalh) {
-                                    var p = pBackBuffer + y * image.BackBufferStride + x * 4;
-                                    *((int*)p) = pixel.argb();
+                if (pixels != null) { 
+                unsafe
+                    {
+                        IntPtr pBackBuffer = image.BackBuffer;
+                        for (int y = 0; y < sourceh; ++y)
+                        {
+                            for (int x = 0; x < sourcew; ++x)
+                            {
+                                PalEntry pixel = pixels[y * sourcew + x];
+                                if (pixel != null)
+                                {
+                                    if (x < finalw && y < finalh)
+                                    {
+                                        var p = pBackBuffer + y * image.BackBufferStride + x * 4;
+                                        *((int*)p) = pixel.argb();
+                                    }
                                 }
                             }
                         }
