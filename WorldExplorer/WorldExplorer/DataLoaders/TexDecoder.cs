@@ -182,7 +182,7 @@ namespace WorldExplorer.DataLoaders
                 return pixels;
             } else {
                 int numDestBytes = rrh * dbw;
-                if (pixels == null) {
+                if (pixels == null && numDestBytes != 0) {
                     pixels = new PalEntry[numDestBytes];
                 }
                 int idx = startOffset;
