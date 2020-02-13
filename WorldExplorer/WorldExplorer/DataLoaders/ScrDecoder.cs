@@ -19,8 +19,8 @@ namespace WorldExplorer.DataLoaders
             script.hw3 = reader.ReadInt16();
             script.hw4 = reader.ReadInt16();
 
-            int instructionsOffset = reader.ReadInt32();
-            int stringsOffset = reader.ReadInt32();
+            script.instructionsOffset = reader.ReadInt32();
+            script.stringsOffset = reader.ReadInt32();
 
             script.offset3 = reader.ReadInt32();
             script.offset4 = reader.ReadInt32();
@@ -58,8 +58,188 @@ namespace WorldExplorer.DataLoaders
                 externalOffset += 0x18;
             }
 
+            int stringTableLen = script.offset3 - script.stringsOffset;
+            int thisStringStart = -1;
+            var stringReader = new DataReader(data, startOffset + HEADER_SIZE + script.stringsOffset, stringTableLen+1);
+            StringBuilder thisString = new StringBuilder();
+            for (int i=0; i < stringTableLen; i+= 4)
+            {
+                if (thisStringStart < 0)
+                {
+                    thisString = new StringBuilder();
+                    thisStringStart = i;
+                }
+                byte[] bytes = stringReader.ReadBytes(4);
+                for (int b=3; b >= 0; --b)
+                {
+                    if (bytes[b] != 0)
+                    {
+                        thisString.Append((char)bytes[b]);
+                    } else
+                    {
+                        script.stringTable.Add(thisStringStart, thisString.ToString());
+                        thisStringStart = -1;
+                        break;
+                    }
+                }
+            }
+            DecodeInstructions(script, data, startOffset);
             return script;
         }
+
+        private static void DecodeInstructions(Script script, byte[] data, int startOffset)
+        {
+
+        }
+
+        enum ARGS_TYPE
+        {
+            NO_ARGS, ONE_ARG, ONE_ARG_INSTR, TWO_ARGS, VAR_ARGS, ARGS_130
+        }
+
+        static ARGS_TYPE[] bgdaOpCodeArgs = new ARGS_TYPE[]
+            {
+            ARGS_TYPE.NO_ARGS,      // 0x00
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+
+            ARGS_TYPE.ONE_ARG,      // 0x10
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+
+            ARGS_TYPE.ONE_ARG,      // 0x20
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+
+            ARGS_TYPE.NO_ARGS,          // 0x30
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ONE_ARG_INSTR,
+
+            ARGS_TYPE.ONE_ARG_INSTR,    // 0x40
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+
+            ARGS_TYPE.NO_ARGS,          //0x50
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+
+            ARGS_TYPE.NO_ARGS,      // 0x60
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+
+            ARGS_TYPE.NO_ARGS,      // 0x70
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.NO_ARGS,
+            ARGS_TYPE.ONE_ARG,
+            ARGS_TYPE.VAR_ARGS,     // 0x7c
+            ARGS_TYPE.TWO_ARGS,     // 0x7d
+            ARGS_TYPE.VAR_ARGS,     // 0x7e
+            ARGS_TYPE.TWO_ARGS,
+
+            ARGS_TYPE.NO_ARGS,      // 0x80
+            ARGS_TYPE.ONE_ARG_INSTR,
+            ARGS_TYPE.ARGS_130
+            };
+
     }
 
     public class Script
@@ -68,6 +248,9 @@ namespace WorldExplorer.DataLoaders
 
         public int offset0;
         public int hw1, hw2, hw3, hw4;
+
+        public int instructionsOffset;
+        public int stringsOffset;
 
         public int offset3, offset4, offset5;
 
@@ -80,6 +263,8 @@ namespace WorldExplorer.DataLoaders
         public string[] externals;
         public int numExternals;
         public int offsetExternals;
+
+        public Dictionary<int, string> stringTable = new Dictionary<int, string>();
 
         public string Disassemble()
         {
@@ -109,7 +294,14 @@ namespace WorldExplorer.DataLoaders
             {
                 sb.AppendFormat("{0}: {1}\n", i, externals[i]);
             }
+            sb.Append("\nStrings\n~~~~~~~~~\n");
+            foreach (int key in stringTable.Keys)
+            {
+                sb.AppendFormat("0x{0}: {1}\n", key.ToString("X4"), stringTable[key]);
+            }
+
             return sb.ToString();
         }
     }
 }
+
