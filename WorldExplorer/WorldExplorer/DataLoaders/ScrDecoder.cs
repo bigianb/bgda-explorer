@@ -23,5 +23,9 @@ namespace WorldExplorer.DataLoaders
     {
         public int header0;
 
+        public string Disassemble()
+        {
+            return "xx";
+        }
     }
 }
