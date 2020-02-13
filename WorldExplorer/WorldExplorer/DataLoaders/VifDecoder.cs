@@ -31,12 +31,18 @@ namespace WorldExplorer.DataLoaders
         public static List<Mesh> Decode(ILogger log, byte[] data, int startOffset, int length, int texturePixelWidth, int texturePixelHeight)
         {
             int numMeshes = data[startOffset + 0x12] & 0xFF;
+            int meshBlockOffset = 0x28;
+            if (0 == numMeshes)
+            {
+                numMeshes = 1;
+                meshBlockOffset = 0x68;
+            }
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
             List<Mesh> meshes = new List<Mesh>();
             int totalNumChunks = 0;
             for (int meshNum = 0; meshNum < numMeshes; ++meshNum) {
-                int offsetVerts = DataUtil.getLEInt(data, startOffset + 0x28 + meshNum * 4);
-                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + 0x2C + meshNum * 4);
+                int offsetVerts = DataUtil.getLEInt(data, startOffset + meshBlockOffset + meshNum * 4);
+                int offsetEndVerts = DataUtil.getLEInt(data, startOffset + meshBlockOffset + 4 + meshNum * 4);
                 var chunks = ReadVerts(log, data, startOffset + offsetVerts, startOffset + offsetEndVerts);
                 var Mesh = ChunksToMesh(log, chunks, texturePixelWidth, texturePixelHeight);
                 meshes.Add(Mesh);

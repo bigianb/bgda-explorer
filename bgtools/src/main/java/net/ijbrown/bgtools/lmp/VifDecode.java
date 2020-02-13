@@ -34,8 +34,9 @@ public class VifDecode
         String outDir = inDir+"../DATA_extracted/";
 
         VifDecode obj = new VifDecode();
-        obj.extract("superman", new File(outDir + "SUPERMAN_LMP"), 264, 128);
-    }
+        obj.extract("ammobox", new File(outDir + "AMMOBOX_LMP"), 264, 128);
+        //obj.extract("superman", new File(outDir + "SUPERMAN_LMP"), 264, 128);
+       }
 
     public void extract(String name, File outDir, int texw, int texh) throws IOException
     {
@@ -58,8 +59,8 @@ public class VifDecode
 
         int numMeshes = fileData[0x12] & 0xFF;
         int offset1 = DataUtil.getLEInt(fileData, 0x24);
-        int offsetVerts = DataUtil.getLEInt(fileData, 0x28);
-        int offsetEndVerts = DataUtil.getLEInt(fileData, 0x2C);
+        int offsetVerts = DataUtil.getLEInt(fileData, 0x68);
+        int offsetEndVerts = DataUtil.getLEInt(fileData, 0x6C);
 
         readVerts(fileData, offsetVerts, offsetEndVerts);
 

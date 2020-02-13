@@ -36,7 +36,7 @@ public class TexDecode
         String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
-        obj.extract("superman.tex", new File(outDir + "SUPERMAN_LMP"));
+        obj.extract("ammobox.tex", new File(outDir + "AMMOBOX_LMP"));
 
     }
 
