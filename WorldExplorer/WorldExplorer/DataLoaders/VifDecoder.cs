@@ -40,6 +40,7 @@ namespace WorldExplorer.DataLoaders
             int offset1 = DataUtil.getLEInt(data, startOffset + 0x24);
             List<Mesh> meshes = new List<Mesh>();
             int totalNumChunks = 0;
+
             for (int meshNum = 0; meshNum < numMeshes; ++meshNum) {
                 int offsetVerts = DataUtil.getLEInt(data, startOffset + meshBlockOffset + meshNum * 4);
                 int offsetEndVerts = DataUtil.getLEInt(data, startOffset + meshBlockOffset + 4 + meshNum * 4);
@@ -124,6 +125,11 @@ namespace WorldExplorer.DataLoaders
             }
             int vstart = 0;
             foreach (var chunk in chunks) {
+                if (null == chunk.gifTag0)
+                {
+                    // Hack to deal with JLH models. TODO: Fix this properly
+                    continue;
+                }
                 if ((chunk.gifTag0.prim & 0x07) != 4) {
                     Debug.Fail("Can only deal with tri strips");
                 }
