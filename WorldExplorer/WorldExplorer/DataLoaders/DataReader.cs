@@ -77,7 +77,7 @@ namespace WorldExplorer.DataLoaders
 
         public byte[] ReadBytes(int count)
         {
-            if (_offset + count >= Length)
+            if (_offset + count > Length)
                 throw new IndexOutOfRangeException("No more data");
 
             var value = new byte[count];

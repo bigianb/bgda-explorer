@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
@@ -9,6 +10,11 @@ namespace WorldExplorer.DataLoaders
 
         public static Script Decode(byte[] data, int startOffset, int length)
         {
+            if (length == 0)
+            {
+                return new Script();
+            }
+
             var reader = new DataReader(data, startOffset + HEADER_SIZE, length);
 
             var script = new Script();
@@ -38,7 +44,7 @@ namespace WorldExplorer.DataLoaders
                 var labelAddress = internalReader.ReadInt32();
                 string label = internalReader.ReadZString();
                 script.internals.Add(label, labelAddress);
-
+                script.internalsByAddr.Add(labelAddress, label);
                 internalOffset += 0x18;
             }
 
@@ -59,6 +65,7 @@ namespace WorldExplorer.DataLoaders
             }
 
             int stringTableLen = script.offset3 - script.stringsOffset;
+            int instructionLen = script.stringsOffset - script.instructionsOffset;
             int thisStringStart = -1;
             var stringReader = new DataReader(data, startOffset + HEADER_SIZE + script.stringsOffset, stringTableLen+1);
             StringBuilder thisString = new StringBuilder();
@@ -83,13 +90,67 @@ namespace WorldExplorer.DataLoaders
                     }
                 }
             }
-            DecodeInstructions(script, data, startOffset);
+            DecodeInstructions(script, data, startOffset + HEADER_SIZE + script.instructionsOffset, instructionLen);
             return script;
         }
 
-        private static void DecodeInstructions(Script script, byte[] data, int startOffset)
+        private static void DecodeInstructions(Script script, byte[] data, int startOffset, int len)
         {
+            var reader = new DataReader(data, startOffset, len);
 
+            for (int i = 0; i < len; i += 4)
+            {
+                int opcode = reader.ReadInt32();
+                Instruction inst = new Instruction
+                {
+                    opCode = opcode,
+                    addr = i
+                };
+                if (script.internalsByAddr.ContainsKey(i))
+                {
+                    inst.label = script.internalsByAddr[i];
+                }
+                ARGS_TYPE type = bgdaOpCodeArgs[opcode];
+                switch (type)
+                {
+                    case ARGS_TYPE.NO_ARGS:
+
+                        break;
+                    case ARGS_TYPE.ONE_ARG:
+                        inst.args.Add(reader.ReadInt32());
+                        i += 4;
+                        break;
+                    case ARGS_TYPE.ONE_ARG_INSTR:
+                        inst.args.Add(reader.ReadInt32());
+                        i += 4;
+                        break;
+                    case ARGS_TYPE.TWO_ARGS:
+                        inst.args.Add(reader.ReadInt32());
+                        inst.args.Add(reader.ReadInt32());
+                        i += 8;
+                        break;
+                    case ARGS_TYPE.VAR_ARGS:
+                        int numArgs = reader.ReadInt32();
+                        for (int j=0; j<numArgs-1; ++j)
+                        {
+                            inst.args.Add(reader.ReadInt32());
+                        }
+                        i += numArgs * 4;
+                        break;
+                    case ARGS_TYPE.ARGS_130:
+                        int num = reader.ReadInt32(); i += 4;
+                        for (int j = 0; j < num; ++j)
+                        {
+                            inst.args.Add(reader.ReadInt32());
+                            inst.args.Add(reader.ReadInt32());
+                            i += 8;
+                        }
+                        inst.args.Add(reader.ReadInt32());
+                        i += 4;
+                        break;
+                }
+                script.instructions.Add(inst);
+            }
         }
 
         enum ARGS_TYPE
@@ -242,6 +303,14 @@ namespace WorldExplorer.DataLoaders
 
     }
 
+    public class Instruction
+    {
+        public int opCode;
+        public int addr;
+        public string label;
+        public List<int> args = new List<int>();
+    }
+
     public class Script
     {
         public string parseWarnings = "";
@@ -254,8 +323,10 @@ namespace WorldExplorer.DataLoaders
 
         public int offset3, offset4, offset5;
 
-        // Maps an internal label to an address
+        // Maps an internal label to an address and the inverse
         public Dictionary<string, int> internals = new Dictionary<string, int>();
+        public Dictionary<int, string> internalsByAddr = new Dictionary<int, string>();
+        
         public int numInternals;
         public int offsetInternals;
 
@@ -265,6 +336,8 @@ namespace WorldExplorer.DataLoaders
         public int offsetExternals;
 
         public Dictionary<int, string> stringTable = new Dictionary<int, string>();
+
+        public List<Instruction> instructions = new List<Instruction>();
 
         public string Disassemble()
         {
@@ -298,6 +371,83 @@ namespace WorldExplorer.DataLoaders
             foreach (int key in stringTable.Keys)
             {
                 sb.AppendFormat("0x{0}: {1}\n", key.ToString("X4"), stringTable[key]);
+            }
+
+            sb.Append("\nScript\n~~~~~~~~~\n");
+            foreach (Instruction inst in instructions)
+            {
+                string s = DisassembleInstruction(inst);
+                sb.Append(s);
+                if (s.Length > 0) { sb.Append('\n'); }
+            }
+
+            return sb.ToString();
+        }
+
+        private string DisassembleInstruction(Instruction inst)
+        {
+            var sb = new StringBuilder();
+            if (!String.IsNullOrEmpty(inst.label))
+            {
+                sb.Append("\n").Append(inst.label).Append(":\n");
+            }
+            sb.AppendFormat("{0:x4}  ", inst.addr);
+            switch (inst.opCode)
+            {
+                case 1:
+                    sb.AppendFormat("acc = var {0}", inst.args[0]);
+                    break;
+                case 0x0B:
+                    sb.AppendFormat("acc = {0}", inst.args[0]);
+                    break;
+                case 0x0F:
+                    sb.AppendFormat("var {0} = acc", inst.args[0]);
+                    break;
+                case 0x11:
+                    sb.AppendFormat("t4 var {0} = acc", inst.args[0]);
+                    break;
+                case 0x27:
+                    sb.AppendFormat("push {0}", inst.args[0]);
+                    break;
+                case 0x2C:
+                    sb.AppendFormat("pop {0} bytes", inst.args[0]);
+                    break;
+                case 0x2E:
+                    sb.AppendFormat("enter");
+                    break;
+                case 0x30:
+                    sb.AppendFormat("return");
+                    break;
+                case 0x33:
+                    sb.AppendFormat("jump to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x35:
+                    sb.AppendFormat("jump if acc == 0 to 0x{0:x4}", inst.args[0]);
+                    break;
+                case 0x36:
+                    sb.AppendFormat("jump if acc != 0 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x54:
+                    sb.Append("acc <= 0");
+                    break;
+                case 0x59:
+                    sb.Append("acc = 0");
+                    break;
+                case 0x5B:
+                    sb.AppendFormat("clear var {0}", inst.args[0]);
+                    break;
+                case 0x7B:
+                    sb.AppendFormat("call {0}", externals[inst.args[0]]);
+                    break;
+                case 0x7D:
+                    //sb.AppendFormat("debug line {0} [{1}]", inst.args[0], inst.args[1]);
+                    break;
+                case 0x81:
+                    sb.Append("switch(acc)");
+                    break;
+                default:
+                    sb.AppendFormat("unknown, opcode {0}", inst.opCode);
+                    break;
             }
 
             return sb.ToString();
