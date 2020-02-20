@@ -43,7 +43,6 @@ namespace WorldExplorer.DataLoaders
                 var internalReader = new DataReader(data, internalOffset, 0x18);
                 var labelAddress = internalReader.ReadInt32();
                 string label = internalReader.ReadZString();
-                script.internals.Add(label, labelAddress);
                 script.internalsByAddr.Add(labelAddress, label);
                 internalOffset += 0x18;
             }
@@ -323,8 +322,7 @@ namespace WorldExplorer.DataLoaders
 
         public int offset3, offset4, offset5;
 
-        // Maps an internal label to an address and the inverse
-        public Dictionary<string, int> internals = new Dictionary<string, int>();
+        // Maps an address to a label
         public Dictionary<int, string> internalsByAddr = new Dictionary<int, string>();
         
         public int numInternals;
@@ -356,9 +354,9 @@ namespace WorldExplorer.DataLoaders
             sb.AppendFormat("Offset5: 0x{0}\n", offset5.ToString("X4"));
             sb.Append("\nInternals\n~~~~~~~~~\n");
             sb.AppendFormat("{0} internals at  0x{1}\n\n", numInternals, offsetInternals.ToString("X4"));
-            foreach (string key in internals.Keys)
+            foreach (int key in internalsByAddr.Keys)
             {
-                sb.AppendFormat("{0}: 0x{1}\n", key, internals[key].ToString("X4"));
+                sb.AppendFormat("{0}: 0x{1}\n", key, key.ToString("X4"));
             }
 
             sb.Append("\nExternals\n~~~~~~~~~\n");
@@ -367,16 +365,18 @@ namespace WorldExplorer.DataLoaders
             {
                 sb.AppendFormat("{0}: {1}\n", i, externals[i]);
             }
-            sb.Append("\nStrings\n~~~~~~~~~\n");
+            sb.Append("\nStrings\n~~~~~~~\n");
             foreach (int key in stringTable.Keys)
             {
                 sb.AppendFormat("0x{0}: {1}\n", key.ToString("X4"), stringTable[key]);
             }
 
-            sb.Append("\nScript\n~~~~~~~~~\n");
+            sb.Append("\nScript\n~~~~~~\n");
+            // Assume that stacks are always deterministic and nothing clever is done with jumps
+            Stack<int> stack = new Stack<int>();
             foreach (Instruction inst in instructions)
             {
-                string s = DisassembleInstruction(inst);
+                string s = DisassembleInstruction(inst, stack);
                 sb.Append(s);
                 if (s.Length > 0) { sb.Append('\n'); }
             }
@@ -384,7 +384,7 @@ namespace WorldExplorer.DataLoaders
             return sb.ToString();
         }
 
-        private string DisassembleInstruction(Instruction inst)
+        private string DisassembleInstruction(Instruction inst, Stack<int> stack)
         {
             var sb = new StringBuilder();
             if (!String.IsNullOrEmpty(inst.label))
@@ -407,10 +407,18 @@ namespace WorldExplorer.DataLoaders
                     sb.AppendFormat("t4 var {0} = acc", inst.args[0]);
                     break;
                 case 0x27:
+                    stack.Push(inst.args[0]);
                     sb.AppendFormat("push {0}", inst.args[0]);
                     break;
                 case 0x2C:
-                    sb.AppendFormat("pop {0} bytes", inst.args[0]);
+                    {
+                        int numInts = inst.args[0] / 4;
+                        for (int i = 0; i < numInts && stack.Count > 0; ++i)
+                        {
+                            stack.Pop();
+                        }
+                        sb.AppendFormat("pop {0} bytes", inst.args[0]);
+                    }
                     break;
                 case 0x2E:
                     sb.AppendFormat("enter");
@@ -437,7 +445,7 @@ namespace WorldExplorer.DataLoaders
                     sb.AppendFormat("clear var {0}", inst.args[0]);
                     break;
                 case 0x7B:
-                    sb.AppendFormat("call {0}", externals[inst.args[0]]);
+                    sb.AppendFormat(DisasssembleExternal(inst, stack, externals[inst.args[0]]));
                     break;
                 case 0x7D:
                     //sb.AppendFormat("debug line {0} [{1}]", inst.args[0], inst.args[1]);
@@ -446,10 +454,52 @@ namespace WorldExplorer.DataLoaders
                     sb.Append("switch(acc)");
                     break;
                 default:
-                    sb.AppendFormat("unknown, opcode {0}", inst.opCode);
+                    sb.AppendFormat("unknown, opcode 0x{0:x}", inst.opCode);
+                    foreach (int arg in inst.args)
+                    {
+                        sb.AppendFormat(" 0x{0:x}", arg);
+                    }
                     break;
             }
 
+            return sb.ToString();
+        }
+
+        private string DisasssembleExternal(Instruction inst, Stack<int> stack, string name)
+        {
+            var sb = new StringBuilder();
+            sb.Append(name).Append(" ");
+            switch(name)
+            {
+                case "addQuest":
+
+                    break;
+                case "getv":
+                    if (stack.Count >= 2)
+                    {
+                        var enumerator = stack.GetEnumerator();
+                        enumerator.MoveNext();
+                        int size = enumerator.Current;
+                        enumerator.MoveNext();
+                        int stringId = enumerator.Current;
+                        
+                        sb.Append(stringTable[stringId]);
+                    }
+                    break;
+                case "setv":
+                    if (stack.Count >= 3)
+                    {
+                        var enumerator = stack.GetEnumerator();
+                        enumerator.MoveNext();
+                        int size = enumerator.Current;
+                        enumerator.MoveNext();
+                        int stringId = enumerator.Current;
+                        enumerator.MoveNext();
+                        int val = enumerator.Current;
+                        sb.Append(stringTable[stringId]).Append(" = ").Append(val);
+                    }
+                    break;
+            }
             return sb.ToString();
         }
     }
