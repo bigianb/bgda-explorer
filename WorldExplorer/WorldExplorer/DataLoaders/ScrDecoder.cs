@@ -356,7 +356,7 @@ namespace WorldExplorer.DataLoaders
             sb.AppendFormat("{0} internals at  0x{1}\n\n", numInternals, offsetInternals.ToString("X4"));
             foreach (int key in internalsByAddr.Keys)
             {
-                sb.AppendFormat("{0}: 0x{1}\n", key, key.ToString("X4"));
+                sb.AppendFormat("{0}: 0x{1}\n", internalsByAddr[key], key.ToString("X4"));
             }
 
             sb.Append("\nExternals\n~~~~~~~~~\n");
@@ -406,9 +406,13 @@ namespace WorldExplorer.DataLoaders
                 case 0x11:
                     sb.AppendFormat("t4 var {0} = acc", inst.args[0]);
                     break;
-                case 0x27:
+                case 0x27:      
                     stack.Push(inst.args[0]);
-                    sb.AppendFormat("push {0}", inst.args[0]);
+                    sb.AppendFormat("push 0x{0:x}", inst.args[0]);
+                    break;
+                case 0x29:      
+                    stack.Push(inst.args[0]);   // not correct as it not an immediate
+                    sb.AppendFormat("push t4 var 0x{0:x}", inst.args[0]);
                     break;
                 case 0x2C:
                     {
@@ -441,6 +445,9 @@ namespace WorldExplorer.DataLoaders
                 case 0x59:
                     sb.Append("acc = 0");
                     break;
+                case 0x5A:
+                    sb.Append("reload acc");
+                    break;
                 case 0x5B:
                     sb.AppendFormat("clear var {0}", inst.args[0]);
                     break;
@@ -451,10 +458,10 @@ namespace WorldExplorer.DataLoaders
                     //sb.AppendFormat("debug line {0} [{1}]", inst.args[0], inst.args[1]);
                     break;
                 case 0x81:
-                    sb.Append("switch(acc)");
+                    sb.AppendFormat("switch(acc) @ 0x{0:x}", inst.args[0]);
                     break;
                 default:
-                    sb.AppendFormat("unknown, opcode 0x{0:x}", inst.opCode);
+                    sb.AppendFormat("switch vector table", inst.opCode);
                     foreach (int arg in inst.args)
                     {
                         sb.AppendFormat(" 0x{0:x}", arg);
@@ -469,28 +476,54 @@ namespace WorldExplorer.DataLoaders
         {
             var sb = new StringBuilder();
             sb.Append(name).Append(" ");
-            switch(name)
+            var enumerator = stack.GetEnumerator();
+            enumerator.MoveNext();
+            switch (name)
             {
+                case "addHelpMessage":
                 case "addQuest":
-
+                case "soundSequence":
+                    PrintSSArgs(enumerator, sb);
+                    break;
+                case "startDialog":
+                    if (stack.Count > 3)
+                    {
+                        PrintSSIArgs(enumerator, sb);
+                    } else
+                    {
+                        sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
+                    }
                     break;
                 case "getv":
-                    if (stack.Count >= 2)
+                case "removeQuest":
+                    PrintSArg(enumerator, sb);
+                    break;
+                case "givePlayerItem":
+                    PrintSIArgs(enumerator, sb);
+                    break;
+                case "givePlayerExp":
+                case "givePlayerGold":
+                case "hideMonster":
+                    PrintIArg(enumerator, sb);
+                    break;
+                case "loadMonsterSlot":
+                    PrintISIArgs(enumerator, sb);
+                    break;
+                case "moveTalkTarget":
+                    if (stack.Count > 3)
                     {
-                        var enumerator = stack.GetEnumerator();
-                        enumerator.MoveNext();
-                        int size = enumerator.Current;
-                        enumerator.MoveNext();
-                        int stringId = enumerator.Current;
-                        
-                        sb.Append(stringTable[stringId]);
+                        PrintIIIArgs(enumerator, sb);
+                    } else
+                    {
+                        sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
                     }
+                    break;
+                case "setTalkTarget":
+                    PrintSIIIIIArgs(enumerator, sb);
                     break;
                 case "setv":
                     if (stack.Count >= 3)
                     {
-                        var enumerator = stack.GetEnumerator();
-                        enumerator.MoveNext();
                         int size = enumerator.Current;
                         enumerator.MoveNext();
                         int stringId = enumerator.Current;
@@ -501,6 +534,97 @@ namespace WorldExplorer.DataLoaders
                     break;
             }
             return sb.ToString();
+        }
+
+        private void PrintSArg(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int stringId = enumerator.Current;
+
+            sb.Append(stringTable[stringId]);
+        }
+
+        private void PrintIArg(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+
+            sb.AppendFormat("{0}", arg1);
+        }
+
+        private void PrintSSArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int body = enumerator.Current;
+            enumerator.MoveNext();
+            int title = enumerator.Current;
+            sb.Append(stringTable[title]).Append(", ").Append(stringTable[body]);
+        }
+
+        private void PrintSSIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg2 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg3 = enumerator.Current;
+            sb.AppendFormat("{0}, {1}, {2}", stringTable[arg1], stringTable[arg2], arg3);
+        }
+
+        private void PrintIIIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg2 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg3 = enumerator.Current;
+            sb.AppendFormat("{0}, {1}, {2}", arg1, arg2, arg3);
+        }
+
+        private void PrintSIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg2 = enumerator.Current;
+            sb.Append(stringTable[arg1]).AppendFormat(", {0}", arg2);
+        }
+        private void PrintISIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg2 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg3 = enumerator.Current;
+            sb.AppendFormat("{0}, ", arg1).Append(stringTable[arg2]).AppendFormat(", {0}", arg3);
+        }
+
+        private void PrintSIIIIIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
+        {
+            int size = enumerator.Current;
+            enumerator.MoveNext();
+            int arg1 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg2 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg3 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg4 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg5 = enumerator.Current;
+            enumerator.MoveNext();
+            int arg6 = enumerator.Current;
+            sb.AppendFormat("{0}, {1}, {2}, {3}, {4}, {5}", stringTable[arg1], arg2, arg3, arg4, arg5, arg6);
         }
     }
 }
