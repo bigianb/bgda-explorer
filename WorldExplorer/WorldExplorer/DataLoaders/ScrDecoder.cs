@@ -395,16 +395,32 @@ namespace WorldExplorer.DataLoaders
             switch (inst.opCode)
             {
                 case 1:
-                    sb.AppendFormat("acc = var {0}", inst.args[0]);
+                    sb.AppendFormat("a = var {0}", inst.args[0]);
                     break;
                 case 0x0B:
-                    sb.AppendFormat("acc = {0}", inst.args[0]);
+                    sb.AppendFormat("a = {0}", inst.args[0]);
+                    break;
+                case 0x0C:
+                    sb.AppendFormat("reload a, set s3 to 0x{0:x}", inst.args[0]);
                     break;
                 case 0x0F:
                     sb.AppendFormat("var {0} = acc", inst.args[0]);
                     break;
                 case 0x11:
                     sb.AppendFormat("t4 var {0} = acc", inst.args[0]);
+                    break;
+                case 0x21:
+                    sb.Append("a = s3");
+                    break;
+                case 0x22:
+                    sb.Append("s3 = a");
+                    break;
+                case 0x23:
+                    sb.Append("exch s3, a");
+                    break;
+                case 0x25:
+                    stack.Push(0);
+                    sb.Append("push s3");
                     break;
                 case 0x27:      
                     stack.Push(inst.args[0]);
@@ -430,26 +446,41 @@ namespace WorldExplorer.DataLoaders
                 case 0x30:
                     sb.AppendFormat("return");
                     break;
+                case 0x31:
+                    sb.AppendFormat("call 0x{0:x}", inst.args[0]);
+                    break;
                 case 0x33:
                     sb.AppendFormat("jump to 0x{0:X4}", inst.args[0]);
                     break;
                 case 0x35:
-                    sb.AppendFormat("jump if acc == 0 to 0x{0:x4}", inst.args[0]);
+                    sb.AppendFormat("jump if a == 0 to 0x{0:x4}", inst.args[0]);
                     break;
                 case 0x36:
-                    sb.AppendFormat("jump if acc != 0 to 0x{0:X4}", inst.args[0]);
+                    sb.AppendFormat("jump if a != 0 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x38:
+                    sb.AppendFormat("jump if a != s3 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x4A:
+                    sb.Append("sets a to something around s3 / a");
                     break;
                 case 0x54:
-                    sb.Append("acc <= 0");
+                    sb.Append("a <= 0");
+                    break;
+                case 0x55:
+                    sb.Append("neg a");
                     break;
                 case 0x59:
-                    sb.Append("acc = 0");
+                    sb.Append("a = 0");
                     break;
                 case 0x5A:
-                    sb.Append("reload acc");
+                    sb.Append("reload a, set s3 to 0");
                     break;
                 case 0x5B:
                     sb.AppendFormat("clear var {0}", inst.args[0]);
+                    break;
+                case 0x69:
+                    sb.AppendFormat("(a xor 0x{0:x}) <= 0", inst.args[0]);
                     break;
                 case 0x7B:
                     sb.AppendFormat(DisasssembleExternal(inst, stack, externals[inst.args[0]]));
@@ -458,15 +489,24 @@ namespace WorldExplorer.DataLoaders
                     //sb.AppendFormat("debug line {0} [{1}]", inst.args[0], inst.args[1]);
                     break;
                 case 0x81:
-                    sb.AppendFormat("switch(acc) @ 0x{0:x}", inst.args[0]);
+                    sb.AppendFormat("switch(a) @ 0x{0:x}", inst.args[0]);
                     break;
-                default:
-                    sb.AppendFormat("switch vector table", inst.opCode);
+                case 0x82:
+                    sb.Append("switch vector table");
                     foreach (int arg in inst.args)
                     {
                         sb.AppendFormat(" 0x{0:x}", arg);
                     }
                     break;
+                default:
+                    sb.AppendFormat("unknown opcode 0x{0:x}", inst.opCode);
+                    foreach (int arg in inst.args)
+                    {
+                        sb.AppendFormat(" 0x{0:x}", arg);
+                    }
+                    break;
+
+
             }
 
             return sb.ToString();
@@ -483,6 +523,7 @@ namespace WorldExplorer.DataLoaders
                 case "addHelpMessage":
                 case "addQuest":
                 case "soundSequence":
+                case "startPropAnim":
                     PrintSSArgs(enumerator, sb);
                     break;
                 case "startDialog":
@@ -494,11 +535,14 @@ namespace WorldExplorer.DataLoaders
                         sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
                     }
                     break;
+                case "callScript":
                 case "getv":
                 case "removeQuest":
+                case "stopPropAnim":
                     PrintSArg(enumerator, sb);
                     break;
                 case "givePlayerItem":
+                case "setNoCollide":
                     PrintSIArgs(enumerator, sb);
                     break;
                 case "givePlayerExp":
