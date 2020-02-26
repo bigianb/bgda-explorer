@@ -397,6 +397,15 @@ namespace WorldExplorer.DataLoaders
                 case 1:
                     sb.AppendFormat("a = var {0}", inst.args[0]);
                     break;
+                case 2:
+                    sb.AppendFormat("s3 = var {0}", inst.args[0]);
+                    break;
+                case 0x3:
+                    sb.AppendFormat("a = t4 var {0}", inst.args[0]);
+                    break;
+                case 0x4:
+                    sb.AppendFormat("s3 = t4 var {0}", inst.args[0]);
+                    break;
                 case 0x0B:
                     sb.AppendFormat("a = {0}", inst.args[0]);
                     break;
@@ -407,7 +416,7 @@ namespace WorldExplorer.DataLoaders
                     sb.AppendFormat("var {0} = acc", inst.args[0]);
                     break;
                 case 0x11:
-                    sb.AppendFormat("t4 var {0} = acc", inst.args[0]);
+                    sb.AppendFormat("t4 var {0} = a", inst.args[0]);
                     break;
                 case 0x21:
                     sb.Append("a = s3");
@@ -418,6 +427,10 @@ namespace WorldExplorer.DataLoaders
                 case 0x23:
                     sb.Append("exch s3, a");
                     break;
+                case 0x24:
+                    stack.Push(0);
+                    sb.Append("push a");
+                    break;
                 case 0x25:
                     stack.Push(0);
                     sb.Append("push s3");
@@ -426,9 +439,22 @@ namespace WorldExplorer.DataLoaders
                     stack.Push(inst.args[0]);
                     sb.AppendFormat("push 0x{0:x}", inst.args[0]);
                     break;
+                case 0x28:
+                    stack.Push(inst.args[0]);   // not correct as it not an immediate
+                    sb.AppendFormat("push var {0}", inst.args[0]);
+                    break;
                 case 0x29:      
                     stack.Push(inst.args[0]);   // not correct as it not an immediate
-                    sb.AppendFormat("push t4 var 0x{0:x}", inst.args[0]);
+                    sb.AppendFormat("push t4 var {0}", inst.args[0]);
+                    break;
+                case 0x2B:
+                    {
+                        if (stack.Count > 0)
+                        {
+                            stack.Pop();
+                        }
+                        sb.Append("pop s3");
+                    }
                     break;
                 case 0x2C:
                     {
@@ -458,17 +484,35 @@ namespace WorldExplorer.DataLoaders
                 case 0x36:
                     sb.AppendFormat("jump if a != 0 to 0x{0:X4}", inst.args[0]);
                     break;
+                case 0x37:
+                    sb.AppendFormat("jump if a == s3 to 0x{0:X4}", inst.args[0]);
+                    break;
                 case 0x38:
                     sb.AppendFormat("jump if a != s3 to 0x{0:X4}", inst.args[0]);
                     break;
+                case 0x3D:
+                    sb.AppendFormat("jump if a < s3 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x3E:
+                    sb.AppendFormat("jump if a <= s3 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x3F:
+                    sb.AppendFormat("jump if a > s3 to 0x{0:X4}", inst.args[0]);
+                    break;
+                case 0x40:
+                    sb.AppendFormat("jump if a >= s3 to 0x{0:X4}", inst.args[0]);
+                    break;
                 case 0x4A:
-                    sb.Append("sets a to something around s3 / a");
+                    sb.Append("a = s3 / a, s3 = remainder");
                     break;
                 case 0x54:
                     sb.Append("a <= 0");
                     break;
                 case 0x55:
                     sb.Append("neg a");
+                    break;
+                case 0x57:
+                    sb.AppendFormat("a += {0}", inst.args[0]);
                     break;
                 case 0x59:
                     sb.Append("a = 0");
@@ -479,8 +523,20 @@ namespace WorldExplorer.DataLoaders
                 case 0x5B:
                     sb.AppendFormat("clear var {0}", inst.args[0]);
                     break;
+                case 0x5C:
+                    sb.AppendFormat("clear t4 var {0}", inst.args[0]);
+                    break;
                 case 0x69:
                     sb.AppendFormat("(a xor 0x{0:x}) <= 0", inst.args[0]);
+                    break;
+                case 0x6D:
+                    sb.AppendFormat("inc var {0}", inst.args[0]);
+                    break;
+                case 0x6E:
+                    sb.AppendFormat("inc t4 var {0}", inst.args[0]);
+                    break;
+                case 0x72:
+                    sb.AppendFormat("dec var {0}", inst.args[0]);
                     break;
                 case 0x7B:
                     sb.AppendFormat(DisasssembleExternal(inst, stack, externals[inst.args[0]]));
@@ -535,7 +591,7 @@ namespace WorldExplorer.DataLoaders
                         sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
                     }
                     break;
-                case "callScript":
+                
                 case "getv":
                 case "removeQuest":
                 case "stopPropAnim":
@@ -543,6 +599,7 @@ namespace WorldExplorer.DataLoaders
                     break;
                 case "givePlayerItem":
                 case "setNoCollide":
+                case "callScript":
                     PrintSIArgs(enumerator, sb);
                     break;
                 case "givePlayerExp":

@@ -85,7 +85,7 @@
                 </TabItem>
                 <TabItem Header="Log">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" FontFamily="Consolas" FontSize="10" />
+                        <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" FontFamily="Consolas" FontSize="12" />
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
