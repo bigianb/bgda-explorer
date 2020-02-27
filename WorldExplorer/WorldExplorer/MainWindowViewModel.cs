@@ -287,6 +287,12 @@ namespace WorldExplorer
                     _window.tabControl.SelectedIndex = 4; // Log View
 
                     break;
+                case ".cut":
+                    var scene = CutDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                    LogText = scene.Disassemble();
+                    _window.tabControl.SelectedIndex = 4; // Log View
+
+                    break;
             }
         }
 
