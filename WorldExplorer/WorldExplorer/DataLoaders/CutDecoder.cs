@@ -60,7 +60,6 @@ namespace WorldExplorer.DataLoaders
                 keyframe.ic = reader.ReadInt32();
                 keyframe.i10 = reader.ReadInt32();
 
-
                 scene.keyframes.Add(keyframe);
             }
 
@@ -102,8 +101,6 @@ namespace WorldExplorer.DataLoaders
                 public float time;
                 public int actor, action;
                 public int i8, ic, i10;
-
-
             }
 
             public List<Keyframe> keyframes = new List<Keyframe>();
@@ -132,10 +129,23 @@ namespace WorldExplorer.DataLoaders
                 switch (keyframe.actor)
                 {
                     case -100:
+                        // camera
                         switch (keyframe.action)
                         {
+                            case 0:
+                                sb.AppendFormat(" pos: {0}, {1}, {2}", keyframe.i8, keyframe.ic, keyframe.i10);
+                                understood = true;
+                                break;
+                            case 1:
+                                sb.AppendFormat(" action 1, {0}", keyframe.i8 * 12);
+                                understood = true;
+                                break;
+                            case 2:
+                                sb.AppendFormat(" action 2, {0}", keyframe.i8 * 12);
+                                understood = true;
+                                break;
                             case 6:
-                                sb.AppendFormat(" action 6, val = {0}", keyframe.i8 * 12);
+                                sb.AppendFormat(" farClip = {0}", keyframe.i8 * 12);
                                 understood = true;
                                 break;
                         }
