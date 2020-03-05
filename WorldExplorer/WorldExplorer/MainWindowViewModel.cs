@@ -258,26 +258,28 @@ namespace WorldExplorer
 
                     break;
                 case ".ob":
-                    var objects = ObDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
-
-                    var sb = new StringBuilder();
-
-                    foreach (var obj in objects)
                     {
-                        sb.AppendFormat("Name: {0}\n", obj.Name);
-                        sb.AppendFormat("I6: {0}\n", obj.I6.ToString("X4"));
-                        sb.AppendFormat("Floats: {0},{1},{2}\n", obj.Floats[0], obj.Floats[1], obj.Floats[2]);
-                        if (obj.Properties != null)
-                        {
-                            foreach (var prop in obj.Properties)
-                            {
-                                sb.AppendFormat("Property: {0}\n", prop);
-                            }
-                        }
-                        sb.Append("\n");
-                    }
+                        var objects = ObDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
 
-                    LogText = sb.ToString();
+                        var sb = new StringBuilder();
+
+                        foreach (var obj in objects)
+                        {
+                            sb.AppendFormat("Name: {0}\n", obj.Name);
+                            sb.AppendFormat("I6: {0}\n", obj.I6.ToString("X4"));
+                            sb.AppendFormat("Floats: {0},{1},{2}\n", obj.Floats[0], obj.Floats[1], obj.Floats[2]);
+                            if (obj.Properties != null)
+                            {
+                                foreach (var prop in obj.Properties)
+                                {
+                                    sb.AppendFormat("Property: {0}\n", prop);
+                                }
+                            }
+                            sb.Append("\n");
+                        }
+
+                        LogText = sb.ToString();
+                    }
                     _window.tabControl.SelectedIndex = 4; // Log View
 
                     break;
@@ -290,6 +292,24 @@ namespace WorldExplorer
                 case ".cut":
                     var scene = CutDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
                     LogText = scene.Disassemble();
+                    _window.tabControl.SelectedIndex = 4; // Log View
+
+                    break;
+                case ".bin":
+                    {
+                        var dialog = DialogDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                        var sb = new StringBuilder();
+
+                        foreach (var obj in dialog)
+                        {
+                            sb.AppendFormat("Name: {0}\n", obj.Name);
+                            sb.AppendFormat("Start offset in VA File: 0x{0:x}\n", obj.StartOffsetInVAFile);
+                            sb.AppendFormat("Length: 0x{0:x}\n", obj.Length);
+                            sb.Append("\n");
+                        }
+                    
+                        LogText = sb.ToString();
+                    }
                     _window.tabControl.SelectedIndex = 4; // Log View
 
                     break;

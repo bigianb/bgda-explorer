@@ -89,6 +89,7 @@
     <Compile Include="DataExporters\VifExporter.cs" />
     <Compile Include="DataLoaders\BitstreamReader.cs" />
     <Compile Include="DataLoaders\CutDecoder.cs" />
+    <Compile Include="DataLoaders\DialogDecoder.cs" />
     <Compile Include="DataLoaders\ScrDecoder.cs" />
     <Compile Include="DataLoaders\YakFile.cs" />
     <Compile Include="DataLoaders\DataReader.cs" />
