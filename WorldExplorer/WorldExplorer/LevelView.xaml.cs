@@ -15,22 +15,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using HelixToolkit;
-using WorldExplorer.DataLoaders;
 using WorldExplorer.WorldDefs;
 
 namespace WorldExplorer
@@ -45,8 +35,21 @@ namespace WorldExplorer
             InitializeComponent();
 
             viewport.MouseUp += new MouseButtonEventHandler(viewport_MouseUp);
+            
 
             ElementSelected(null);
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            viewport.CameraController.MoveSensitivity = 30;
+            base.OnRender(drawingContext);
+        }
+
+        public override void EndInit()
+        {
+            base.EndInit();
+
         }
 
         void viewport_MouseUp(object sender, MouseButtonEventArgs e)

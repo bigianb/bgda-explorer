@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:hvd="http://helix-toolkit.org/wpf"
+             xmlns:HelixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
              xmlns:local="clr-namespace:WorldExplorer"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="500"  DataContext="{Binding}">
@@ -16,9 +16,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Background="Transparent" Name="trackballSource" Margin="0,23,0,0" d:LayoutOverrides="GridBox">
-            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0">
+            <HelixToolkit:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0" EnableCurrentPosition="True" IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" ShowCameraInfo="True" CalculateCursorPosition="True">
+                
                 <local:SceneVisual3D Scene="{Binding Scene}" />
-            </hvd:HelixViewport3D>            
+            </HelixToolkit:HelixViewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox"/>
         <Expander x:Name="editorExpander" Header="Properties" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
