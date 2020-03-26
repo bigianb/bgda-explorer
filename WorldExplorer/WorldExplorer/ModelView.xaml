@@ -21,16 +21,8 @@
         <Label Grid.Column="1" Content="{Binding CurrentFrame}"/>
         <Border Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent" Name="trackballSource">
             <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False">
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <AmbientLight Color="#808080" />
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <DirectionalLight Color="#FFFFFF" Direction="0, -1, -1" />
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
+                <hvd:SunLight/>
+                
                 <ModelVisual3D x:Name="modelObject" />
             </hvd:HelixViewport3D>            
         </Border>

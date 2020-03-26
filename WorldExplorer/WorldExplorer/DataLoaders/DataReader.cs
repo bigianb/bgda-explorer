@@ -67,6 +67,11 @@ namespace WorldExplorer.DataLoaders
             _offset = _offset + bytesToSkip;
         }
 
+        public void Rewind(int bytesToRewind)
+        {
+            Skip(-bytesToRewind);
+        }
+
         public byte ReadByte()
         {
             if (_offset + 1 >= Length)

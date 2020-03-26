@@ -59,6 +59,13 @@ namespace WorldExplorer.DataLoaders
                 keyframe.i8 = reader.ReadInt32();
                 keyframe.ic = reader.ReadInt32();
                 keyframe.i10 = reader.ReadInt32();
+                if (keyframe.actor == -100 && keyframe.action == 5)
+                {
+                    reader.Rewind(12);
+                    keyframe.f8 = reader.ReadFloat();
+                    keyframe.fc = reader.ReadFloat();
+                    keyframe.f10 = reader.ReadFloat();
+                }
 
                 scene.keyframes.Add(keyframe);
             }
@@ -101,6 +108,7 @@ namespace WorldExplorer.DataLoaders
                 public float time;
                 public int actor, action;
                 public int i8, ic, i10;
+                public float f8, fc, f10;
             }
 
             public List<Keyframe> keyframes = new List<Keyframe>();
@@ -137,11 +145,18 @@ namespace WorldExplorer.DataLoaders
                                 understood = true;
                                 break;
                             case 1:
-                                sb.AppendFormat(" action 1, {0}", keyframe.i8 * 12);
+                                sb.AppendFormat(" rotate z, {0} deg", keyframe.i8 * 360.0 / 65535.0);
                                 understood = true;
                                 break;
                             case 2:
-                                sb.AppendFormat(" action 2, {0}", keyframe.i8 * 12);
+                                {
+                                    int adjustedAngle = (keyframe.i8 + 0x3fd3) & 0xFFFF;    // +89 degrees
+                                    sb.AppendFormat(" rotate x, {0} deg", adjustedAngle * 360.0 / 65535.0);
+                                    understood = true;
+                                }
+                                break;
+                            case 5:
+                                sb.AppendFormat(" delta: {0}, 0x{1:x}, {2}", keyframe.f8, keyframe.ic, keyframe.f10);
                                 understood = true;
                                 break;
                             case 6:

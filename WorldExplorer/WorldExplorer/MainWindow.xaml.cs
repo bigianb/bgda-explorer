@@ -82,7 +82,8 @@ namespace WorldExplorer
                     skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
                     break;
                 case 3:
-                    levelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    // hard coded for taven cut scene start
+                    levelView.viewport.SetView(new Point3D(79, -106, 89), new Vector3D(-79, 106, -89), new Vector3D(0, 0, 1), 0);
                     break;
             }
         }
