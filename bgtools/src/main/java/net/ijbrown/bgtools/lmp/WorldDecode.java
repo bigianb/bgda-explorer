@@ -41,6 +41,7 @@ public class WorldDecode
 
         WorldDecode obj = new WorldDecode(gameType);
         obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub");
+        //obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1");
     }
 
     private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
@@ -99,7 +100,7 @@ public class WorldDecode
             try {
                 texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
             } catch (RuntimeException e) {
-
+                e.printStackTrace();
             }
         }
     }

@@ -74,6 +74,9 @@ public class TexDecode
         extract(outDirFile, fileData, 0, filename, fileLength);
     }
 
+    private static final int TRXPOS = 0x51;
+    private static final int TRXREG = 0x52;
+
     public void extract(File outDirFile, byte[] fileData, int startOffset, String filename, int length) throws IOException
     {
         int endIndex = startOffset + length;
@@ -82,6 +85,7 @@ public class TexDecode
         int sourcew = finalw;
         int sourceh = finalh;
         PalEntry[] pixels = null;
+        byte[] bytes = null;
 
         int offsetToGIF = DataUtil.getLEInt(fileData, startOffset + 16);
 
@@ -104,52 +108,56 @@ public class TexDecode
 
             palette = PalEntry.unswizzlePalette(palette);
 
-            int palLen = palw * palh * 4;
             curIdx += gifTag2.getLength();
 
-            GIFTag gifTag50 = new GIFTag();
-            gifTag50.parse(fileData, curIdx);
-            curIdx += gifTag50.getLength();
+            int destWBytes = 2048;
+            int destHBytes = (sourceh + 0x0f) & ~0x0f;
 
-            int dbw = (sourcew / 2 + 0x07) & ~0x07;
-            int dbh = (sourceh / 2 + 0x07) & ~0x07;
-
-            while (curIdx < endIndex - 0x10) {
+            boolean done=false;
+            while (curIdx < endIndex - 0x10 && !done) {
                 GIFTag gifTag3 = new GIFTag();
-                gifTag3.parse(fileData, curIdx);
 
-                int trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, 0x52);
-
-                if (trxregOffset == 0) {
-                    curIdx += gifTag3.getLength();
+                int trxregOffset = 0;
+                while (trxregOffset == 0 && curIdx < endIndex - 0x10) {
                     gifTag3.parse(fileData, curIdx);
-                    trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, 0x52);
+                    trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXREG);
                     if (trxregOffset == 0) {
-                        throw new RuntimeException("Failed to find TRXREG register");
+                        curIdx += gifTag3.getLength();
                     }
                 }
 
                 int rrw = DataUtil.getLEShort(fileData, trxregOffset);
                 int rrh = DataUtil.getLEShort(fileData, trxregOffset + 4);
 
-                int startx = DataUtil.getLEShort(fileData, trxregOffset + 0x20);
-                int starty = DataUtil.getLEShort(fileData, trxregOffset + 0x22);
+                int startx = 0;
+                int starty = 0;
+                int trxposOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXPOS);
+                if (trxposOffset != 0) {
+                    startx = DataUtil.getLEShort(fileData, trxposOffset);
+                    starty = DataUtil.getLEShort(fileData, trxposOffset + 0x02);
+                }
 
                 curIdx += gifTag3.getLength();
                 GIFTag imageTag = new GIFTag();
                 imageTag.parse(fileData, curIdx);
                 curIdx += 0x10;     // image gif tag
-                pixels = readPixels32(pixels, fileData, palette, curIdx, startx, starty, rrw, rrh, dbw, dbh);
-                curIdx += rrw * rrh * 4;
+                int bytesToTransfer = imageTag.nloop * 16;
+                int pixelsSize = rrw*rrh;
+                int xferw = palette.length == 16 ? rrw/2 : rrw;
+                bytes = transferData(bytes, fileData, curIdx, startx, starty, xferw, rrh, destWBytes, destHBytes);
+                curIdx += bytesToTransfer;
+                done=true;
             }
-            if (palLen != 64){
-                pixels = unswizzle8bpp(pixels, dbw * 2, dbh * 2);
-                sourcew = dbw * 2;
-                sourceh = dbh * 2;
+            if (palette.length == 256){
+                bytes = unswizzle8bpp(bytes, destWBytes, destHBytes);
+                sourcew = destWBytes;
+                sourceh = destHBytes;
             } else {
-                sourcew = dbw;
-                sourceh = dbh;
+                bytes = unswizzle4bpp(bytes, destWBytes, destHBytes);
+                sourcew = destWBytes;
+                sourceh = destHBytes;
             }
+            pixels = applyPalette(palette, bytes);
 
         } else if (gifTag.nloop == 3) {
             GIFTag gifTag2 = new GIFTag();
@@ -176,6 +184,20 @@ public class TexDecode
         }
     }
 
+    private PalEntry[] applyPalette(PalEntry[] palette, byte[] bytes)
+    {
+        PalEntry[] pixels = null;
+        //if (palette.length == 256){
+            pixels = new PalEntry[bytes.length];
+            for (int i=0; i<bytes.length; ++i){
+                pixels[i] = palette[bytes[i] & 0xFF];
+            }
+        //} else {
+
+        //}
+        return pixels;
+    }
+
     private int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
     {
         int retval = 0;
@@ -189,9 +211,9 @@ public class TexDecode
         return retval;
     }
 
-    private PalEntry[] unswizzle8bpp(PalEntry[] pixels, int w, int h)
+    private byte[] unswizzle8bpp(byte[] pixels, int w, int h)
     {
-        PalEntry[] unswizzled = new PalEntry[pixels.length];
+        byte[] unswizzled = new byte[pixels.length];
 
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
@@ -215,9 +237,72 @@ public class TexDecode
         return unswizzled;
     }
 
+    private byte[] unswizzle4bpp(byte[] pixels, int w, int h)
+    {
+        byte[] unswizzled = new byte[pixels.length];
+
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+
+                int pageX = x &(~0x7f);
+                int pageY = y &(~0x7f);
+
+                int pages_horz = (w + 0x7f) >> 7;
+                int pages_vert = (h + 0x7f) >> 7;
+
+                int page_number = (pageY >> 7) * pages_horz + (pageX >> 7);
+
+                int page32Y = (page_number / pages_vert) * 32;
+                int page32X = (page_number % pages_vert) * 64;
+
+                int page_location = page32Y * h * 2 + page32X * 4;
+
+                int locX = x & 0x7f;
+                int locY = y & 0x7f;
+
+                int block_location = ((locX & (~0x1f)) >> 1) * h + (locY & (~0xf)) * 2;
+                int swap_selector = (((y + 2) >> 2) & 0x1) * 4;
+                int posY = (((y & (~3)) >> 1) + (y & 1)) & 0x7;
+
+                int column_location = posY * h * 2 + ((x + swap_selector) & 0x7) * 4;
+
+                int byte_num = (x >> 3) & 3;     // 0,1,2,3
+
+                int idx = page_location + block_location + column_location + byte_num;
+                if (idx >= pixels.length) {
+                    System.out.println("x");
+                } else {
+                    byte entry = pixels[idx];
+
+                    entry = (byte)((entry >> ((y >> 1) & 0x01) * 4) & 0x0F);
+
+                    unswizzled[(y * w) + x] = entry;
+                }
+            }
+        }
+
+        return unswizzled;
+    }
+
+    private byte[] transferData(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,int rrw, int rrh, int destWBytes, int destHBytes)
+    {
+        int numDestBytes = destWBytes * destHBytes;
+        if (pixels == null) {
+            pixels = new byte[numDestBytes];
+        }
+        int idx = startOffset;
+        for (int y = 0; y < rrh && (y+starty) < destHBytes; ++y) {
+            for (int x = 0; x < rrw; ++x) {
+                int destIdx = (y+starty) * destWBytes + (x + startx);
+                pixels[destIdx++] = fileData[idx++];
+            }
+        }
+        return pixels;
+    }
 
     private PalEntry[] readPixels32(PalEntry[] pixels, byte[] fileData, PalEntry[] palette, int startOffset, int startx, int starty, int rrw, int rrh, int dbw, int dbh)
     {
+        // rrw and rrh are the size in pixels assuming RGBA transmission mode.
         if (palette.length == 256){
             int numDestBytes = dbh * dbw * 4;
             int widthBytes = dbw * 4;
@@ -236,7 +321,9 @@ public class TexDecode
             }
             return pixels;
         } else {
-            int numDestBytes = rrh * dbw;
+            // dbw and dbh are the source w and height in 16 bit words rounded up to a 16 byte boundary.
+            int numDestBytes = dbh * dbw * 4;
+            int widthBytes = dbw*2;
             if (pixels == null) {
                 pixels = new PalEntry[numDestBytes];
             }
@@ -244,7 +331,7 @@ public class TexDecode
             boolean lowbit=false;
             for (int y = 0; y < rrh; ++y) {
                 for (int x = 0; x < rrw; ++x) {
-                    int destIdx = (y + starty) * dbw + x + startx;
+                    int destIdx = (y + starty) * widthBytes + (x + startx);
                     if (lowbit){
                         pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
                         idx++;
