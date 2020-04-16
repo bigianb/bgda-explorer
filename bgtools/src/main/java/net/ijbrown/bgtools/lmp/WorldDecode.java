@@ -33,14 +33,14 @@ public class WorldDecode
 
     public static void main(String[] args) throws IOException
     {
-        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+        GameType gameType = GameType.DARK_ALLIANCE;
 
         Config config = new Config(gameType);
         String dataDir = config.getDataDir();
         String extractedDataDir = dataDir+"../DATA_extracted/";
 
         WorldDecode obj = new WorldDecode(gameType);
-        obj.decodeWorld(extractedDataDir, dataDir, "E1L1A", "e1l1a");
+        obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub");
     }
 
     private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
@@ -92,12 +92,15 @@ public class WorldDecode
     private void extractMiniMap(String outputFilename, File outDirFile) throws IOException
     {
         int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
-        TexDecode texDecode = new TexDecode();
-        int minimapLength = fileData.length - miniMapOffset; // TODO: fixme
-        try {
-            texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
-        } catch (RuntimeException e){
+        int topoOffset = DataUtil.getLEInt(fileData, 0x18);
+        if (miniMapOffset != 0) {
+            TexDecode texDecode = new TexDecode();
+            int minimapLength = topoOffset - miniMapOffset; // TODO: fixme
+            try {
+                texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
+            } catch (RuntimeException e) {
 
+            }
         }
     }
 
@@ -125,8 +128,8 @@ public class WorldDecode
         sb.append("Cols (world.10): ").append(cols).append("\r\n");
         sb.append("Rows (world.14): ").append(rows).append("\r\n");
 
-        int offset18 = DataUtil.getLEInt(fileData, 0x18);
-        sb.append("Offset18: ").append(HexUtil.formatHex(offset18)).append("\r\n\r\n");
+        int perCellTopoElements = DataUtil.getLEInt(fileData, 0x18);
+        sb.append("Per cell topo elements array: ").append(HexUtil.formatHex(perCellTopoElements)).append("\r\n\r\n");
         // This is an array of 4 byte offsets
         // size is given by rows and cols in offset 10 and 14
         // Each offset points to a -1 terminated array of shorts
@@ -184,17 +187,17 @@ public class WorldDecode
         int textureArrayOffset = DataUtil.getLEInt(fileData, 0x64);
         sb.append("Texture grid array offset: ").append(HexUtil.formatHex(textureArrayOffset)).append("\r\n");
 
-        float offset68 = DataUtil.getLEFloat(fileData, 0x68);
-        sb.append("Offset68: ").append(offset68).append("\r\n");
+        float float68 = DataUtil.getLEFloat(fileData, 0x68);
+        sb.append("float68: ").append(float68).append("\r\n");
 
-        int offsetTex6c = DataUtil.getLEInt(fileData, 0x6C);
-        sb.append("Offset Tex 6c: ").append(HexUtil.formatHex(offsetTex6c)).append("\r\n");
+        int minimapOffset = DataUtil.getLEInt(fileData, 0x6C);
+        sb.append("minimap offset: ").append(HexUtil.formatHex(minimapOffset)).append("\r\n");
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
         sb.append("Per cell topo elements array. Each index points to an entry in array 20.\r\n \r\n");
         for (int i = 0; i < rows * cols; ++i) {
-            int off = DataUtil.getLEInt(fileData, offset18 + i * 4);
+            int off = DataUtil.getLEInt(fileData, perCellTopoElements + i * 4);
             sb.append(i).append(" : ").append(HexUtil.formatHex(off)).append(" -> ");
             if (gameType == GameType.DARK_ALLIANCE) {
                 int u = DataUtil.getLEShort(fileData, off);
@@ -375,7 +378,12 @@ public class WorldDecode
             for (int x = 0; x < cols_38; ++x) {
                 int val = DataUtil.getLEUShort(fileData, offset38 + 2 * (y * cols_38 + x));
                 val &= 0xFF;
-                sb.append(HexUtil.formatHexByte(val)).append(" ");
+                if (val == 0){
+                    sb.append(" ");
+                } else {
+                    sb.append("x");
+                }
+                //sb.append(HexUtil.formatHexByte(val)).append(" ");
             }
             sb.append("\r\n");
         }
