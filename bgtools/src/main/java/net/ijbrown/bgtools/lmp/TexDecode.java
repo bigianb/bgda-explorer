@@ -29,14 +29,14 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
-        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+        GameType gameType = GameType.DARK_ALLIANCE;
 
         Config config = new Config(gameType);
         String inDir = config.getDataDir();
         String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
-        obj.extract("ammobox.tex", new File(outDir + "AMMOBOX_LMP"));
+        obj.extract("bartender.tex", new File(outDir + "tavern/bartend_lmp"));
 
     }
 
@@ -82,8 +82,10 @@ public class TexDecode
         int endIndex = startOffset + length;
         int finalw = DataUtil.getLEShort(fileData, startOffset);
         int finalh = DataUtil.getLEShort(fileData, startOffset + 2);
+
         int sourcew = finalw;
         int sourceh = finalh;
+
         PalEntry[] pixels = null;
         byte[] bytes = null;
 
@@ -95,7 +97,6 @@ public class TexDecode
 
         // This is basically heuristics
         if (gifTag.nloop == 4) {
-
             int palw = DataUtil.getLEShort(fileData, curIdx + 0x30);
             int palh = DataUtil.getLEShort(fileData, curIdx + 0x34);
 
@@ -110,8 +111,8 @@ public class TexDecode
 
             curIdx += gifTag2.getLength();
 
-            int destWBytes = 2048;
-            int destHBytes = (sourceh + 0x0f) & ~0x0f;
+            int destWBytes = (finalw + 0x0f) & ~0x0f;
+            int destHBytes = (finalh + 0x0f) & ~0x0f;
 
             boolean done=false;
             while (curIdx < endIndex - 0x10 && !done) {
@@ -133,8 +134,8 @@ public class TexDecode
                 int starty = 0;
                 int trxposOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXPOS);
                 if (trxposOffset != 0) {
-                    startx = DataUtil.getLEShort(fileData, trxposOffset);
-                    starty = DataUtil.getLEShort(fileData, trxposOffset + 0x02);
+                    startx = DataUtil.getLEShort(fileData, trxposOffset + 0x04) & 0x07FF;
+                    starty = DataUtil.getLEShort(fileData, trxposOffset + 0x06) & 0x07FF;
                 }
 
                 curIdx += gifTag3.getLength();
@@ -143,21 +144,22 @@ public class TexDecode
                 curIdx += 0x10;     // image gif tag
                 int bytesToTransfer = imageTag.nloop * 16;
                 int pixelsSize = rrw*rrh;
-                int xferw = palette.length == 16 ? rrw/2 : rrw;
-                bytes = transferData(bytes, fileData, curIdx, startx, starty, xferw, rrh, destWBytes, destHBytes);
+                int xferw = palette.length == 16 ? rrw/2 : rrw*4;
+                int startpix = palette.length == 16 ? startx : startx*4;
+                bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
                 curIdx += bytesToTransfer;
-                done=true;
+                if (palette.length == 16) {
+                    done = true;
+                }
             }
             if (palette.length == 256){
                 bytes = unswizzle8bpp(bytes, destWBytes, destHBytes);
-                sourcew = destWBytes;
-                sourceh = destHBytes;
             } else {
                 bytes = unswizzle4bpp(bytes, destWBytes, destHBytes);
-                sourcew = destWBytes;
-                sourceh = destHBytes;
             }
             pixels = applyPalette(palette, bytes);
+            sourcew = destWBytes;
+            sourceh = destHBytes;
 
         } else if (gifTag.nloop == 3) {
             GIFTag gifTag2 = new GIFTag();
@@ -179,7 +181,7 @@ public class TexDecode
                     }
                 }
             }
-            File outputfile = new File(outDirFile, filename + ".png");
+            File outputfile = new File(outDirFile, filename+".png");
             ImageIO.write(image, "png", outputfile);
         }
     }
@@ -290,10 +292,14 @@ public class TexDecode
         if (pixels == null) {
             pixels = new byte[numDestBytes];
         }
+        int interleave = 2;
+        if (rrh*2 > destHBytes){
+            interleave = 1; // hack
+        }
         int idx = startOffset;
         for (int y = 0; y < rrh && (y+starty) < destHBytes; ++y) {
             for (int x = 0; x < rrw; ++x) {
-                int destIdx = (y+starty) * destWBytes + (x + startx);
+                int destIdx = (y+starty) * destWBytes * interleave + (x + startx);
                 pixels[destIdx++] = fileData[idx++];
             }
         }

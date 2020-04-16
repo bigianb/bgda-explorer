@@ -41,7 +41,7 @@ public class WorldDecode
 
         WorldDecode obj = new WorldDecode(gameType);
         obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub");
-        //obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1");
+        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1");
     }
 
     private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
@@ -53,7 +53,7 @@ public class WorldDecode
 
         read(worldName + ".world", outDirFile);
 
-        extractMiniMap(worldName + "_minimap.png", outDirFile);
+        extractMiniMap(worldName + "_minimap", outDirFile);
 
         String txt;
         txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
