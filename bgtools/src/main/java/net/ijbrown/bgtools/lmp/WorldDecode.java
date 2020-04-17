@@ -93,12 +93,10 @@ public class WorldDecode
     private void extractMiniMap(String outputFilename, File outDirFile) throws IOException
     {
         int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
-        int topoOffset = DataUtil.getLEInt(fileData, 0x18);
         if (miniMapOffset != 0) {
             TexDecode texDecode = new TexDecode();
-            int minimapLength = topoOffset - miniMapOffset; // TODO: fixme
             try {
-                texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
+                texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, 0);
             } catch (RuntimeException e) {
                 e.printStackTrace();
             }

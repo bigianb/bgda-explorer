@@ -91,12 +91,18 @@ public class TexDecode
 
         int offsetToGIF = DataUtil.getLEInt(fileData, startOffset + 16);
 
+        if (length == 0){
+            int dataLen = DataUtil.getLEShort(fileData, startOffset+0x06) * 16;
+            endIndex = offsetToGIF + dataLen;
+        }
+
         int curIdx = offsetToGIF + startOffset;
         GIFTag gifTag = new GIFTag();
         gifTag.parse(fileData, curIdx);
 
         // This is basically heuristics
         if (gifTag.nloop == 4) {
+            // should look for TRXREG really
             int palw = DataUtil.getLEShort(fileData, curIdx + 0x30);
             int palh = DataUtil.getLEShort(fileData, curIdx + 0x34);
 
@@ -114,8 +120,7 @@ public class TexDecode
             int destWBytes = (finalw + 0x0f) & ~0x0f;
             int destHBytes = (finalh + 0x0f) & ~0x0f;
 
-            boolean done=false;
-            while (curIdx < endIndex - 0x10 && !done) {
+            while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
 
                 int trxregOffset = 0;
@@ -148,9 +153,6 @@ public class TexDecode
                 int startpix = palette.length == 16 ? startx : startx*4;
                 bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
                 curIdx += bytesToTransfer;
-                if (palette.length == 16) {
-                    done = true;
-                }
             }
             if (palette.length == 256){
                 bytes = unswizzle8bpp(bytes, destWBytes, destHBytes);
@@ -215,6 +217,8 @@ public class TexDecode
 
     private byte[] unswizzle8bpp(byte[] pixels, int w, int h)
     {
+        // See pp 174 of GS Users manual.
+        // Converting one column PSMT8 (16x4) to PSMCT32 (8x2)
         byte[] unswizzled = new byte[pixels.length];
 
         for (int y = 0; y < h; ++y) {
@@ -276,7 +280,7 @@ public class TexDecode
                 } else {
                     byte entry = pixels[idx];
 
-                    entry = (byte)((entry >> ((y >> 1) & 0x01) * 4) & 0x0F);
+                    entry = (byte)((entry >> (((y >> 1) & 0x01) * 4)) & 0x0F);
 
                     unswizzled[(y * w) + x] = entry;
                 }
