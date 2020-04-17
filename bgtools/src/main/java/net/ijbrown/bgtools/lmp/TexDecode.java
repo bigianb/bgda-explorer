@@ -74,8 +74,12 @@ public class TexDecode
         extract(outDirFile, fileData, 0, filename, fileLength);
     }
 
+    private static final int BITBLTBUF = 0x50;
     private static final int TRXPOS = 0x51;
     private static final int TRXREG = 0x52;
+
+    private static final int PSMCT32 = 0x00;
+    private static final int PSMT4 = 0x14;
 
     public void extract(File outDirFile, byte[] fileData, int startOffset, String filename, int length) throws IOException
     {
@@ -120,6 +124,8 @@ public class TexDecode
             int destWBytes = (finalw + 0x0f) & ~0x0f;
             int destHBytes = (finalh + 0x0f) & ~0x0f;
 
+            int dpsm = PSMCT32;
+
             while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
 
@@ -143,21 +149,46 @@ public class TexDecode
                     starty = DataUtil.getLEShort(fileData, trxposOffset + 0x06) & 0x07FF;
                 }
 
+                int bitbltOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
+                if (bitbltOffset != 0){
+                    int dbw = fileData[bitbltOffset + 0x06];
+                    dpsm = fileData[bitbltOffset + 0x07];
+                }
+
                 curIdx += gifTag3.getLength();
                 GIFTag imageTag = new GIFTag();
                 imageTag.parse(fileData, curIdx);
                 curIdx += 0x10;     // image gif tag
                 int bytesToTransfer = imageTag.nloop * 16;
                 int pixelsSize = rrw*rrh;
-                int xferw = palette.length == 16 ? rrw/2 : rrw*4;
-                int startpix = palette.length == 16 ? startx : startx*4;
-                bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                if (palette.length == 16){
+                    // source is PSMT4. Dest can be PSMT4 or PSMCT32
+                    if (dpsm == PSMCT32) {
+                        int xferw = rrw*4;          // Each dest pixel is 4 bytes
+                        int startpix = startx*4;
+                        bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                    } else {
+                        int xferw = (rrw+1) / 2;        // 2 dest pixels are one byte
+                        int startpix = startx / 2;
+                        bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                    }
+                } else {
+                    // source is PSMT8. Dest is always PSMCT32.
+                    int xferw = rrw*4;          // Each dest pixel is 4 bytes
+                    int startpix = startx*4;
+                    bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                }
+
                 curIdx += bytesToTransfer;
             }
             if (palette.length == 256){
                 bytes = unswizzle8bpp(bytes, destWBytes, destHBytes);
             } else {
-                bytes = unswizzle4bpp(bytes, destWBytes, destHBytes);
+                if (dpsm == PSMCT32) {
+                    bytes = unswizzle4bpp(bytes, destWBytes, destHBytes);
+                } else {
+                    // expand the pixels to 1 byte per pixel.
+                }
             }
             pixels = applyPalette(palette, bytes);
             sourcew = destWBytes;
