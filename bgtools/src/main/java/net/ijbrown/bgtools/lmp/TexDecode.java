@@ -125,6 +125,7 @@ public class TexDecode
             int destHBytes = (finalh + 0x0f) & ~0x0f;
 
             int dpsm = PSMCT32;
+            int dbw = 0;
 
             while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
@@ -151,7 +152,7 @@ public class TexDecode
 
                 int bitbltOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
                 if (bitbltOffset != 0){
-                    int dbw = fileData[bitbltOffset + 0x06];
+                    dbw = fileData[bitbltOffset + 0x06];
                     dpsm = fileData[bitbltOffset + 0x07];
                 }
 
@@ -162,15 +163,26 @@ public class TexDecode
                 int bytesToTransfer = imageTag.nloop * 16;
                 int pixelsSize = rrw*rrh;
                 if (palette.length == 16){
+                    destWBytes = 0x300;
+                    destHBytes = pixelsSize*8 / destWBytes;
                     // source is PSMT4. Dest can be PSMT4 or PSMCT32
                     if (dpsm == PSMCT32) {
+                        // source data is PSMT4 but transferred as though it was PSMCT32 .. so it will be swizzled
                         int xferw = rrw*4;          // Each dest pixel is 4 bytes
-                        int startpix = startx*4;
-                        bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                        //int startpix = startx*4;
+                        int pix1 = rrw*rrh*8;
+                        int pix2 = destHBytes * destWBytes;
+                        if (pix1 == pix2){
+                            bytes = transferData(bytes, fileData, curIdx, startx, starty, destWBytes, destHBytes, destWBytes, destHBytes);
+                            //bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, destWBytes, destHBytes, destWBytes, destHBytes, dbw);
+
+                        } else {
+                            throw new RuntimeException("confused in texture decode");
+                        }
+                        bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, destWBytes, destHBytes, destWBytes, destHBytes, dbw);
                     } else {
-                        int xferw = (rrw+1) / 2;        // 2 dest pixels are one byte
-                        int startpix = startx / 2;
-                        bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                        // dest and source are the same and so image isn't swizzled
+                        bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, rrw, rrh, destWBytes, destHBytes, dbw);
                     }
                 } else {
                     // source is PSMT8. Dest is always PSMCT32.
@@ -187,7 +199,7 @@ public class TexDecode
                 if (dpsm == PSMCT32) {
                     bytes = unswizzle4bpp(bytes, destWBytes, destHBytes);
                 } else {
-                    // expand the pixels to 1 byte per pixel.
+                    // no swizzle required
                 }
             }
             pixels = applyPalette(palette, bytes);
@@ -221,15 +233,10 @@ public class TexDecode
 
     private PalEntry[] applyPalette(PalEntry[] palette, byte[] bytes)
     {
-        PalEntry[] pixels = null;
-        //if (palette.length == 256){
-            pixels = new PalEntry[bytes.length];
-            for (int i=0; i<bytes.length; ++i){
-                pixels[i] = palette[bytes[i] & 0xFF];
-            }
-        //} else {
-
-        //}
+        PalEntry[] pixels = new PalEntry[bytes.length];
+        for (int i=0; i<bytes.length; ++i){
+            pixels[i] = palette[bytes[i] & 0xFF];
+        }
         return pixels;
     }
 
@@ -321,10 +328,36 @@ public class TexDecode
         return unswizzled;
     }
 
+    private byte[] transferPSMT4(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,
+                                 int rrw, int rrh, int destWBytes, int destHBytes, int dbw)
+    {
+        if (pixels == null) {
+            pixels = new byte[destWBytes * destHBytes];
+        }
+
+        int nybble=2;
+        byte[] nybbles = new byte[2];
+        int idx = startOffset;
+        for (int y = 0; y < rrh && (y+starty) < destHBytes; ++y) {
+            for (int x = 0; x < rrw; ++x) {
+                if (nybble > 1){
+                    byte twoPix = fileData[idx++];
+                    nybbles[0] = (byte)((twoPix >> 4) & 0x0f);
+                    nybbles[1] = (byte)((twoPix) & 0x0f);
+                    nybble = 0;
+                }
+                int destIdx = (y+starty) * destWBytes + (x + startx);
+                pixels[destIdx++] = nybbles[nybble];
+                ++nybble;
+            }
+        }
+        return pixels;
+    }
+
     private byte[] transferData(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,int rrw, int rrh, int destWBytes, int destHBytes)
     {
-        int numDestBytes = destWBytes * destHBytes;
         if (pixels == null) {
+            int numDestBytes = destWBytes * destHBytes;
             pixels = new byte[numDestBytes];
         }
         int interleave = 2;
