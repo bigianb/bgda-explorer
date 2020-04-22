@@ -14,7 +14,7 @@ public class PalEntry
 
         byte java_a = a == 0 ? 0 : (byte) ((a << 1) - 1);
 
-        java_a = (byte) 0xFF;
+        //java_a = (byte) 0xFF;
 
         int argb = (java_a << 24) |
                 ((r << 16) & 0xFF0000) |

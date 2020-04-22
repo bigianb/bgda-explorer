@@ -97,7 +97,7 @@ public class TexDecode
 
         if (length == 0){
             int dataLen = DataUtil.getLEShort(fileData, startOffset+0x06) * 16;
-            endIndex = offsetToGIF + dataLen;
+            endIndex = startOffset + offsetToGIF + dataLen;
         }
 
         int curIdx = offsetToGIF + startOffset;
@@ -163,17 +163,18 @@ public class TexDecode
                 int bytesToTransfer = imageTag.nloop * 16;
                 int pixelsSize = rrw*rrh;
                 if (palette.length == 16){
-                    destWBytes = 0x300;
-                    destHBytes = pixelsSize*8 / destWBytes;
+
                     // source is PSMT4. Dest can be PSMT4 or PSMCT32
                     if (dpsm == PSMCT32) {
+                        destWBytes = rrw*8;
+                        destHBytes = pixelsSize*8 / destWBytes;
                         // source data is PSMT4 but transferred as though it was PSMCT32 .. so it will be swizzled
                         int xferw = rrw*4;          // Each dest pixel is 4 bytes
                         //int startpix = startx*4;
                         int pix1 = rrw*rrh*8;
                         int pix2 = destHBytes * destWBytes;
                         if (pix1 == pix2){
-                            bytes = transferData(bytes, fileData, curIdx, startx, starty, destWBytes, destHBytes, destWBytes, destHBytes);
+                            bytes = transferData(bytes, fileData, curIdx, startx, starty, rrw*4, rrh, destWBytes, destHBytes);
                             //bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, destWBytes, destHBytes, destWBytes, destHBytes, dbw);
 
                         } else {
@@ -342,8 +343,8 @@ public class TexDecode
             for (int x = 0; x < rrw; ++x) {
                 if (nybble > 1){
                     byte twoPix = fileData[idx++];
-                    nybbles[0] = (byte)((twoPix >> 4) & 0x0f);
-                    nybbles[1] = (byte)((twoPix) & 0x0f);
+                    nybbles[1] = (byte)((twoPix >> 4) & 0x0f);
+                    nybbles[0] = (byte)((twoPix) & 0x0f);
                     nybble = 0;
                 }
                 int destIdx = (y+starty) * destWBytes + (x + startx);

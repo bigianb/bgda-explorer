@@ -40,11 +40,15 @@ public class WorldDecode
         String extractedDataDir = dataDir+"../DATA_extracted/";
 
         WorldDecode obj = new WorldDecode(gameType);
-        //obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub");
-        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1");
+        //obj.decodeWorld(extractedDataDir, dataDir, "burneye1", "burneye1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "smlcave1", "smlcave1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "town", "town", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "test", "test", true);
     }
 
-    private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
+    private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName, boolean minimapOnly) throws IOException
     {
         String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
 
@@ -54,10 +58,11 @@ public class WorldDecode
         read(worldName + ".world", outDirFile);
 
         extractMiniMap(worldName + "_minimap", outDirFile);
-
-        String txt;
-        txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
-        writeFile(worldName + ".world.txt", outDirFile, txt);
+        if (!minimapOnly) {
+            String txt;
+            txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
+            writeFile(worldName + ".world.txt", outDirFile, txt);
+        }
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
