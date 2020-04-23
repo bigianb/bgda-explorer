@@ -102,5 +102,5 @@ public class GIFTag
     int prim;
     int flg;
     int nreg;
-    int regs[];
+    int[] regs;
 }

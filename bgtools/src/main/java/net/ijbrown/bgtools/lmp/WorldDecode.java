@@ -40,10 +40,11 @@ public class WorldDecode
         String extractedDataDir = dataDir+"../DATA_extracted/";
 
         WorldDecode obj = new WorldDecode(gameType);
-        //obj.decodeWorld(extractedDataDir, dataDir, "burneye1", "burneye1", true);
+        //obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "burneye1", "burneye1", true);
         obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub", true);
         obj.decodeWorld(extractedDataDir, dataDir, "smlcave1", "smlcave1", true);
-        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
+
         obj.decodeWorld(extractedDataDir, dataDir, "town", "town", true);
         obj.decodeWorld(extractedDataDir, dataDir, "test", "test", true);
     }
@@ -217,7 +218,7 @@ public class WorldDecode
             sb.append("\r\n");
         }
 
-        List<Integer> linkedObjects = new ArrayList<Integer>();
+        List<Integer> linkedObjects = new ArrayList<>();
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
@@ -433,11 +434,11 @@ public class WorldDecode
                 if (canExportTextures){
                     int n = levelTexDecoder.getNumEntries(texOffset);
                     for (int i=1; i<=n; ++i){
-                        File outFile = new File(outDirFile, Integer.toString(x)+Integer.toString(y)+'_'+Integer.toString(i)+".png");
+                        File outFile = new File(outDirFile, Integer.toString(x)+ y +'_'+ i +".png");
                         try {
                             levelTexDecoder.extract(outFile, texOffset + 0x40*i);
                         } catch (IOException ioe){
-                            sb.append("Failed to export " + outFile.getName());
+                            sb.append("Failed to export ").append(outFile.getName());
                         }
                     }
                 }

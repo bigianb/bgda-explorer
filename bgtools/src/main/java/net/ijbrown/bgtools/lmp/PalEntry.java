@@ -14,13 +14,10 @@ public class PalEntry
 
         byte java_a = a == 0 ? 0 : (byte) ((a << 1) - 1);
 
-        //java_a = (byte) 0xFF;
-
-        int argb = (java_a << 24) |
+        return (java_a << 24) |
                 ((r << 16) & 0xFF0000) |
                 ((g << 8) & 0xFF00) |
                 (b & 0xFF);
-        return argb;
     }
 
     public static PalEntry[] readPalette(byte[] fileData, int startOffset, int palw, int palh)
@@ -46,10 +43,10 @@ public class PalEntry
 
             int j = 0;
             for (int i = 0; i < 256; i += 32, j += 32) {
-                copy(unswizzled, i, palette, j, 8);
-                copy(unswizzled, i + 16, palette, j + 8, 8);
-                copy(unswizzled, i + 8, palette, j + 16, 8);
-                copy(unswizzled, i + 24, palette, j + 24, 8);
+                copy(unswizzled, i, palette, j);
+                copy(unswizzled, i + 16, palette, j + 8);
+                copy(unswizzled, i + 8, palette, j + 16);
+                copy(unswizzled, i + 24, palette, j + 24);
             }
             return unswizzled;
         } else {
@@ -57,10 +54,8 @@ public class PalEntry
         }
     }
 
-    private static void copy(PalEntry[] unswizzled, int i, PalEntry[] swizzled, int j, int num)
+    private static void copy(PalEntry[] unswizzled, int i, PalEntry[] swizzled, int j)
     {
-        for (int x = 0; x < num; ++x) {
-            unswizzled[i + x] = swizzled[j + x];
-        }
+        System.arraycopy(swizzled, j, unswizzled, i, 8);
     }
 }
