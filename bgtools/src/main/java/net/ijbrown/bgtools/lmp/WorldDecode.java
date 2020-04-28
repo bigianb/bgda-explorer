@@ -40,7 +40,7 @@ public class WorldDecode
         String extractedDataDir = dataDir+"../DATA_extracted/";
 
         WorldDecode obj = new WorldDecode(gameType);
-        //obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
         obj.decodeWorld(extractedDataDir, dataDir, "burneye1", "burneye1", true);
         obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub", true);
         obj.decodeWorld(extractedDataDir, dataDir, "smlcave1", "smlcave1", true);

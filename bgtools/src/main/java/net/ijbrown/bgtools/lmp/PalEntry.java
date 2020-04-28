@@ -12,8 +12,12 @@ public class PalEntry
         // in ps2 0x80 is fully transparent and 0 is opaque.
         // in java 0 is transparent and 0xFF is opaque.
 
-        byte java_a = a == 0 ? 0 : (byte) ((a << 1) - 1);
-
+        byte java_a = (byte)0xFF;
+        if (a < 0){
+            java_a = 0;
+        } else if (a > 0){
+            java_a = (byte)(0xFF - a*2);
+        }
         return (java_a << 24) |
                 ((r << 16) & 0xFF0000) |
                 ((g << 8) & 0xFF00) |

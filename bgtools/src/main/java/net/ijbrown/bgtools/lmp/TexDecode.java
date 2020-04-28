@@ -36,6 +36,7 @@ public class TexDecode
         String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
+        obj.extract("lowbartender.tex", new File(outDir + "tavern/bartend_lmp"));
         obj.extract("bartender.tex", new File(outDir + "tavern/bartend_lmp"));
 
     }
@@ -125,43 +126,39 @@ public class TexDecode
             int dpsm = PSMCT32;
             int dbw = 0;
             int dbp = 0;
+            int rrw = 0;
+            int rrh = 0;
+            int startx = 0;
+            int starty = 0;
 
             while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
-
-                int trxregOffset = 0;
-                while (trxregOffset == 0 && curIdx < endIndex - 0x10) {
-                    gifTag3.parse(fileData, curIdx);
-                    trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXREG);
-                    if (trxregOffset == 0) {
-                        curIdx += gifTag3.getLength();
+                gifTag3.parse(fileData, curIdx);
+                while (!gifTag3.isImage()){
+                    int trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXREG);
+                    if (trxregOffset != 0) {
+                        rrw = DataUtil.getLEShort(fileData, trxregOffset);
+                        rrh = DataUtil.getLEShort(fileData, trxregOffset + 4);
                     }
+                    int trxposOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXPOS);
+                    if (trxposOffset != 0) {
+                        startx = DataUtil.getLEShort(fileData, trxposOffset + 0x04) & 0x07FF;
+                        starty = DataUtil.getLEShort(fileData, trxposOffset + 0x06) & 0x07FF;
+                    }
+                    int bitbltOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
+                    if (bitbltOffset != 0){
+                        //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
+                        dbp = fileData[bitbltOffset + 0x04] & 0x3FFF;
+                        dbw = fileData[bitbltOffset + 0x06] & 0x3F;
+                        dpsm = fileData[bitbltOffset + 0x07] & 0x3F;
+                    }
+
+                    curIdx += gifTag3.getLength();
+                    gifTag3.parse(fileData, curIdx);
                 }
 
-                int rrw = DataUtil.getLEShort(fileData, trxregOffset);
-                int rrh = DataUtil.getLEShort(fileData, trxregOffset + 4);
-
-                int startx = 0;
-                int starty = 0;
-                int trxposOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXPOS);
-                if (trxposOffset != 0) {
-                    startx = DataUtil.getLEShort(fileData, trxposOffset + 0x04) & 0x07FF;
-                    starty = DataUtil.getLEShort(fileData, trxposOffset + 0x06) & 0x07FF;
-                }
-
-                int bitbltOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
-                if (bitbltOffset != 0){
-                    //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
-                    dbp = fileData[bitbltOffset + 0x04] & 0x3FFF;
-                    dbw = fileData[bitbltOffset + 0x06] & 0x3F;
-                    dpsm = fileData[bitbltOffset + 0x07] & 0x3F;
-                }
-
-                curIdx += gifTag3.getLength();
-                GIFTag imageTag = new GIFTag();
-                imageTag.parse(fileData, curIdx);
                 curIdx += 0x10;     // image gif tag
-                int bytesToTransfer = imageTag.nloop * 16;
+                int bytesToTransfer = gifTag3.nloop * 16;
                 if (palette.length == 16){
                     // source is PSMT4. Dest can be PSMT4 or PSMCT32
                     if (dpsm == PSMCT32) {
@@ -188,26 +185,27 @@ public class TexDecode
                                 bytesToTransfer += imageTag2.getLength();
                             }
                         }
+
                         gsMem.writeTexPSMCT32(dbp, dbw, startx, starty, rrw, rrh, imageData, imageDataIdx);
-                        int dbw2 = (finalw + 63)/64;
-                        bytes = gsMem.readTexPSMT4(dbp, dbw2, startx, starty, destWBytes, destHBytes);
+
+                        destWBytes = (finalw + 0x3f) & ~0x3f;
+                        bytes = gsMem.readTexPSMT4(dbp, destWBytes / 0x40, startx, starty, destWBytes, destHBytes);
                         bytes = expand4bit(bytes);
 
                     } else {
                         // dest and source are the same and so image isn't swizzled
-                        bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, rrw, rrh, destWBytes, destHBytes, dbw);
+                        bytes = transferPSMT4(bytes, fileData, curIdx, startx, starty, rrw, rrh, destWBytes, destHBytes);
                     }
                 } else {
                     // source is PSMT8. Dest is always PSMCT32.
-                    int xferw = rrw*4;          // Each dest pixel is 4 bytes
-                    int startpix = startx*4;
-                    bytes = transferData(bytes, fileData, curIdx, startpix, starty, xferw, rrh, destWBytes, destHBytes);
+                    gsMem.writeTexPSMCT32(dbp, dbw, startx, starty, rrw, rrh, fileData, curIdx);
                 }
-
                 curIdx += bytesToTransfer;
             }
             if (palette.length == 256){
-                bytes = unswizzle8bpp(bytes, destWBytes, destHBytes);
+                destWBytes = (finalw + 0x3f) & ~0x3f;
+                dbw = destWBytes / 0x40;
+                bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
             }
             pixels = applyPalette(palette, bytes);
             sourcew = destWBytes;
@@ -271,35 +269,8 @@ public class TexDecode
         return retval;
     }
 
-    private byte[] unswizzle8bpp(byte[] pixels, int w, int h)
-    {
-        // See pp 174 of GS Users manual.
-        // Converting one column PSMT8 (16x4) to PSMCT32 (8x2)
-        byte[] unswizzled = new byte[pixels.length];
-
-        for (int y = 0; y < h; ++y) {
-            for (int x = 0; x < w; ++x) {
-
-                int block_location = (y & (~0xf)) * w + (x & (~0xf)) * 2;
-                int swap_selector = (((y + 2) >> 2) & 0x1) * 4;
-                int posY = (((y & (~3)) >> 1) + (y & 1)) & 0x7;
-                int column_location = posY * w * 2 + ((x + swap_selector) & 0x7) * 4;
-
-                int byte_num = ((y >> 1) & 1) + ((x >> 2) & 2);     // 0,1,2,3
-
-                int idx = block_location + column_location + byte_num;
-                if (idx >= pixels.length) {
-                    System.out.println("x");
-                } else {
-                    unswizzled[(y * w) + x] = pixels[idx];
-                }
-            }
-        }
-        return unswizzled;
-    }
-
     private byte[] transferPSMT4(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,
-                                 int rrw, int rrh, int destWBytes, int destHBytes, int dbw)
+                                 int rrw, int rrh, int destWBytes, int destHBytes)
     {
         if (pixels == null) {
             pixels = new byte[destWBytes * destHBytes];
@@ -317,76 +288,11 @@ public class TexDecode
                     nybble = 0;
                 }
                 int destIdx = (y+starty) * destWBytes + (x + startx);
-                pixels[destIdx++] = nybbles[nybble];
+                pixels[destIdx] = nybbles[nybble];
                 ++nybble;
             }
         }
         return pixels;
-    }
-
-    private byte[] transferData(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,int rrw, int rrh, int destWBytes, int destHBytes)
-    {
-        if (pixels == null) {
-            int numDestBytes = destWBytes * destHBytes;
-            pixels = new byte[numDestBytes];
-        }
-        int interleave = 2;
-        if (rrh*2 > destHBytes){
-            interleave = 1; // hack
-        }
-        int idx = startOffset;
-        for (int y = 0; y < rrh && (y+starty) < destHBytes; ++y) {
-            for (int x = 0; x < rrw; ++x) {
-                int destIdx = (y+starty) * destWBytes * interleave + (x + startx);
-                pixels[destIdx] = fileData[idx++];
-            }
-        }
-        return pixels;
-    }
-
-    private PalEntry[] readPixels32(PalEntry[] pixels, byte[] fileData, PalEntry[] palette, int startOffset, int startx, int starty, int rrw, int rrh, int dbw, int dbh)
-    {
-        // rrw and rrh are the size in pixels assuming RGBA transmission mode.
-        if (palette.length == 256){
-            int numDestBytes = dbh * dbw * 4;
-            int widthBytes = dbw * 4;
-            if (pixels == null) {
-                pixels = new PalEntry[numDestBytes];
-            }
-            int idx = startOffset;
-            for (int y = 0; y < rrh && (y+starty) < dbh; ++y) {
-                for (int x = 0; x < rrw; ++x) {
-                    int destIdx = (y+starty) * widthBytes + (x + startx) * 4;
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                    pixels[destIdx] = palette[fileData[idx++] & 0xFF];
-                }
-            }
-            return pixels;
-        } else {
-            // dbw and dbh are the source w and height in 16 bit words rounded up to a 16 byte boundary.
-            int numDestBytes = dbh * dbw * 4;
-            int widthBytes = dbw*2;
-            if (pixels == null) {
-                pixels = new PalEntry[numDestBytes];
-            }
-            int idx = startOffset;
-            boolean lowbit=false;
-            for (int y = 0; y < rrh; ++y) {
-                for (int x = 0; x < rrw; ++x) {
-                    int destIdx = (y + starty) * widthBytes + (x + startx);
-                    if (lowbit){
-                        pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
-                        idx++;
-                    } else {
-                        pixels[destIdx] = palette[fileData[idx] & 0x0F];
-                    }
-                    lowbit = !lowbit;
-                }
-            }
-            return pixels;
-        }
     }
 
     private PalEntry[] readPixels32(byte[] fileData, int startOffset, int w, int h)
