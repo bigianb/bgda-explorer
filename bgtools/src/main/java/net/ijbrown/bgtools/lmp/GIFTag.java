@@ -79,6 +79,11 @@ public class GIFTag
         return sb.toString();
     }
 
+    public boolean isImage()
+    {
+        return flg == 2;
+    }
+
     public String flagString()
     {
         switch (flg) {
@@ -102,5 +107,5 @@ public class GIFTag
     int prim;
     int flg;
     int nreg;
-    int regs[];
+    int[] regs;
 }

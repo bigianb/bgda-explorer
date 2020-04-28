@@ -40,10 +40,16 @@ public class WorldDecode
         String extractedDataDir = dataDir+"../DATA_extracted/";
 
         WorldDecode obj = new WorldDecode(gameType);
-        obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub");
+        obj.decodeWorld(extractedDataDir, dataDir, "cellar1", "cellar1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "burneye1", "burneye1", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "tavern", "pub", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "smlcave1", "smlcave1", true);
+
+        obj.decodeWorld(extractedDataDir, dataDir, "town", "town", true);
+        obj.decodeWorld(extractedDataDir, dataDir, "test", "test", true);
     }
 
-    private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName) throws IOException
+    private void decodeWorld(String rootDir, String rootDirOrig, String lmpName, String worldName, boolean minimapOnly) throws IOException
     {
         String outDir = rootDir + lmpName + "/" + lmpName + "_lmp/";
 
@@ -52,11 +58,12 @@ public class WorldDecode
 
         read(worldName + ".world", outDirFile);
 
-        extractMiniMap(worldName + "_minimap.png", outDirFile);
-
-        String txt;
-        txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
-        writeFile(worldName + ".world.txt", outDirFile, txt);
+        extractMiniMap(worldName + "_minimap", outDirFile);
+        if (!minimapOnly) {
+            String txt;
+            txt = disassemble(outDirFile, new File(rootDirOrig + lmpName + ".tex"));
+            writeFile(worldName + ".world.txt", outDirFile, txt);
+        }
     }
 
     private void writeFile(String filename, File outDirFile, String txt) throws IOException
@@ -92,14 +99,12 @@ public class WorldDecode
     private void extractMiniMap(String outputFilename, File outDirFile) throws IOException
     {
         int miniMapOffset = DataUtil.getLEInt(fileData, 0x6C);
-        int topoOffset = DataUtil.getLEInt(fileData, 0x18);
         if (miniMapOffset != 0) {
             TexDecode texDecode = new TexDecode();
-            int minimapLength = topoOffset - miniMapOffset; // TODO: fixme
             try {
-                texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, minimapLength);
+                texDecode.extract(outDirFile, fileData, miniMapOffset, outputFilename, 0);
             } catch (RuntimeException e) {
-
+                e.printStackTrace();
             }
         }
     }
@@ -213,7 +218,7 @@ public class WorldDecode
             sb.append("\r\n");
         }
 
-        List<Integer> linkedObjects = new ArrayList<Integer>();
+        List<Integer> linkedObjects = new ArrayList<>();
 
         sb.append("-----------------------------------------------------\r\n");
         sb.append("\r\n");
@@ -429,11 +434,11 @@ public class WorldDecode
                 if (canExportTextures){
                     int n = levelTexDecoder.getNumEntries(texOffset);
                     for (int i=1; i<=n; ++i){
-                        File outFile = new File(outDirFile, Integer.toString(x)+Integer.toString(y)+'_'+Integer.toString(i)+".png");
+                        File outFile = new File(outDirFile, Integer.toString(x)+ y +'_'+ i +".png");
                         try {
                             levelTexDecoder.extract(outFile, texOffset + 0x40*i);
                         } catch (IOException ioe){
-                            sb.append("Failed to export " + outFile.getName());
+                            sb.append("Failed to export ").append(outFile.getName());
                         }
                     }
                 }
