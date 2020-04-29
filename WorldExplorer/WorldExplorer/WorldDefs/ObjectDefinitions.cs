@@ -281,7 +281,7 @@ namespace WorldExplorer.WorldDefs
                         if (entry == null || texEntry == null)
                             return CreateBox(5, Color.FromRgb(255,0,0));
 
-                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData, texEntry.StartOffset, texEntry.Length);
+                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData, texEntry.StartOffset);
 
                         var logger = new StringLogger();
                         var vifModel = VifDecoder.Decode(

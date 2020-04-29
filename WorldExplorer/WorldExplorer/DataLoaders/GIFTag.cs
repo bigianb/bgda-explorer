@@ -69,6 +69,27 @@ namespace WorldExplorer.DataLoaders
         return sb.ToString();
     }
 
+    public int Length
+    {
+        get
+        {
+            if (2 == flg)
+            {
+                // IMAGE mode
+                return (nloop + 1) * 0x10;
+            }
+            else
+            {
+                return (nloop * nreg + 1) * 0x10;
+            }
+        }
+    }
+
+    public bool isImage()
+    {
+        return flg == 2;
+    }
+
     public String flagString()
     {
         switch (flg) {

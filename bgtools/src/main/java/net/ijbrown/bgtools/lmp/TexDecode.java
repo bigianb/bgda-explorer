@@ -29,6 +29,7 @@ public class TexDecode
 {
     public static void main(String[] args) throws IOException
     {
+        /*
         GameType gameType = GameType.DARK_ALLIANCE;
 
         Config config = new Config(gameType);
@@ -38,7 +39,15 @@ public class TexDecode
         TexDecode obj = new TexDecode();
         obj.extract("lowbartender.tex", new File(outDir + "tavern/bartend_lmp"));
         obj.extract("bartender.tex", new File(outDir + "tavern/bartend_lmp"));
+*/
+        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
 
+        Config config = new Config(gameType);
+        String inDir = config.getDataDir();
+        String outDir = inDir+"../DATA_extracted/";
+
+        TexDecode obj = new TexDecode();
+        obj.extract("tophat.tex", new File(outDir + "ZATANNA_LMP"));
     }
 
     // Texture format is something like as follows:
@@ -68,7 +77,7 @@ public class TexDecode
             offset += read;
         }
 
-        extract(outDirFile, fileData, 0, filename, fileLength);
+        extract(outDirFile, fileData, 0, filename, 0);
     }
 
     private static final int BITBLTBUF = 0x50;

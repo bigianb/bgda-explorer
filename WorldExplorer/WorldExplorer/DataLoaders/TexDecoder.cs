@@ -22,17 +22,31 @@ namespace WorldExplorer.DataLoaders
 {
     public class TexDecoder
     {
-        public static WriteableBitmap Decode(byte[] data, int startOffset, int length)
+        private const int BITBLTBUF = 0x50;
+        private const int TRXPOS = 0x51;
+        private const int TRXREG = 0x52;
+
+        private const int PSMCT32 = 0x00;
+        private const int PSMT4 = 0x14;
+
+        public static WriteableBitmap Decode(byte[] data, int startOffset)
         {
-            int endIndex = startOffset + length;
+            GSMemory gsMem = new GSMemory();
+
+            int length = DataUtil.getLEShort(data, startOffset + 6) * 16;
+
             int finalw = BitConverter.ToInt16(data, startOffset);
             int finalh = BitConverter.ToInt16(data, startOffset + 2);
+            int offsetToGIF = DataUtil.getLEInt(data, startOffset + 16);
 
             int sourcew = finalw;
             int sourceh = finalh;
             PalEntry[] pixels = null;
+            byte[] bytes = null;
 
-            int curIdx = 0x80 + startOffset;
+            int curIdx = offsetToGIF + startOffset;
+            int endIndex = curIdx + length;
+
             GIFTag gifTag = new GIFTag();
             gifTag.parse(data, curIdx);
 
@@ -43,7 +57,7 @@ namespace WorldExplorer.DataLoaders
                 int palw = DataUtil.getLEShort(data, curIdx + 0x30);
                 int palh = DataUtil.getLEShort(data, curIdx + 0x34);
 
-                curIdx += 0x50;
+                curIdx += gifTag.Length;
                 GIFTag gifTag2 = new GIFTag();
                 gifTag2.parse(data, curIdx);
 
@@ -52,44 +66,114 @@ namespace WorldExplorer.DataLoaders
 
                 palette = PalEntry.unswizzlePalette(palette);
 
-                int palLen = palw * palh * 4;
-                curIdx += (palLen + 0x10);
+                curIdx += gifTag2.Length;
+                int destWBytes = (finalw + 0x0f) & ~0x0f;
+                int destHBytes = (finalh + 0x0f) & ~0x0f;
 
-                GIFTag gifTag50 = new GIFTag();
-                gifTag50.parse(data, curIdx);
-                curIdx += 0x20;
+                int dpsm = PSMCT32;
+                int dbw = 0;
+                int dbp = 0;
+                int rrw = 0;
+                int rrh = 0;
+                int startx = 0;
+                int starty = 0;
 
-                int dbw = (sourcew / 2 + 0x07) & ~0x07;
-                int dbh = (sourceh / 2 + 0x07) & ~0x07;
-
-                // The following should be a loop, there are repeating sections
                 while (curIdx < endIndex - 0x10) {
                     GIFTag gifTag3 = new GIFTag();
                     gifTag3.parse(data, curIdx);
+                    while (!gifTag3.isImage())
+                    {
+                        int trxregOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXREG);
+                        if (trxregOffset != 0)
+                        {
+                            rrw = DataUtil.getLEShort(data, trxregOffset);
+                            rrh = DataUtil.getLEShort(data, trxregOffset + 4);
+                        }
+                        int trxposOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXPOS);
+                        if (trxposOffset != 0)
+                        {
+                            startx = DataUtil.getLEShort(data, trxposOffset + 0x04) & 0x07FF;
+                            starty = DataUtil.getLEShort(data, trxposOffset + 0x06) & 0x07FF;
+                        }
+                        int bitbltOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
+                        if (bitbltOffset != 0)
+                        {
+                            //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
+                            dbp = data[bitbltOffset + 0x04] & 0x3FFF;
+                            dbw = data[bitbltOffset + 0x06] & 0x3F;
+                            dpsm = data[bitbltOffset + 0x07] & 0x3F;
+                        }
 
-                    int dimOffset = 0x10;
+                        curIdx += gifTag3.Length;
+                        gifTag3.parse(data, curIdx);
+                    }
+                    curIdx += 0x10;     // image gif tag
+                    int bytesToTransfer = gifTag3.nloop * 16;
 
-                    int thisRrw = DataUtil.getLEShort(data, curIdx + dimOffset);
-                    int thisRrh = DataUtil.getLEShort(data, curIdx + dimOffset + 4);
+                    if (palette.Length == 16)
+                    {
+                        // source is PSMT4. Dest can be PSMT4 or PSMCT32
+                        if (dpsm == PSMCT32)
+                        {
+                            byte[] imageData = data;
+                            int imageDataIdx = curIdx;
+                            // check for multiple IMAGE entries.
+                            int nextTagInd = bytesToTransfer + curIdx;
+                            if (nextTagInd < endIndex - 0x10)
+                            {
+                                GIFTag imageTag2 = new GIFTag();
+                                imageTag2.parse(data, nextTagInd);
+                                if (imageTag2.flg == 2)
+                                {
+                                    // IMAGE
+                                    int bytesToTransfer2 = imageTag2.nloop * 16;
+                                    imageDataIdx = 0;
+                                    imageData = new byte[bytesToTransfer + bytesToTransfer2];
+                                    int j = curIdx;
+                                    for (int i = 0; i < bytesToTransfer; ++i)
+                                    {
+                                        imageData[i] = data[j];
+                                    }
+                                    j = nextTagInd + 0x10;
+                                    for (int i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i)
+                                    {
+                                        imageData[i] = data[j];
+                                    }
+                                    bytesToTransfer += imageTag2.Length;
+                                }
+                            }
 
-                    int startx = DataUtil.getLEShort(data, curIdx + dimOffset + 20);
-                    int starty = DataUtil.getLEShort(data, curIdx + dimOffset + 22);
+                            gsMem.writeTexPSMCT32(dbp, dbw, startx, starty, rrw, rrh, imageData, imageDataIdx);
 
-                    curIdx += gifTag.nloop * 0x10 + 0x10;
-                    pixels = readPixels32(pixels, data, palette, curIdx, startx, starty, thisRrw, thisRrh, dbw, dbh);
-                    curIdx += thisRrw * thisRrh * 4;
+                            destWBytes = (finalw + 0x3f) & ~0x3f;
+                            bytes = gsMem.readTexPSMT4(dbp, destWBytes / 0x40, startx, starty, destWBytes, destHBytes);
+                            bytes = expand4bit(bytes);
+
+                        }
+                        else
+                        {
+                            // dest and source are the same and so image isn't swizzled
+                            bytes = transferPSMT4(bytes, data, curIdx, startx, starty, rrw, rrh, destWBytes, destHBytes);
+                        }
+                    }
+                    else
+                    {
+                        // source is PSMT8. Dest is always PSMCT32.
+                        gsMem.writeTexPSMCT32(dbp, dbw, startx, starty, rrw, rrh, data, curIdx);
+                    }
+                    curIdx += bytesToTransfer;
                 }
-                if (palLen != 64) {
-                    pixels = unswizzle8bpp(pixels, dbw * 2, dbh * 2);
-                    sourcew = dbw * 2;
-                    sourceh = dbh * 2;
-                } else {
-                    sourcew = dbw;
-                    sourceh = dbh;
+                if (palette.Length == 256)
+                {
+                    destWBytes = (finalw + 0x3f) & ~0x3f;
+                    dbw = destWBytes / 0x40;
+                    bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
                 }
-                
-
-            } else if (gifTag.nloop == 3) {
+                pixels = applyPalette(palette, bytes);
+                sourcew = destWBytes;
+                sourceh = destHBytes;
+            }
+            else if (gifTag.nloop == 3) {
                 GIFTag gifTag2 = new GIFTag();
                 gifTag2.parse(data, startOffset + 0xC0);
 
@@ -110,9 +194,9 @@ namespace WorldExplorer.DataLoaders
                 unsafe
                     {
                         IntPtr pBackBuffer = image.BackBuffer;
-                        for (int y = 0; y < sourceh; ++y)
+                        for (int y = 0; y < sourceh && y < finalh; ++y)
                         {
-                            for (int x = 0; x < sourcew; ++x)
+                            for (int x = 0; x < sourcew && x < finalw; ++x)
                             {
                                 PalEntry pixel = pixels[y * sourcew + x];
                                 if (pixel != null)
@@ -136,74 +220,73 @@ namespace WorldExplorer.DataLoaders
             return image;
         }
 
-        private static PalEntry[] unswizzle8bpp(PalEntry[] pixels, int w, int h)
+
+    // Take an image where the pixels are packed and expand them to one byte per pixel.
+    private static byte[] expand4bit(byte[] bytes)
+    {
+        byte[] outbytes = new byte[bytes.Length * 2];
+        int j = 0;
+        foreach (int val in bytes)
         {
-            PalEntry[] unswizzled = new PalEntry[pixels.Length];
+            outbytes[j++] = (byte) (val & 0x0f);
+            outbytes[j++] = (byte) ((val >> 4) & 0x0f);
+        }
+        return outbytes;
+    }
 
-            for (int y = 0; y < h; ++y) {
-                for (int x = 0; x < w; ++x) {
+    private static PalEntry[] applyPalette(PalEntry[] palette, byte[] bytes)
+    {
+        PalEntry[] pixels = new PalEntry[bytes.Length];
+        for (int i = 0; i < bytes.Length; ++i)
+        {
+            pixels[i] = palette[bytes[i] & 0xFF];
+        }
+        return pixels;
+    }
 
-                    int block_location = (y & (~0xf)) * w + (x & (~0xf)) * 2;
-                    int swap_selector = (((y + 2) >> 2) & 0x1) * 4;
-                    int posY = (((y & (~3)) >> 1) + (y & 1)) & 0x7;
-                    int column_location = posY * w * 2 + ((x + swap_selector) & 0x7) * 4;
-
-                    int byte_num = ((y >> 1) & 1) + ((x >> 2) & 2);     // 0,1,2,3
-
-                    int idx = block_location + column_location + byte_num;
-                    if (idx < pixels.Length) {
-                        unswizzled[(y * w) + x] = pixels[idx];
-                    }
+    private static int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
+        {
+            int retval = 0;
+            for (int i = 0; i < nloop; ++i)
+            {
+                int reg = DataUtil.getLEInt(fileData, dataStartIdx + i * 0x10 + 0x08);
+                if (reg == registerId)
+                {
+                    retval = dataStartIdx + i * 0x10;
+                    break;
                 }
             }
-
-            return unswizzled;
+            return retval;
         }
 
-
-        private static PalEntry[] readPixels32(PalEntry[] pixels, byte[] fileData, PalEntry[] palette, int startOffset, int startx, int starty, int rrw, int rrh, int dbw, int dbh)
+        private static byte[] transferPSMT4(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,
+                                 int rrw, int rrh, int destWBytes, int destHBytes)
         {
-            if (palette.Length == 256) {
-                int numDestBytes = dbh * dbw * 4;
-                int widthBytes = dbw * 4;
-                if (pixels == null) {
-                    pixels = new PalEntry[numDestBytes];
-                }
-                int idx = startOffset;
-                for (int y = 0; y < rrh && (y+starty) < dbh; ++y) {
-                    for (int x = 0; x < rrw; ++x) {
-                        int destIdx = (y+starty) * widthBytes + (x + startx) * 4;
-                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                        pixels[destIdx++] = palette[fileData[idx++] & 0xFF];
-                        pixels[destIdx] = palette[fileData[idx++] & 0xFF];
-                    }
-                }
-                return pixels;
-            } else {
-                int numDestBytes = rrh * dbw;
-                if (numDestBytes <= 0)
-                {
-                    return pixels;
-                }
-                if (pixels == null) {
-                    pixels = new PalEntry[numDestBytes];
-                }
-                int idx = startOffset;
-                bool lowbit = false;
-                for (int y = 0; y < rrh; ++y) {
-                    for (int x = 0; x < rrw; ++x) {
-                        int destIdx = (y + starty) * dbw + x + startx;
-                        if (!lowbit) {
-                            pixels[destIdx] = palette[fileData[idx] >> 4 & 0x0F];
-                        } else {
-                            pixels[destIdx] = palette[fileData[idx++] & 0x0F];
-                        }
-                        lowbit = !lowbit;
-                    }
-                }
-                return pixels;
+            if (pixels == null)
+            {
+                pixels = new byte[destWBytes * destHBytes];
             }
+
+            int nybble = 2;
+            byte[] nybbles = new byte[2];
+            int idx = startOffset;
+            for (int y = 0; y < rrh && (y + starty) < destHBytes; ++y)
+            {
+                for (int x = 0; x < rrw; ++x)
+                {
+                    if (nybble > 1)
+                    {
+                        byte twoPix = fileData[idx++];
+                        nybbles[0] = (byte)((twoPix) & 0x0f);
+                        nybbles[1] = (byte)((twoPix >> 4) & 0x0f);
+                        nybble = 0;
+                    }
+                    int destIdx = (y + starty) * destWBytes + (x + startx);
+                    pixels[destIdx] = nybbles[nybble];
+                    ++nybble;
+                }
+            }
+            return pixels;
         }
 
         private static PalEntry[] readPixels32(byte[] fileData, int startOffset, int w, int h)
