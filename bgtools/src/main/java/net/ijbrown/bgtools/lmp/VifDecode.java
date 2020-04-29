@@ -34,7 +34,7 @@ public class VifDecode
         String outDir = inDir+"../DATA_extracted/";
 
         VifDecode obj = new VifDecode();
-        obj.extract("ammobox", new File(outDir + "AMMOBOX_LMP"), 264, 128);
+        obj.extract("tophat", new File(outDir + "ZATANNA_LMP"), 264, 128);
         //obj.extract("superman", new File(outDir + "SUPERMAN_LMP"), 264, 128);
        }
 
@@ -91,6 +91,9 @@ public class VifDecode
         writer.println("usemtl " + name);
         for (Chunk chunk : chunks) {
             writer.println("# Chunk " + chunkNo++);
+            if (chunk.gifTag0 == null){
+                continue;
+            }
             writer.println("# GifTag: " + chunk.gifTag0.toString());
             if (chunk.gifTag1 != null){
                 writer.println("# GifTag1: " + chunk.gifTag1.toString());
@@ -206,21 +209,21 @@ public class VifDecode
         writer.close();
     }
 
-    private class Vertex
+    private static class Vertex
     {
         public short x;
         public short y;
         public short z;
     }
 
-    private class ByteVector
+    private static class ByteVector
     {
         public byte x;
         public byte y;
         public byte z;
     }
 
-    private class VLoc
+    private static class VLoc
     {
         public int v1;
         public int v2;
@@ -233,7 +236,7 @@ public class VifDecode
         }
     }
 
-    private class UV
+    private static class UV
     {
         public UV(short u, short v)
         {
@@ -245,20 +248,20 @@ public class VifDecode
         public short v;
     }
 
-    private class Chunk
+    private static class Chunk
     {
         public int mscalID=0;
         public GIFTag gifTag0 = null;
         public GIFTag gifTag1 = null;
-        public List<Vertex> vertices = new ArrayList<Vertex>();
-        public List<ByteVector> normals = new ArrayList<ByteVector>();
-        public List<VLoc> vlocs = new ArrayList<VLoc>();
-        public List<UV> uvs = new ArrayList<UV>();
+        public List<Vertex> vertices = new ArrayList<>();
+        public List<ByteVector> normals = new ArrayList<>();
+        public List<VLoc> vlocs = new ArrayList<>();
+        public List<UV> uvs = new ArrayList<>();
     }
 
     private Chunk currentChunk = null;
     private Chunk previousChunk = null;
-    private List<Chunk> chunks = new ArrayList<Chunk>();
+    private List<Chunk> chunks = new ArrayList<>();
 
     private static final int NOP_CMD = 0;
     private static final int STCYCL_CMD = 1;
@@ -404,6 +407,8 @@ public class VifDecode
                                 currentChunk.gifTag0.parse(fileData, offset);
                                 currentChunk.gifTag1 = new GIFTag();
                                 currentChunk.gifTag1.parse(fileData, offset + 16);
+                            } else {
+                                System.out.println("unknown numCommand="+numCommand);
                             }
                             int numBytes = numCommand * 16;
                             offset += numBytes;

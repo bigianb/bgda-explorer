@@ -37,7 +37,7 @@ public class LmpExtractor {
         String outDir = inDir+"../DATA_extracted/";
 
         LmpExtractor obj = new LmpExtractor(gameType);
-        obj.extractAll(inDir, outDir, "SUPERMAN.LMP");
+        obj.extractAll(inDir, outDir, "ZATANNA.LMP");
     }
 
     private void extractAll(String inDirname, String outDirname, String lmpFilename) throws IOException

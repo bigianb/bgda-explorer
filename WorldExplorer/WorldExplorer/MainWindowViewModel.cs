@@ -188,7 +188,7 @@ namespace WorldExplorer
             {
                 case ".tex":
                     {
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset, entry.Length);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset);
 
                         _window.tabControl.SelectedIndex = 0; // Texture View
                     }
@@ -197,7 +197,7 @@ namespace WorldExplorer
                     {
                         string texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset, texEntry.Length);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
@@ -349,8 +349,7 @@ namespace WorldExplorer
 
         private void OnYakChildElementSelected(YakChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData, childEntry.Value.TextureOffset + childEntry.Value.VifOffset,
-                childEntry.Value.VifLength - childEntry.Value.TextureOffset);
+            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData, childEntry.Value.TextureOffset + childEntry.Value.VifOffset);
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
