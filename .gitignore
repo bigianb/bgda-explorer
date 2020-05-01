@@ -4,6 +4,6 @@ obj
 bin
 packages
 .vs
-
-
 bgtools/vifview/.idea
+.idea
+target
