@@ -5,6 +5,8 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -19,6 +21,13 @@ public class Demo {
     private long window;
 
     public void run() {
+        GameConfigs cfg = new GameConfigs();
+        try {
+            cfg.read();
+        } catch (IOException | URISyntaxException e) {
+            throw new IllegalStateException("Failed to read config");
+        }
+
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
         init();
