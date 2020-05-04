@@ -1,9 +1,8 @@
 *.class
-bgtools/.idea/workspace.xml
 obj
 bin
 packages
 .vs
-bgtools/vifview/.idea
 .idea
 target
+.DS_Store
