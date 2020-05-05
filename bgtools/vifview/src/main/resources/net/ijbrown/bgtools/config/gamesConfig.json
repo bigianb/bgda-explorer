@@ -2,6 +2,38 @@
   {
     "title": "Justice League Heroes",
     "ids": ["SLES_544.23", "SLUS_213.04"],
-    "dataDir": "GAME/DATA"
+    "dataDir": "GAME/DATA",
+    "characters": [
+      {
+        "name": "Superman",
+        "lmp": "SUPERMAN.LMP",
+        "body": {
+          "vif": "superman.vif"
+        },
+        "extras":[
+          {
+            "vif": "cape16.vif"
+          }
+        ]
+      },
+      {
+        "name": "Zatanna",
+        "lmp": "ZATANNA.LMP",
+        "body": {
+          "vif": "zatanna.vif"
+        },
+        "extras":[
+          {
+            "vif": "cape8.vif"
+          },
+          {
+            "vif": "dove.vif"
+          },
+          {
+            "vif": "tophat.vif"
+          }
+        ]
+      }
+    ]
   }
 ]
