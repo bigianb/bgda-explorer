@@ -1,5 +1,6 @@
 package net.ijbrown.bgtools.vifview;
 
+import com.google.devtools.common.options.OptionsParser;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -8,6 +9,7 @@ import org.lwjgl.system.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.*;
+import java.util.Collections;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -20,7 +22,7 @@ public class Demo {
     // The window handle
     private long window;
 
-    public void run() {
+    public void run(String gameDir) {
         GameConfigs cfg = new GameConfigs();
         try {
             cfg.read();
@@ -120,7 +122,20 @@ public class Demo {
     }
 
     public static void main(String[] args) {
-        new Demo().run();
+
+        OptionsParser parser = OptionsParser.newOptionsParser(CliOptions.class);
+        parser.parseAndExitUponError(args);
+        CliOptions options = parser.getOptions(CliOptions.class);
+        if (options == null || options.dir.isEmpty() || options.help) {
+            printUsage(parser);
+            return;
+        }
+
+        new Demo().run(options.dir);
     }
 
+    private static void printUsage(OptionsParser parser) {
+        System.out.println("Usage: java -jar demo.jar OPTIONS");
+        System.out.println(parser.describeOptions(Collections.emptyMap(), OptionsParser.HelpVerbosity.LONG));
+    }
 }
