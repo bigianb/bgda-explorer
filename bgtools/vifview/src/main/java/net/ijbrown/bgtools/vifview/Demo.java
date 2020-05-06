@@ -22,13 +22,16 @@ public class Demo {
     // The window handle
     private long window;
 
-    public void run(String gameDir) {
+    public void run(String gameDir) throws IOException {
         GameConfigs cfg = new GameConfigs();
         try {
             cfg.read();
         } catch (IOException | URISyntaxException e) {
             throw new IllegalStateException("Failed to read config");
         }
+
+        GameDataManager gameDataManager = new GameDataManager(cfg, gameDir);
+        gameDataManager.discover();
 
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
@@ -121,7 +124,7 @@ public class Demo {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         OptionsParser parser = OptionsParser.newOptionsParser(CliOptions.class);
         parser.parseAndExitUponError(args);
