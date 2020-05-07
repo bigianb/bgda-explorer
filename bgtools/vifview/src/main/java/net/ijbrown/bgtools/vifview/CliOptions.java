@@ -23,4 +23,12 @@ public class CliOptions extends OptionsBase {
             defaultValue = ""
     )
     public String dir;
+
+    @Option(
+            name = "character",
+            abbrev = 'c',
+            help = "Name of the character to display.",
+            defaultValue = ""
+    )
+    public String character;
 }
