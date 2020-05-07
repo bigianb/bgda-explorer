@@ -22,7 +22,7 @@ public class Demo {
     // The window handle
     private long window;
 
-    public void run(String gameDir) throws IOException {
+    public void run(String gameDir, String characterName) throws IOException {
         GameConfigs cfg = new GameConfigs();
         try {
             cfg.read();
@@ -33,6 +33,10 @@ public class Demo {
         GameDataManager gameDataManager = new GameDataManager(cfg, gameDir);
         gameDataManager.discover();
 
+        GameConfig.Character characterConfig = gameDataManager.findCharacter(characterName);
+        if (characterConfig == null){
+            throw new RuntimeException("Couldn't find character config for " + characterName);
+        }
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
         init();
@@ -134,7 +138,7 @@ public class Demo {
             return;
         }
 
-        new Demo().run(options.dir);
+        new Demo().run(options.dir, options.character);
     }
 
     private static void printUsage(OptionsParser parser) {

@@ -47,4 +47,18 @@ public class GameDataManager
         }
         return this.gameConfig;
     }
+
+    public GameConfig.Character findCharacter(String characterName)
+    {
+        GameConfig.Character charObj = null;
+        if (this.gameConfig != null){
+            for (GameConfig.Character character : this.gameConfig.characters){
+                if (characterName.equals(character.name)){
+                    charObj = character;
+                    break;
+                }
+            }
+        }
+        return charObj;
+    }
 }
