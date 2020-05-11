@@ -37,10 +37,10 @@ public class Demo {
         if (characterConfig == null){
             throw new RuntimeException("Couldn't find character config for " + characterName);
         }
-        System.out.println("Hello LWJGL " + Version.getVersion() + "!");
+        System.out.println("Using LWJGL " + Version.getVersion() + "!");
 
         init();
-        loop();
+        loop(gameDataManager, characterConfig);
 
         // Free the window callbacks and destroy the window
         glfwFreeCallbacks(window);
@@ -104,7 +104,10 @@ public class Demo {
         glfwShowWindow(window);
     }
 
-    private void loop() {
+    private void loop(GameDataManager gameDataManager, GameConfig.Character characterConfig) {
+
+        CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
+
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
         // LWJGL detects the context that is current in the current thread,
@@ -113,12 +116,13 @@ public class Demo {
         GL.createCapabilities();
 
         // Set the clear color
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+            characterModel.render();
 
             glfwSwapBuffers(window); // swap the color buffers
 
