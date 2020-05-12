@@ -104,9 +104,10 @@ public class Demo {
         glfwShowWindow(window);
     }
 
-    private void loop(GameDataManager gameDataManager, GameConfig.Character characterConfig) {
+    private void loop(GameDataManager gameDataManager, GameConfig.Character characterConfig) throws IOException {
 
         CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
+        characterModel.read();
 
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.

@@ -1,9 +1,13 @@
 package net.ijbrown.bgtools.vifview;
 
+import net.ijbrown.bgtools.lmp.Lmp;
+
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Deals with finding the data for a game.
@@ -60,5 +64,19 @@ public class GameDataManager
             }
         }
         return charObj;
+    }
+
+    private final Map<String, Lmp> lmpCache = new HashMap<>();
+
+    public Lmp getLmp(String lmpName) throws IOException {
+        if (!lmpCache.containsKey(lmpName)){
+            Path rootPath = FileSystems.getDefault().getPath(rootDir);
+            Path dataPath = rootPath.resolve(gameConfig.dataDir);
+            Path lmpPath = dataPath.resolve(lmpName);
+            Lmp lmp = new Lmp(gameConfig.type);
+            lmp.readLmpFile(lmpPath);
+            lmpCache.put(lmpName, lmp);
+        }
+        return lmpCache.get(lmpName);
     }
 }

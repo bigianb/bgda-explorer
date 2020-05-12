@@ -370,8 +370,8 @@ public class WorldDecode
                 byte nregs = fileData[meshOffset + 0x10];
                 int startOffset = (nregs + 2) * 0x10;
                 vifDecode.readVerts(fileData, meshOffset + startOffset, meshOffset + len * 0x10);
-                vifDecode.writeObj(meshName, worldMeshDir, 240, 48, 128.0);
-            } catch (IOException e) {
+                //vifDecode.writeObj(meshName, worldMeshDir, 240, 48, 128.0);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
