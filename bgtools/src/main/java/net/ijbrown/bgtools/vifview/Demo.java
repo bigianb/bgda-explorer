@@ -14,6 +14,10 @@ import java.util.Collections;
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11C.GL_RENDERER;
+import static org.lwjgl.opengl.GL11C.GL_VENDOR;
+import static org.lwjgl.opengl.GL11C.GL_VERSION;
+import static org.lwjgl.opengl.GL11C.glGetString;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -65,6 +69,12 @@ public class Demo {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
+        // required so that macos uses a modern version
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
         // Create the window
         window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
         if ( window == NULL )
@@ -105,16 +115,19 @@ public class Demo {
     }
 
     private void loop(GameDataManager gameDataManager, GameConfig.Character characterConfig) throws IOException {
-
-        CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
-        characterModel.read();
-
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
         // LWJGL detects the context that is current in the current thread,
         // creates the GLCapabilities instance and makes the OpenGL
         // bindings available for use.
         GL.createCapabilities();
+
+        CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
+        characterModel.read();
+
+        System.err.println("GL_VENDOR: " + glGetString(GL_VENDOR));
+        System.err.println("GL_RENDERER: " + glGetString(GL_RENDERER));
+        System.err.println("GL_VERSION: " + glGetString(GL_VERSION));
 
         // Set the clear color
         glClearColor(0.8f, 0.8f, 0.8f, 0.0f);

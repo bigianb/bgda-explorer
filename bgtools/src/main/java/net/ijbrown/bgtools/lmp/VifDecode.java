@@ -70,7 +70,7 @@ public class VifDecode
         }
     }
         if (weights.size() != 0) {
-            throw new RuntimeException("Failed to find vertex weight");
+            System.out.println("Failed to find vertex weight");
         }
         return new VertexWeight();
     }
@@ -181,10 +181,6 @@ public class VifDecode
                     var p2 = chunk.uvs.get(uv2);
                     var p3 = chunk.uvs.get(uv3);
 
-                    //p1 = TileST(p1);
-                    //p2 = TileST(p2);
-                    //p3 = TileST(p3);
-
                     if (mesh.uvCoords.get(vidx1) != null && !mesh.uvCoords.get(vidx1).equals(p1))
                     {
                         // There is more than 1 uv assignment to this vertex, so we need to duplicate it.
@@ -248,13 +244,8 @@ public class VifDecode
                     mesh.uvCoords.set(vidx2, p2);
                     mesh.uvCoords.set(vidx3, p3);
 
-                    // Double sided hack. Should fix this with normals really
                     mesh.triangleIndices.add(vidx1);
                     mesh.triangleIndices.add(vidx2);
-                    mesh.triangleIndices.add(vidx3);
-
-                    mesh.triangleIndices.add(vidx2);
-                    mesh.triangleIndices.add(vidx1);
                     mesh.triangleIndices.add(vidx3);
                 }
                 ++triIdx;
