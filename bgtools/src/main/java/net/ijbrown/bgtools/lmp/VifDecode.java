@@ -63,12 +63,11 @@ public class VifDecode
     // Finds which vertex weight object to use for the given vertex.
     private static VertexWeight FindVertexWeight(List<VertexWeight> weights, int vertexNum)
     {
-
         for (var weight : weights) {
-        if (vertexNum >= weight.startVertex && vertexNum <= weight.endVertex) {
-            return weight;
+            if (vertexNum >= weight.startVertex && vertexNum <= weight.endVertex) {
+                return weight;
+            }
         }
-    }
         if (weights.size() != 0) {
             System.out.println("Failed to find vertex weight");
         }
