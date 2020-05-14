@@ -4,10 +4,13 @@ import net.ijbrown.bgtools.lmp.Lmp;
 import net.ijbrown.bgtools.lmp.VifDecode;
 import org.joml.Matrix4d;
 import org.joml.Matrix4x3d;
+import org.lwjgl.system.MemoryUtil;
 
 import static org.lwjgl.opengl.GL30C.*;
+import static org.lwjgl.system.MemoryUtil.memFree;
 
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.util.List;
 
 
@@ -42,9 +45,11 @@ public class CharacterModel
 
         "void main()\n"+
         "{\n"+
-        "    vec3 normal = normalize(u_NORMAL * in_Normal);\n"+
-        "    v_Shade = max(dot(normal, u_LIGHT), 0.0);\n"+
-        "    gl_Position = u_MVP * vec4(in_Position, 1.0);\n"+
+        //"    vec3 normal = normalize(u_NORMAL * in_Normal);\n"+
+        //"    v_Shade = max(dot(normal, u_LIGHT), 0.0);\n"+
+        //"    gl_Position = u_MVP * vec4(in_Position, 1.0);\n"+
+                "    v_Shade=1.0;\n"+
+                "    gl_Position = vec4(in_Position, 1.0);\n"+
         "}\n";
 
     static String fragmentShaderText =
@@ -54,7 +59,9 @@ public class CharacterModel
             "out vec4 out_Color;\n" +
 
             "void main() {\n" +
-            "    out_Color = vec4(u_COLOR.xyz * v_Shade, u_COLOR.w);\n" +
+            //"    out_Color = vec4(u_COLOR.xyz * v_Shade, u_COLOR.w);\n" +
+                    "    out_Color = vec4(0.0, 0.5, 0.5, v_Shade);\n" +
+
             "}";
 
     private static int compileShaders(String vs, String fs) {
@@ -123,9 +130,54 @@ public class CharacterModel
         int positions = glGetAttribLocation(program, "in_Position");
         int normals = glGetAttribLocation(program, "in_Normal");
 
-        glEnableVertexAttribArray(positions);
-        glEnableVertexAttribArray(normals);
+        for (var mesh : bodyMeshes) {
 
+            float[] verticesRaw = upwrapVertices(mesh.vertices);
+            FloatBuffer verticesBuffer = MemoryUtil.memAllocFloat(verticesRaw.length);
+            verticesBuffer.put(verticesRaw).flip();
 
+            // The attribute array. Holds the buffer array(s)
+            var vaoId = glGenVertexArrays();
+            glBindVertexArray(vaoId);
+
+            // Copies our data into the vbo on the gpu
+            var vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
+            memFree(verticesBuffer);
+
+            var idxVboId = glGenBuffers();
+            int[] indicesRaw = new int[mesh.triangleIndices.size()];
+            for (int i=0; i<mesh.triangleIndices.size(); ++i){
+                indicesRaw[i] = mesh.triangleIndices.get(i);
+            }
+            var indicesBuffer = MemoryUtil.memAllocInt(indicesRaw.length);
+            indicesBuffer.put(indicesRaw).flip();
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVboId);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL_STATIC_DRAW);
+            memFree(indicesBuffer);
+
+            // Define the format of the data
+            glVertexAttribPointer(positions, 3, GL_FLOAT, false, 0, 0);
+
+            glEnableVertexAttribArray(positions);
+
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            glDisable(GL_CULL_FACE);
+            glEnable(GL_DEPTH_TEST);
+            glDrawElements(GL_TRIANGLES, mesh.triangleIndices.size(), GL_UNSIGNED_INT, 0);
+        }
+    }
+
+    private float[] upwrapVertices(List<VifDecode.Vec3F> vertices) {
+        float[] out = new float[vertices.size()*3];
+        int i=0;
+        for (var v : vertices){
+            // transform is just a hack to show tophat
+            out[i++] = v.x / 10.0f + 0.5f;
+            out[i++] = v.y / 10.0f;
+            out[i++] = v.z / 10.0f + 0.5f;
+        }
+        return out;
     }
 }
