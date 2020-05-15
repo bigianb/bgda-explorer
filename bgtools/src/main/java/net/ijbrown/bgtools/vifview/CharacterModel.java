@@ -2,8 +2,7 @@ package net.ijbrown.bgtools.vifview;
 
 import net.ijbrown.bgtools.lmp.Lmp;
 import net.ijbrown.bgtools.lmp.VifDecode;
-import org.joml.Matrix4d;
-import org.joml.Matrix4x3d;
+import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
 import static org.lwjgl.opengl.GL30C.*;
@@ -14,7 +13,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 
 
-public class CharacterModel
+public class CharacterModel implements IGameItem
 {
     private Lmp lmp;
     private GameConfig.Character characterConfig;
@@ -24,6 +23,10 @@ public class CharacterModel
     public CharacterModel(GameDataManager gameDataManager, GameConfig.Character characterConfig) {
         this.gameDataManager = gameDataManager;
         this.characterConfig = characterConfig;
+
+        position = new Vector3f();
+        scale = 0.1f;
+        rotation = new Vector3f();
     }
 
     public void read() throws IOException {
@@ -33,102 +36,8 @@ public class CharacterModel
         bodyMeshes = new VifDecode().decode(bodyVif.data, bodyVif.offset);
     }
 
-    static String vertexShaderText =
-        "#version 330\n"+
-        "uniform mat4 u_MVP;\n"+
-        "uniform mat3 u_NORMAL;\n"+
-        "uniform vec3 u_LIGHT;\n"+
-
-        "in vec3 in_Position;\n"+
-        "in vec3 in_Normal;\n"+
-        "out float v_Shade;\n"+
-
-        "void main()\n"+
-        "{\n"+
-        //"    vec3 normal = normalize(u_NORMAL * in_Normal);\n"+
-        //"    v_Shade = max(dot(normal, u_LIGHT), 0.0);\n"+
-        //"    gl_Position = u_MVP * vec4(in_Position, 1.0);\n"+
-                "    v_Shade=1.0;\n"+
-                "    gl_Position = vec4(in_Position, 1.0);\n"+
-        "}\n";
-
-    static String fragmentShaderText =
-            "#version 330\n"+
-            "uniform vec4 u_COLOR;\n" +
-            "in float v_Shade;\n" +
-            "out vec4 out_Color;\n" +
-
-            "void main() {\n" +
-            //"    out_Color = vec4(u_COLOR.xyz * v_Shade, u_COLOR.w);\n" +
-                    "    out_Color = vec4(0.0, 0.5, 0.5, v_Shade);\n" +
-
-            "}";
-
-    private static int compileShaders(String vs, String fs) {
-        int v = glCreateShader(GL_VERTEX_SHADER);
-        int f = glCreateShader(GL_FRAGMENT_SHADER);
-
-        compileShader(v, vs);
-        compileShader(f, fs);
-
-        int p = glCreateProgram();
-        glAttachShader(p, v);
-        glAttachShader(p, f);
-        glLinkProgram(p);
-        printProgramInfoLog(p);
-
-        if (glGetProgrami(p, GL_LINK_STATUS) != GL_TRUE) {
-            throw new IllegalStateException("Failed to link program.");
-        }
-
-        glUseProgram(p);
-        return p;
-    }
-
-    private static void printShaderInfoLog(int obj) {
-        int infologLength = glGetShaderi(obj, GL_INFO_LOG_LENGTH);
-        if (infologLength > 0) {
-            glGetShaderInfoLog(obj);
-            System.out.format("%s\n", glGetShaderInfoLog(obj));
-        }
-    }
-
-    private static void printProgramInfoLog(int obj) {
-        int infologLength = glGetProgrami(obj, GL_INFO_LOG_LENGTH);
-        if (infologLength > 0) {
-            glGetProgramInfoLog(obj);
-            System.out.format("%s\n", glGetProgramInfoLog(obj));
-        }
-    }
-
-    private static void compileShader(int shader, String source) {
-        glShaderSource(shader, source);
-
-        glCompileShader(shader);
-        printShaderInfoLog(shader);
-
-        if (glGetShaderi(shader, GL_COMPILE_STATUS) != GL_TRUE) {
-            throw new IllegalStateException("Failed to compile shader.");
-        }
-    }
-
-    private final Matrix4d
-            P   = new Matrix4d(),
-            MVP = new Matrix4d();
-    private final Matrix4x3d
-            V   = new Matrix4x3d(),
-            M   = new Matrix4x3d(),
-            MV  = new Matrix4x3d();
-
-    public void render() {
-        var program = compileShaders(vertexShaderText, fragmentShaderText);
-        int u_MVP = glGetUniformLocation(program, "u_MVP");
-        int u_NORMAL = glGetUniformLocation(program, "u_NORMAL");
-        int u_LIGHT = glGetUniformLocation(program, "u_LIGHT");
-        int u_COLOR = glGetUniformLocation(program, "u_COLOR");
-
-        int positions = glGetAttribLocation(program, "in_Position");
-        int normals = glGetAttribLocation(program, "in_Normal");
+    @Override
+    public void render(ShaderProgram shaderProgram) {
 
         for (var mesh : bodyMeshes) {
 
@@ -158,9 +67,9 @@ public class CharacterModel
             memFree(indicesBuffer);
 
             // Define the format of the data
-            glVertexAttribPointer(positions, 3, GL_FLOAT, false, 0, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-            glEnableVertexAttribArray(positions);
+            glEnableVertexAttribArray(0);
 
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
             glDisable(GL_CULL_FACE);
@@ -173,11 +82,40 @@ public class CharacterModel
         float[] out = new float[vertices.size()*3];
         int i=0;
         for (var v : vertices){
-            // transform is just a hack to show tophat
-            out[i++] = v.x / 10.0f + 0.5f;
-            out[i++] = v.y / 10.0f;
-            out[i++] = v.z / 10.0f + 0.5f;
+            out[i++] = v.x;
+            out[i++] = v.y;
+            out[i++] = v.z;
         }
         return out;
     }
+
+    private final Vector3f position;
+
+    private float scale;
+
+    private final Vector3f rotation;
+
+    @Override
+    public Vector3f getRotation() {
+        return rotation;
+    }
+
+    @Override
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    @Override
+    public float getScale() {
+        return scale;
+    }
+
+    @Override
+    public void setPosition(float x, float y, float z) {
+        position.x = x;
+        position.y = y;
+        position.z = z;
+    }
+
+
 }

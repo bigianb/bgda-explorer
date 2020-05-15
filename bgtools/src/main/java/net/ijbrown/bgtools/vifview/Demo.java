@@ -24,9 +24,21 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class Demo {
 
     // The window handle
-    private long window;
+    private final Window window;
 
-    public void run(String gameDir, String characterName) throws IOException {
+    private final Renderer renderer;
+    private final Camera camera;
+
+    public Demo()
+    {
+
+        renderer = new Renderer();
+        camera = new Camera();
+        window = new Window("VIF Viewer", 600, 600, true);
+    }
+
+
+    public void run(String gameDir, String characterName) throws Exception {
         GameConfigs cfg = new GameConfigs();
         try {
             cfg.read();
@@ -46,107 +58,38 @@ public class Demo {
         init();
         loop(gameDataManager, characterConfig);
 
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
-
-        // Terminate GLFW and free the error callback
-        glfwTerminate();
-        glfwSetErrorCallback(null).free();
+        renderer.cleanup();
     }
 
-    private void init() {
-        // Setup an error callback. The default implementation
-        // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set();
-
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if ( !glfwInit() )
-            throw new IllegalStateException("Unable to initialize GLFW");
-
-        // Configure GLFW
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
-
-        // required so that macos uses a modern version
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-        // Create the window
-        window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
-        if ( window == NULL )
-            throw new RuntimeException("Failed to create the GLFW window");
-
-        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if ( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE )
-                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-        });
-
-        // Get the thread stack and push a new frame
-        try ( MemoryStack stack = stackPush() ) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
-
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(window, pWidth, pHeight);
-
-            // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-            // Center the window
-            glfwSetWindowPos(
-                    window,
-                    (vidmode.width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
-            );
-        } // the stack frame is popped automatically
-
-        // Make the OpenGL context current
-        glfwMakeContextCurrent(window);
-        // Enable v-sync
-        glfwSwapInterval(1);
-
-        // Make the window visible
-        glfwShowWindow(window);
+    private void init() throws Exception {
+        window.init();
+        renderer.init(window);
     }
 
     private void loop(GameDataManager gameDataManager, GameConfig.Character characterConfig) throws IOException {
-        // This line is critical for LWJGL's interoperation with GLFW's
-        // OpenGL context, or any context that is managed externally.
-        // LWJGL detects the context that is current in the current thread,
-        // creates the GLCapabilities instance and makes the OpenGL
-        // bindings available for use.
-        GL.createCapabilities();
 
         CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
         characterModel.read();
+
+        characterModel.setPosition(0, 0, -2);
+
+        CharacterModel[] items = new CharacterModel[1];
+        items[0] = characterModel;
 
         System.err.println("GL_VENDOR: " + glGetString(GL_VENDOR));
         System.err.println("GL_RENDERER: " + glGetString(GL_RENDERER));
         System.err.println("GL_VERSION: " + glGetString(GL_VERSION));
 
-        // Set the clear color
-        glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
-
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
-        while ( !glfwWindowShouldClose(window) ) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-            characterModel.render();
+        while ( !window.windowShouldClose() ) {
+            renderer.render(window, camera, items);
 
-            glfwSwapBuffers(window); // swap the color buffers
-
-            // Poll for window events. The key callback above will only be
-            // invoked during this call.
-            glfwPollEvents();
+            window.update();
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         OptionsParser parser = OptionsParser.newOptionsParser(CliOptions.class);
         parser.parseAndExitUponError(args);
