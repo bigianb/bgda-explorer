@@ -16,7 +16,9 @@
 package net.ijbrown.bgtools.lmp;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,7 +49,7 @@ public class TexDecode
         String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
-        obj.extract("tophat.tex", new File(outDir + "ZATANNA_LMP"));
+        obj.extract("zatanna.tex", new File(outDir + "ZATANNA_LMP"));
     }
 
     // Texture format is something like as follows:
@@ -87,7 +89,13 @@ public class TexDecode
     private static final int PSMCT32 = 0x00;
     private static final int PSMT4 = 0x14;
 
-    public void extract(File outDirFile, byte[] fileData, int startOffset, String filename, int length) throws IOException
+    public void extract(File outDirFile, byte[] fileData, int startOffset, String filename, int length) throws IOException {
+        RenderedImage image = getImage(fileData, startOffset, length);
+        File outputfile = new File(outDirFile, filename+".png");
+        ImageIO.write(image, "png", outputfile);
+    }
+
+    public RenderedImage getImage(byte[] fileData, int startOffset, int length)
     {
         GSMemory gsMem = new GSMemory();
 
@@ -230,8 +238,9 @@ public class TexDecode
                 pixels = readPixels32(fileData, startOffset + 0xD0, finalw, finalh);
             }
         }
+        BufferedImage image = null;
         if (finalw != 0 && pixels != null) {
-            BufferedImage image = new BufferedImage(finalw, finalh, BufferedImage.TYPE_INT_ARGB);
+            image = new BufferedImage(finalw, finalh, BufferedImage.TYPE_INT_ARGB);
             for (int y = 0; y < sourceh && y < finalh; ++y) {
                 for (int x = 0; x < sourcew && x < finalw; ++x) {
                     PalEntry pixel = pixels[y * sourcew + x];
@@ -240,9 +249,8 @@ public class TexDecode
                     }
                 }
             }
-            File outputfile = new File(outDirFile, filename+".png");
-            ImageIO.write(image, "png", outputfile);
         }
+        return image;
     }
 
     // Take an image where the pixels are packed and expand them to one byte per pixel.

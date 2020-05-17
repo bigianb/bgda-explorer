@@ -20,5 +20,6 @@ public class GameConfig {
     public static class VifDef
     {
         public String vif;
+        public String tex;
     }
 }

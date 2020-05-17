@@ -46,7 +46,8 @@ public class Renderer {
     private static String loadResource(String fileName) throws Exception {
         String result;
         try (InputStream in = Renderer.class.getResourceAsStream(fileName);
-             Scanner scanner = new Scanner(in, java.nio.charset.StandardCharsets.UTF_8.name())) {
+             Scanner scanner = new Scanner(in, java.nio.charset.StandardCharsets.UTF_8.name()))
+        {
             result = scanner.useDelimiter("\\A").next();
         }
         return result;
