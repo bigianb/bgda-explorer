@@ -1,6 +1,7 @@
 package net.ijbrown.bgtools.vifview;
 
 import net.ijbrown.bgtools.lmp.Lmp;
+import net.ijbrown.bgtools.lmp.TexDecode;
 import net.ijbrown.bgtools.lmp.VifDecode;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
@@ -8,6 +9,7 @@ import org.lwjgl.system.MemoryUtil;
 import static org.lwjgl.opengl.GL30C.*;
 import static org.lwjgl.system.MemoryUtil.memFree;
 
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -19,6 +21,7 @@ public class CharacterModel implements IGameItem
     private GameConfig.Character characterConfig;
     private GameDataManager gameDataManager;
     private List<VifDecode.Mesh> bodyMeshes;
+    private RenderedImage bodyTexture;
 
     public CharacterModel(GameDataManager gameDataManager, GameConfig.Character characterConfig) {
         this.gameDataManager = gameDataManager;
@@ -32,8 +35,10 @@ public class CharacterModel implements IGameItem
     public void read() throws IOException {
         lmp = gameDataManager.getLmp(characterConfig.lmp);
         var bodyVif = lmp.findEntry(characterConfig.body.vif);
-        bodyVif = lmp.findEntry(characterConfig.extras[2].vif);    // tophat for testing
         bodyMeshes = new VifDecode().decode(bodyVif.data, bodyVif.offset);
+        var bodyTex = lmp.findEntry(characterConfig.body.tex);
+        var decoder = new TexDecode();
+        bodyTexture = decoder.getImage(bodyTex.data, bodyTex.offset, bodyTex.length);
     }
 
     @Override

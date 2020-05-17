@@ -21,7 +21,8 @@
         "name": "Zatanna",
         "lmp": "ZATANNA.LMP",
         "body": {
-          "vif": "zatanna.vif"
+          "vif": "zatanna.vif",
+          "tex": "zatanna.tex"
         },
         "extras":[
           {
