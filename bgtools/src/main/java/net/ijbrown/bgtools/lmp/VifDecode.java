@@ -39,10 +39,15 @@ public class VifDecode
 
     public List<Mesh> decode(byte[] data, int startOffset)
     {
-        int numMeshes = data[0x12+startOffset] & 0xFF;
+        int sig = DataUtil.getLEInt(data, startOffset);
+        int numMeshes = data[startOffset + 0x12] & 0xFF;
         int meshBlockOffset = 0x28;
-        if (0 == numMeshes)
-        {
+        if (sig == 0x30332E31) {
+            numMeshes = data[startOffset + 0x4A] & 0xFF;
+            meshBlockOffset = 0x68;
+        }
+
+        if (0 == numMeshes) {
             numMeshes = 1;
             meshBlockOffset = 0x68;
         }
