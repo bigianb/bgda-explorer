@@ -95,8 +95,29 @@ public class TexDecode
         ImageIO.write(image, "png", outputfile);
     }
 
-    public RenderedImage getImage(byte[] fileData, int startOffset, int length)
-    {
+    public RenderedImage getImage(byte[] fileData, int startOffset, int length) {
+
+        DecodedTex tex = decodeTex(fileData, startOffset, length);
+        return getImage(tex);
+    }
+
+    public RenderedImage getImage(DecodedTex tex) {
+        BufferedImage image = null;
+        if (tex.targetWidth != 0 && tex.pixels != null) {
+            image = new BufferedImage(tex.targetWidth, tex.targetHeight, BufferedImage.TYPE_INT_ARGB);
+            for (int y = 0; y < tex.pixelsHeight && y < tex.targetHeight; ++y) {
+                for (int x = 0; x < tex.pixelsWidth && x < tex.targetWidth; ++x) {
+                    PalEntry pixel = tex.pixels[y * tex.pixelsWidth + x];
+                    if (pixel != null) {
+                        image.setRGB(x, y, pixel.argb());
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    public DecodedTex decodeTex(byte[] fileData, int startOffset, int length) {
         GSMemory gsMem = new GSMemory();
 
         int endIndex = startOffset + length;
@@ -111,8 +132,8 @@ public class TexDecode
 
         int offsetToGIF = DataUtil.getLEInt(fileData, startOffset + 16);
 
-        if (length == 0){
-            int dataLen = DataUtil.getLEShort(fileData, startOffset+0x06) * 16;
+        if (length == 0) {
+            int dataLen = DataUtil.getLEShort(fileData, startOffset + 0x06) * 16;
             endIndex = startOffset + offsetToGIF + dataLen;
         }
 
@@ -151,7 +172,7 @@ public class TexDecode
             while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
                 gifTag3.parse(fileData, curIdx);
-                while (!gifTag3.isImage()){
+                while (!gifTag3.isImage()) {
                     int trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXREG);
                     if (trxregOffset != 0) {
                         rrw = DataUtil.getLEShort(fileData, trxregOffset);
@@ -163,7 +184,7 @@ public class TexDecode
                         starty = DataUtil.getLEShort(fileData, trxposOffset + 0x06) & 0x07FF;
                     }
                     int bitbltOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
-                    if (bitbltOffset != 0){
+                    if (bitbltOffset != 0) {
                         //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
                         dbp = fileData[bitbltOffset + 0x04] & 0x3FFF;
                         dbw = fileData[bitbltOffset + 0x06] & 0x3F;
@@ -176,27 +197,27 @@ public class TexDecode
 
                 curIdx += 0x10;     // image gif tag
                 int bytesToTransfer = gifTag3.nloop * 16;
-                if (palette.length == 16){
+                if (palette.length == 16) {
                     // source is PSMT4. Dest can be PSMT4 or PSMCT32
                     if (dpsm == PSMCT32) {
                         byte[] imageData = fileData;
                         int imageDataIdx = curIdx;
                         // check for multiple IMAGE entries.
                         int nextTagInd = bytesToTransfer + curIdx;
-                        if (nextTagInd < endIndex - 0x10){
+                        if (nextTagInd < endIndex - 0x10) {
                             GIFTag imageTag2 = new GIFTag();
                             imageTag2.parse(fileData, nextTagInd);
-                            if (imageTag2.flg == 2){
+                            if (imageTag2.flg == 2) {
                                 // IMAGE
                                 int bytesToTransfer2 = imageTag2.nloop * 16;
                                 imageDataIdx = 0;
-                                imageData = new byte[bytesToTransfer+bytesToTransfer2];
+                                imageData = new byte[bytesToTransfer + bytesToTransfer2];
                                 int j = curIdx;
-                                for (int i=0; i< bytesToTransfer; ++i){
+                                for (int i = 0; i < bytesToTransfer; ++i) {
                                     imageData[i] = fileData[j];
                                 }
                                 j = nextTagInd + 0x10;
-                                for (int i=bytesToTransfer; i< bytesToTransfer+bytesToTransfer2; ++i){
+                                for (int i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i) {
                                     imageData[i] = fileData[j];
                                 }
                                 bytesToTransfer += imageTag2.getLength();
@@ -219,7 +240,7 @@ public class TexDecode
                 }
                 curIdx += bytesToTransfer;
             }
-            if (palette.length == 256){
+            if (palette.length == 256) {
                 destWBytes = (finalw + 0x3f) & ~0x3f;
                 dbw = destWBytes / 0x40;
                 bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
@@ -238,19 +259,31 @@ public class TexDecode
                 pixels = readPixels32(fileData, startOffset + 0xD0, finalw, finalh);
             }
         }
-        BufferedImage image = null;
-        if (finalw != 0 && pixels != null) {
-            image = new BufferedImage(finalw, finalh, BufferedImage.TYPE_INT_ARGB);
-            for (int y = 0; y < sourceh && y < finalh; ++y) {
-                for (int x = 0; x < sourcew && x < finalw; ++x) {
-                    PalEntry pixel = pixels[y * sourcew + x];
-                    if (pixel != null) {
-                        image.setRGB(x, y, pixel.argb());
-                    }
-                }
-            }
-        }
-        return image;
+        DecodedTex decodedTex = new DecodedTex();
+        decodedTex.pixels = pixels;
+        decodedTex.pixelsWidth = sourcew;
+        decodedTex.pixelsHeight = sourceh;
+        decodedTex.targetWidth = finalw;
+        decodedTex.targetWidth = finalh;
+
+        return decodedTex;
+    }
+
+    public static class DecodedTex
+    {
+        public PalEntry[] pixels;
+
+        /** The width of the pixels array. */
+        public int pixelsWidth;
+
+        /** The height of the pixels array. */
+        public int pixelsHeight;
+
+        /** The width specified in the tex file. */
+        public int targetWidth;
+
+        /** The height specified in the tex file. */
+        public int targetHeight;
     }
 
     // Take an image where the pixels are packed and expand them to one byte per pixel.
