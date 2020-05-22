@@ -82,7 +82,8 @@ public class Renderer {
             shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
             // Render the mesh for this game item
             shaderProgram.setUniform("colour", new Vector3f(0.0f, 1.0f, 1.0f));
-            shaderProgram.setUniform("useColour", 1);
+            //shaderProgram.setUniform("useColour", 1);
+            shaderProgram.setUniform("useColour", 0);
             gameItem.render(shaderProgram);
         }
 

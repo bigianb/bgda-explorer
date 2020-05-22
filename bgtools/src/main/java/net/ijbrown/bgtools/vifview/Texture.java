@@ -16,6 +16,7 @@ public class Texture
     private int id;
 
     public int width, height;
+    public int sourceWidth, sourceHeight;
 
 
     public void bind() {
@@ -37,6 +38,9 @@ public class Texture
 
     public void loadTexture(TexDecode.DecodedTex tex)
     {
+        sourceWidth = tex.targetWidth;
+        sourceHeight=tex.targetHeight;
+
         width = makePow2(tex.pixelsWidth);
         height = makePow2(tex.pixelsHeight);
         ByteBuffer buf = BufferUtils.createByteBuffer(width*height*4);

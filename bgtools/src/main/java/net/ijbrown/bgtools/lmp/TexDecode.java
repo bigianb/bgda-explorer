@@ -242,6 +242,7 @@ public class TexDecode
             }
             if (palette.length == 256) {
                 destWBytes = (finalw + 0x3f) & ~0x3f;
+                destHBytes = finalh;
                 dbw = destWBytes / 0x40;
                 bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
             }
@@ -264,7 +265,7 @@ public class TexDecode
         decodedTex.pixelsWidth = sourcew;
         decodedTex.pixelsHeight = sourceh;
         decodedTex.targetWidth = finalw;
-        decodedTex.targetWidth = finalh;
+        decodedTex.targetHeight = finalh;
 
         return decodedTex;
     }
