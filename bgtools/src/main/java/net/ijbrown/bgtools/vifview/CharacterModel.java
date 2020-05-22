@@ -9,7 +9,6 @@ import org.lwjgl.system.MemoryUtil;
 import static org.lwjgl.opengl.GL30C.*;
 import static org.lwjgl.system.MemoryUtil.memFree;
 
-import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -21,7 +20,7 @@ public class CharacterModel implements IGameItem
     private GameConfig.Character characterConfig;
     private GameDataManager gameDataManager;
     private List<VifDecode.Mesh> bodyMeshes;
-    private RenderedImage bodyTexture;
+    private Texture bodyTexture;
 
     public CharacterModel(GameDataManager gameDataManager, GameConfig.Character characterConfig) {
         this.gameDataManager = gameDataManager;
@@ -38,11 +37,16 @@ public class CharacterModel implements IGameItem
         bodyMeshes = new VifDecode().decode(bodyVif.data, bodyVif.offset);
         var bodyTex = lmp.findEntry(characterConfig.body.tex);
         var decoder = new TexDecode();
-        bodyTexture = decoder.getImage(bodyTex.data, bodyTex.offset, bodyTex.length);
+        var decodedTex = decoder.decodeTex(bodyTex.data, bodyTex.offset, bodyTex.length);
+        bodyTexture = new Texture();
+        bodyTexture.loadTexture(decodedTex);
     }
 
     @Override
     public void render(ShaderProgram shaderProgram) {
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, bodyTexture.getId());
 
         for (var mesh : bodyMeshes) {
 
@@ -59,6 +63,21 @@ public class CharacterModel implements IGameItem
             glBindBuffer(GL_ARRAY_BUFFER, vboId);
             glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
             memFree(verticesBuffer);
+            glEnableVertexAttribArray(0);
+            // Define the format of the data
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+
+
+
+            // Texture coordinates VBO
+            var uvVboId = glGenBuffers();
+            float[] uvsRaw = upwrapUVs(mesh.uvCoords, bodyTexture.width, bodyTexture.height);
+            FloatBuffer textCoordsBuffer = MemoryUtil.memAllocFloat(uvsRaw.length);
+            textCoordsBuffer.put(uvsRaw).flip();
+            glBindBuffer(GL_ARRAY_BUFFER, uvVboId);
+            glBufferData(GL_ARRAY_BUFFER, textCoordsBuffer, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
             var idxVboId = glGenBuffers();
             int[] indicesRaw = new int[mesh.triangleIndices.size()];
@@ -71,16 +90,32 @@ public class CharacterModel implements IGameItem
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL_STATIC_DRAW);
             memFree(indicesBuffer);
 
-            // Define the format of the data
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-
-            glEnableVertexAttribArray(0);
-
-            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
             glDisable(GL_CULL_FACE);
             glEnable(GL_DEPTH_TEST);
             glDrawElements(GL_TRIANGLES, mesh.triangleIndices.size(), GL_UNSIGNED_INT, 0);
+
+            glDeleteBuffers(vboId);
+            glDeleteBuffers(uvVboId);
+            glDeleteBuffers(idxVboId);
         }
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    }
+
+    private float[] upwrapUVs(List<VifDecode.UV> uvCoords, int sourceWidth, int sourceHeight) {
+        float[] out = new float[uvCoords.size()*2];
+        int i=0;
+        float fw = (float)sourceWidth * 16.0f;
+        float fh = (float)sourceHeight * 16.0f;
+        for (var uv : uvCoords){
+            out[i++] = uv.u / fw;
+            out[i++] = uv.v / fh;
+        }
+        return out;
     }
 
     private float[] upwrapVertices(List<VifDecode.Vec3F> vertices) {
