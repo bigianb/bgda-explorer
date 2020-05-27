@@ -61,7 +61,7 @@ namespace WorldExplorer.DataLoaders
             {
                 var element = new WorldElement();
 
-                if (EngineVersion.ReturnToArms == engineVersion)
+                if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
                     reader.SetOffset(elementArrayStart + elementIdx * 0x3C);
                 }
@@ -102,7 +102,7 @@ namespace WorldExplorer.DataLoaders
                 int y = texCellxy / 100;
                 int x = texCellxy % 100;
 
-                if (EngineVersion.ReturnToArms == engineVersion)
+                if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
                     x += texX0;
                     y += texY0;
@@ -110,7 +110,7 @@ namespace WorldExplorer.DataLoaders
 
                 if (textureNum != 0)
                 {
-                    if (EngineVersion.ReturnToArms == engineVersion)
+                    if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                     {
                         element.Texture = texFile.GetBitmapRTA(x, y, textureNum);
                     }
@@ -140,7 +140,7 @@ namespace WorldExplorer.DataLoaders
                 element.VifDataLength = vifLen*0x10 - vifStartOffset;
                 element.model = decodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
-                if (EngineVersion.ReturnToArms == engineVersion)
+                if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
                     int unk = reader.ReadInt16();
                     log.LogLine("Unknown: " + unk);
@@ -154,7 +154,7 @@ namespace WorldExplorer.DataLoaders
 
                 element.pos = new Vector3D(posx / 16.0, posy / 16.0, posz / 16.0);
 
-                if (EngineVersion.ReturnToArms == engineVersion)
+                if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
                     // Just a guess, maybe wrong.
                     element.pos = new Vector3D(posx / 16.0, posz / 16.0, posy / 16.0);
@@ -187,7 +187,7 @@ namespace WorldExplorer.DataLoaders
 
                 element.negYaxis = (flags & 0x40) == 0x40;
 
-                if (EngineVersion.ReturnToArms == engineVersion)
+                if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
                     flags = 0;
                     element.usesRotFlags = true;
@@ -227,7 +227,7 @@ namespace WorldExplorer.DataLoaders
                     // This test is needed to deal with town.world in BGDA which addresses textures outside of the maximum x range.
                     if (data.Length >= offset + cellOffset + 4)
                     {
-                        if (EngineVersion.ReturnToArms == engineVersion)
+                        if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                         {
                             // TODO: Figure out what this should really be
                             addr = 0x800;

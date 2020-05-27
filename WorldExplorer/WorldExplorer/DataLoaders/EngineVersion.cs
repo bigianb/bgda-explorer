@@ -5,5 +5,6 @@ namespace WorldExplorer.DataLoaders
     {
         DarkAlliance,
         ReturnToArms,
+        JusticeLeagueHeroes
     }
 }

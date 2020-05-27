@@ -66,7 +66,7 @@ namespace WorldExplorer.DataLoaders
 
             // bit 15 now contains the first bit we are interested in.
 
-            // shift so that numBits is in bit positino numBits
+            // shift so that numBits is in bit position numBits
             value >>= 16 - numBits;
 
             // Mask out the unused bits
@@ -78,13 +78,29 @@ namespace WorldExplorer.DataLoaders
             return (ushort)value;
         }
 
+        public int ReadSigned(int numBits)
+        {
+            int v = Read(numBits);
+            int maxVal = 1 << (numBits-1);
+            if (v >= maxVal)
+            {
+                // for 8 bits, 0x80 = -x7f, 0x81 = -x7e
+                // 81-80 = 1. 80-1-1
+                int x = maxVal - (v - maxVal) - 1;
+                v = -x;
+            }
+            return v;
+        }
+
         // Test routine.
         public static void Main()
         {
+            // 12345678
             var reader = new BitstreamReader(new byte[] { 0x34, 0x12, 0x78, 0x56 });
             ushort one = reader.Read(4);        // will return 0x01
             ushort twothree = reader.Read(8);   // will return 0x23
             ushort eight = reader.Read(5);      // will return 0x08
+            ushort x15 = reader.Read(5);          // 101 01
         }
     }
 }
