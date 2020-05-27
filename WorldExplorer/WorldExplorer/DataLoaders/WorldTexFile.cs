@@ -17,7 +17,7 @@ namespace WorldExplorer.DataLoaders
             fileData = File.ReadAllBytes(filepath);
             Filename = Path.GetFileName(_filepath);
 
-            if (EngineVersion.ReturnToArms == _engineVersion)
+            if (EngineVersion.ReturnToArms == _engineVersion || EngineVersion.JusticeLeagueHeroes == _engineVersion)
             {
                 _entries = ReadEntries(fileData);
             }

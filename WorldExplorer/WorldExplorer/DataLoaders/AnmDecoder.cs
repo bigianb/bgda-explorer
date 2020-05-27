@@ -67,15 +67,15 @@ namespace WorldExplorer.DataLoaders
 
                 int posLen = bitReader.Read(4) + 1;
                 pose.Position = new Point3D(
-                    bitReader.Read(posLen) / 64.0,
-                    bitReader.Read(posLen) / 64.0,
-                    bitReader.Read(posLen) / 64.0);
+                    bitReader.ReadSigned(posLen) / 64.0,
+                    bitReader.ReadSigned(posLen) / 64.0,
+                    bitReader.ReadSigned(posLen) / 64.0);
 
                 int rotLen = bitReader.Read(4) + 1;
-                double a = bitReader.Read(rotLen) / 4096.0;
-                double b = bitReader.Read(rotLen) / 4096.0;
-                double c = bitReader.Read(rotLen) / 4096.0;
-                double d = bitReader.Read(rotLen) / 4096.0;
+                double a = bitReader.ReadSigned(rotLen) / 4096.0;
+                double b = bitReader.ReadSigned(rotLen) / 4096.0;
+                double c = bitReader.ReadSigned(rotLen) / 4096.0;
+                double d = bitReader.ReadSigned(rotLen) / 4096.0;
 
                 pose.Rotation = new Quaternion(b, c, d, a);
 
@@ -99,6 +99,11 @@ namespace WorldExplorer.DataLoaders
                 int flag = bitReader.Read(1);
                 int boneNum = bitReader.Read(6);
                 
+                if (boneNum >= animData.NumBones)
+                {
+                    break;
+                }
+
                 totalFrame += count;
          
                 if (pose == null || pose.FrameNum != totalFrame || pose.BoneNum != boneNum) {
@@ -117,9 +122,9 @@ namespace WorldExplorer.DataLoaders
                     // xyz
                     int posLen = bitReader.Read(4) + 1;
                     
-                    int x = bitReader.Read(posLen);
-                    int y = bitReader.Read(posLen);
-                    int z = bitReader.Read(posLen);
+                    int x = bitReader.ReadSigned(posLen);
+                    int y = bitReader.ReadSigned(posLen);
+                    int z = bitReader.ReadSigned(posLen);
 
                     Point3D vel = new Point3D(x, y, z);
                     Point3D prevVel = pose.Velocity;
@@ -135,10 +140,10 @@ namespace WorldExplorer.DataLoaders
                 } else {
                     // rot
                     int rotLen = bitReader.Read(4) + 1;
-                    int a = bitReader.Read(rotLen);
-                    int b = bitReader.Read(rotLen);
-                    int c = bitReader.Read(rotLen);
-                    int d = bitReader.Read(rotLen);
+                    int a = bitReader.ReadSigned(rotLen);
+                    int b = bitReader.ReadSigned(rotLen);
+                    int c = bitReader.ReadSigned(rotLen);
+                    int d = bitReader.ReadSigned(rotLen);
 
                     Quaternion angVel = new Quaternion(b, c, d, a);
 

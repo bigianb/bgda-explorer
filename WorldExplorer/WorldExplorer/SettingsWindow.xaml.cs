@@ -28,6 +28,7 @@ namespace WorldExplorer
             // Add engine versions to combo box
             engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Dark Alliance 1", DataContext = EngineVersion.DarkAlliance });
             engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Champions: Return To Arms", DataContext = EngineVersion.ReturnToArms });
+            engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Justice League Heroes", DataContext = EngineVersion.JusticeLeagueHeroes });
 
             // Select the correct item
             var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);

@@ -43,7 +43,7 @@ namespace WorldExplorer.DataLoaders
             int numEntries = reader.ReadInt32();
 
             for (int entry = 0; entry < numEntries; ++entry) {
-                if (EngineVersion.ReturnToArms == _engineVersion)
+                if (EngineVersion.ReturnToArms == _engineVersion || EngineVersion.JusticeLeagueHeroes == _engineVersion)
                 {
                     int stringOffset = reader.ReadInt32();
                     int dataOffset = reader.ReadInt32();
