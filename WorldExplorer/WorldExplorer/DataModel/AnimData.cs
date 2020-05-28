@@ -131,7 +131,7 @@ namespace WorldExplorer.DataModel
             perFramePoses = new AnimMeshPose[NumFrames, NumBones];
             foreach (AnimMeshPose pose in MeshPoses)
             {
-                if (pose != null)
+                if (pose != null && pose.FrameNum <= NumFrames)
                 {
                     perFramePoses[pose.FrameNum, pose.BoneNum] = pose;
                 }
