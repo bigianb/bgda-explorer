@@ -34,10 +34,10 @@ namespace WorldExplorer.DataLoaders
             int endIndex = startOffset + length;
             AnimData animData = new AnimData();
             animData.NumBones = DataUtil.getLEInt(data, startOffset);
-            animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);
+            animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);     // max frame
             animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
             animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
-            int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
+            int offset8Val = DataUtil.getLEInt(data, startOffset + 8);
 
             int bindingPoseOffset = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
             animData.bindingPose = new Point3D[animData.NumBones];
@@ -59,7 +59,7 @@ namespace WorldExplorer.DataLoaders
             AnimMeshPose[] curPose = new AnimMeshPose[animData.NumBones];
 
             AnimMeshPose pose = null;
-            var bitReader = new BitstreamReader(data, offset8Val, length - (offset8Val - startOffset));
+            var bitReader = new BitstreamReader(data, startOffset + offset8Val, length - offset8Val);
             for (int boneNum = 0; boneNum < animData.NumBones; ++boneNum) {
                 pose = new AnimMeshPose();
                 pose.BoneNum = boneNum;
@@ -94,8 +94,12 @@ namespace WorldExplorer.DataLoaders
             int totalFrame = 0;
 
             pose = null;
-            while (bitReader.HasData(16)) {
+            while (bitReader.HasData(22) && totalFrame < animData.Offset4Val) {
                 int count = bitReader.Read(8);
+                if (count == 0xFF)
+                {
+                    break;
+                }
                 int flag = bitReader.Read(1);
                 int boneNum = bitReader.Read(6);
                 
@@ -162,7 +166,7 @@ namespace WorldExplorer.DataLoaders
                 
             }
             animData.MeshPoses.Add(pose);
-            animData.NumFrames = totalFrame + 1;
+            animData.NumFrames = animData.Offset4Val+1; // totalFrame + 1;
             animData.BuildPerFramePoses();
             animData.BuildPerFrameFKPoses();
             return animData;
