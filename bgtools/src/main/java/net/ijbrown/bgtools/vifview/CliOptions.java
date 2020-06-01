@@ -31,4 +31,13 @@ public class CliOptions extends OptionsBase {
             defaultValue = ""
     )
     public String character;
+
+    @Option(
+            name = "export",
+            abbrev = 'e',
+            help = "Export the character to the given filename (.gltf).",
+            defaultValue = ""
+    )
+    public String exportFilename;
+
 }

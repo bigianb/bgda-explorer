@@ -141,7 +141,12 @@ public class Demo {
             return;
         }
 
-        new Demo().run(options.dir, options.character);
+        if (options.exportFilename.isEmpty()) {
+            new Demo().run(options.dir, options.character);
+        } else {
+            var exporter = new CharacterExporter();
+            exporter.export(options.dir, options.character, options.exportFilename);
+        }
     }
 
     private static void printUsage(OptionsParser parser) {
