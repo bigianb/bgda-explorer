@@ -44,7 +44,7 @@ public class CharacterModel implements IGameItem
 
     @Override
     public void render(ShaderProgram shaderProgram) {
-
+        bodyTexture.upload();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, bodyTexture.getId());
 
@@ -66,8 +66,6 @@ public class CharacterModel implements IGameItem
             glEnableVertexAttribArray(0);
             // Define the format of the data
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-
-
 
             // Texture coordinates VBO
             var uvVboId = glGenBuffers();
