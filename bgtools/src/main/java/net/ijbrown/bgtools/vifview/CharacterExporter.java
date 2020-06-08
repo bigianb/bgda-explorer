@@ -46,10 +46,12 @@ public class CharacterExporter
     static class GlTF {
         private final Asset asset = new Asset();
         GlTF() {}
+
+
     }
 
     static class Asset {
-        private final double version = 2.0;
+        private final String version = "2.0";
         private final String generator = "bgdatools";
         Asset(){}
     }
