@@ -1,12 +1,7 @@
 package net.ijbrown.bgtools.vifview;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Exports a character to glTF format.
@@ -32,27 +27,7 @@ public class CharacterExporter
         CharacterModel characterModel = new CharacterModel(gameDataManager, characterConfig);
         characterModel.read();
 
-        Gson gson = new Gson();
-        String json = gson.toJson(new GlTF());
-        writeFile(exportFilename, json);
-    }
-
-    private void writeFile(String filename, String contents) throws IOException {
-
-        Path path = Paths.get(filename);
-        Files.write(path, contents.getBytes("UTF-8"));
-    }
-
-    static class GlTF {
-        private final Asset asset = new Asset();
-        GlTF() {}
-
-
-    }
-
-    static class Asset {
-        private final String version = "2.0";
-        private final String generator = "bgdatools";
-        Asset(){}
+        Gltf gltf = new Gltf(characterModel.getMeshes(), characterModel.getTexture());
+        gltf.write("", exportFilename);
     }
 }
