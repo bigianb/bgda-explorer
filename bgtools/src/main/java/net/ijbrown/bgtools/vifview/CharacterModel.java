@@ -31,6 +31,16 @@ public class CharacterModel implements IGameItem
         rotation = new Vector3f();
     }
 
+    public List<VifDecode.Mesh> getMeshes()
+    {
+        return bodyMeshes;
+    }
+
+    public Texture getTexture()
+    {
+        return bodyTexture;
+    }
+
     public void read() throws IOException {
         lmp = gameDataManager.getLmp(characterConfig.lmp);
         var bodyVif = lmp.findEntry(characterConfig.body.vif);
