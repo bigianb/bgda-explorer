@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 // https://sandbox.babylonjs.com/ can view files
@@ -78,7 +79,7 @@ public class Gltf
         writer.closeArray();
 
         writeNodes(writer, "nodes", nodes);
-
+        writeBuffers(writer);
         writer.closeObject();
     }
 
@@ -93,20 +94,143 @@ public class Gltf
         return b;
     }
 
-    private void writeBuffers(JsonWriter writer)
-    {
-        
+    private void writeBuffers(JsonWriter writer) throws IOException {
+        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-buffer
+        writer.writeKey("buffers");
+        writer.openArray();
+        for (var buffer : buffers){
+            writer.openObject();
+            writer.writeKeyValue("byteLength", buffer.buffer.length);
+            // Embedded buffers
+            writer.writeKey("uri");
+            writeEmbeddedData(writer, buffer.buffer);
+            writer.closeObject();
+        }
+        writer.closeArray();
+
+        // For this implementation, each buffer has a single bufferview of the same index.
+        writer.writeKey("bufferViews");
+        writer.openArray();
+        for (var buffer : buffers){
+            writer.openObject();
+            writer.writeKeyValue("buffer", buffer.id);
+            writer.writeKeyValue("byteOffset", 0);
+            writer.writeKeyValue("byteLength", buffer.buffer.length);
+            writer.closeObject();
+        }
+        writer.closeArray();
+
+    }
+
+    private void writeEmbeddedData(JsonWriter writer, byte[] buffer) throws IOException {
+        var encoder = Base64.getEncoder();
+        String encodedData = encoder.encodeToString(buffer);
+        writer.writeValue("data:application/octet-stream;base64,"+encodedData);
     }
 
     private void writeMesh(JsonWriter writer, VifDecode.Mesh mesh) throws IOException {
+        /*
+            In glTF, meshes are defined as arrays of primitives.
+            Primitives correspond to the data required for GPU draw calls.
+            Primitives specify one or more attributes, corresponding to the vertex attributes used in the draw calls.
+            Indexed primitives also define an indices property.
+            Attributes and indices are defined as references to accessors containing corresponding data.
+            Each primitive also specifies a material and a primitive type that corresponds to the GPU primitive type
+            (e.g., triangle set).
+         */
         writer.openObject();
         writer.writeKey("primitives");
         writer.openArray();
         writer.openObject();
         writer.writeKeyValue("mode", 4);    // triangles
+        writer.writeKey("attributes");
+        writer.openObject();
+        buildAccessors(mesh);
+        writer.closeObject();
         writer.closeObject();
         writer.closeArray();
         writer.closeObject();
+    }
+
+    private enum ComponentType
+    {
+        UNSIGNED_SHORT(5123), FLOAT(5126);
+
+        private final int id;
+
+        private ComponentType(int id)
+        {
+            this.id = id;
+        }
+    }
+
+    private static class Accessor
+    {
+        public int id;
+        public int bufferView;
+        public int byteOffset;
+        public int count;
+        public String type;
+
+        public ComponentType componentType;
+    }
+
+    private Accessor createAccessor(int bufferView, int byteOffset, int count, String type, ComponentType componentType)
+    {
+        Accessor accessor = new Accessor();
+        accessor.id = accessors.size();
+        accessor.bufferView = bufferView;
+        accessor.byteOffset = byteOffset;
+        accessor.count = count;
+        accessor.type = type;
+        accessor.componentType = componentType;
+        accessors.add(accessor);
+        return accessor;
+    }
+
+    private List<Accessor> accessors = new ArrayList<>();
+
+    private static class MeshPrimAccessors
+    {
+        public Accessor positionAccessor;
+        public Accessor indicesAccessor;
+    }
+
+    private MeshPrimAccessors buildAccessors(VifDecode.Mesh mesh) {
+        int positionSize = mesh.vertices.size() * 12;
+        int indicesSize = mesh.triangleIndices.size() * 2;
+        int bufferSize =  positionSize + indicesSize;
+        var buffer = createBuffer(bufferSize);
+        int i=0;
+        for (var vec3 : mesh.vertices){
+            i += writeFloat(buffer.buffer, i, vec3.x);
+            i += writeFloat(buffer.buffer, i, vec3.y);
+            i += writeFloat(buffer.buffer, i, vec3.z);
+        }
+        for (var val : mesh.triangleIndices){
+            i += writeShort(buffer.buffer, i, val);
+        }
+
+        var meshPrimAccessors = new MeshPrimAccessors();
+        meshPrimAccessors.positionAccessor = createAccessor(buffer.id, 0, positionSize, "VEC3", ComponentType.FLOAT);
+        meshPrimAccessors.indicesAccessor = createAccessor(buffer.id, positionSize, indicesSize, "SCALAR", ComponentType.UNSIGNED_SHORT);
+        return meshPrimAccessors;
+    }
+
+    private int writeShort(byte[] buf, int idx, Integer val) {
+        buf[idx++] = (byte)(val & 0xFF);
+        buf[idx++] = (byte)((val >> 8) & 0xFF);
+        return idx;
+    }
+
+    private int writeFloat(byte[] buf, int idx, float f)
+    {
+        int bits = Float.floatToRawIntBits(f);
+        buf[idx++] = (byte)(bits & 0xFF);
+        buf[idx++] = (byte)((bits >> 8) & 0xFF);
+        buf[idx++] = (byte)((bits >> 16) & 0xFF);
+        buf[idx++] = (byte)((bits >> 24) & 0xFF);
+        return idx;
     }
 
     private void writeNodes(JsonWriter writer, String name, List<Node> nodes) throws IOException {
