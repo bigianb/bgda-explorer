@@ -80,6 +80,7 @@ public class Gltf
 
         writeNodes(writer, "nodes", nodes);
         writeBuffers(writer);
+        writeAccessors(writer);
         writer.closeObject();
     }
 
@@ -93,6 +94,7 @@ public class Gltf
         buffers.add(b);
         return b;
     }
+
 
     private void writeBuffers(JsonWriter writer) throws IOException {
         // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-buffer
@@ -138,6 +140,7 @@ public class Gltf
             Each primitive also specifies a material and a primitive type that corresponds to the GPU primitive type
             (e.g., triangle set).
          */
+        var accessors = buildAccessors(mesh);
         writer.openObject();
         writer.writeKey("primitives");
         writer.openArray();
@@ -145,8 +148,9 @@ public class Gltf
         writer.writeKeyValue("mode", 4);    // triangles
         writer.writeKey("attributes");
         writer.openObject();
-        buildAccessors(mesh);
+        writer.writeKeyValue("POSITION", accessors.positionAccessor.id);
         writer.closeObject();
+        writer.writeKeyValue("indices", accessors.indicesAccessor.id);
         writer.closeObject();
         writer.closeArray();
         writer.closeObject();
@@ -158,7 +162,7 @@ public class Gltf
 
         private final int id;
 
-        private ComponentType(int id)
+        ComponentType(int id)
         {
             this.id = id;
         }
@@ -173,6 +177,23 @@ public class Gltf
         public String type;
 
         public ComponentType componentType;
+    }
+
+    private void writeAccessors(JsonWriter writer) throws IOException {
+        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#accessors
+
+        writer.writeKey("accessors");
+        writer.openArray();
+        for (var accessor : accessors){
+            writer.openObject();
+            writer.writeKeyValue("bufferView", accessor.bufferView);
+            writer.writeKeyValue("byteOffset", accessor.byteOffset);
+            writer.writeKeyValue("count", accessor.count);
+            writer.writeKeyValue("type", accessor.type);
+            writer.writeKeyValue("componentType", accessor.componentType.id);
+            writer.closeObject();
+        }
+        writer.closeArray();
     }
 
     private Accessor createAccessor(int bufferView, int byteOffset, int count, String type, ComponentType componentType)
@@ -203,17 +224,17 @@ public class Gltf
         var buffer = createBuffer(bufferSize);
         int i=0;
         for (var vec3 : mesh.vertices){
-            i += writeFloat(buffer.buffer, i, vec3.x);
-            i += writeFloat(buffer.buffer, i, vec3.y);
-            i += writeFloat(buffer.buffer, i, vec3.z);
+            i = writeFloat(buffer.buffer, i, vec3.x);
+            i = writeFloat(buffer.buffer, i, vec3.y);
+            i = writeFloat(buffer.buffer, i, vec3.z);
         }
         for (var val : mesh.triangleIndices){
-            i += writeShort(buffer.buffer, i, val);
+            i = writeShort(buffer.buffer, i, val);
         }
 
         var meshPrimAccessors = new MeshPrimAccessors();
-        meshPrimAccessors.positionAccessor = createAccessor(buffer.id, 0, positionSize, "VEC3", ComponentType.FLOAT);
-        meshPrimAccessors.indicesAccessor = createAccessor(buffer.id, positionSize, indicesSize, "SCALAR", ComponentType.UNSIGNED_SHORT);
+        meshPrimAccessors.positionAccessor = createAccessor(buffer.id, 0, mesh.vertices.size(), "VEC3", ComponentType.FLOAT);
+        meshPrimAccessors.indicesAccessor = createAccessor(buffer.id, positionSize, mesh.triangleIndices.size(), "SCALAR", ComponentType.UNSIGNED_SHORT);
         return meshPrimAccessors;
     }
 
