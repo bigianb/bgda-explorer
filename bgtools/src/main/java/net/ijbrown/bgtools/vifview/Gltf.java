@@ -15,7 +15,7 @@ import java.util.List;
 
 public class Gltf
 {
-    private List<VifDecode.Mesh> meshes;
+    private final List<VifDecode.Mesh> meshes;
     private Texture texture;
 
     private static class Node
@@ -32,7 +32,7 @@ public class Gltf
         }
     }
 
-    private List<Node> nodes = new ArrayList<>();
+    private final List<Node> nodes = new ArrayList<>();
 
     private static class Buffer
     {
@@ -69,10 +69,8 @@ public class Gltf
 
         // Just the first mesh for now
         var mesh = meshes.get(0);
-        Node meshNode = new Node("");
-        nodes.add(meshNode);
-        meshNode.id = nodes.size()-1;
-        meshNode.mesh = 0;
+
+        sceneRootNode.mesh = 0;
 
         writeMesh(writer, mesh);
 
@@ -84,7 +82,7 @@ public class Gltf
         writer.closeObject();
     }
 
-    private List<Buffer> buffers = new ArrayList<>();
+    private final List<Buffer> buffers = new ArrayList<>();
 
     private Buffer createBuffer(int size)
     {
@@ -175,6 +173,8 @@ public class Gltf
         public int byteOffset;
         public int count;
         public String type;
+        public float[] min_fa;
+        public float[] max_fa;
 
         public ComponentType componentType;
     }
@@ -191,6 +191,12 @@ public class Gltf
             writer.writeKeyValue("count", accessor.count);
             writer.writeKeyValue("type", accessor.type);
             writer.writeKeyValue("componentType", accessor.componentType.id);
+            if (accessor.min_fa != null){
+                writer.writeKeyValue("min", accessor.min_fa);
+            }
+            if (accessor.max_fa != null){
+                writer.writeKeyValue("max", accessor.max_fa);
+            }
             writer.closeObject();
         }
         writer.closeArray();
@@ -209,7 +215,7 @@ public class Gltf
         return accessor;
     }
 
-    private List<Accessor> accessors = new ArrayList<>();
+    private final List<Accessor> accessors = new ArrayList<>();
 
     private static class MeshPrimAccessors
     {
@@ -220,22 +226,43 @@ public class Gltf
     private MeshPrimAccessors buildAccessors(VifDecode.Mesh mesh) {
         int positionSize = mesh.vertices.size() * 12;
         int indicesSize = mesh.triangleIndices.size() * 2;
-        int bufferSize =  positionSize + indicesSize;
-        var buffer = createBuffer(bufferSize);
+        var posBuffer = createBuffer(positionSize);
+        var idxBuffer = createBuffer(indicesSize);
         int i=0;
+        VifDecode.Vec3F minPos = new VifDecode.Vec3F(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+        VifDecode.Vec3F maxPos = new VifDecode.Vec3F(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
+
         for (var vec3 : mesh.vertices){
-            i = writeFloat(buffer.buffer, i, vec3.x);
-            i = writeFloat(buffer.buffer, i, vec3.y);
-            i = writeFloat(buffer.buffer, i, vec3.z);
+            accumulateMin(minPos, vec3);
+            accumulateMax(maxPos, vec3);
+            i = writeFloat(posBuffer.buffer, i, vec3.x);
+            i = writeFloat(posBuffer.buffer, i, vec3.y);
+            i = writeFloat(posBuffer.buffer, i, vec3.z);
         }
+        i=0;
         for (var val : mesh.triangleIndices){
-            i = writeShort(buffer.buffer, i, val);
+            i = writeShort(idxBuffer.buffer, i, val);
         }
 
         var meshPrimAccessors = new MeshPrimAccessors();
-        meshPrimAccessors.positionAccessor = createAccessor(buffer.id, 0, mesh.vertices.size(), "VEC3", ComponentType.FLOAT);
-        meshPrimAccessors.indicesAccessor = createAccessor(buffer.id, positionSize, mesh.triangleIndices.size(), "SCALAR", ComponentType.UNSIGNED_SHORT);
+        meshPrimAccessors.positionAccessor = createAccessor(posBuffer.id, 0, mesh.vertices.size(), "VEC3", ComponentType.FLOAT);
+        meshPrimAccessors.positionAccessor.min_fa = new float[]{minPos.x, minPos.y, minPos.z};
+        meshPrimAccessors.positionAccessor.max_fa = new float[]{maxPos.x, maxPos.y, maxPos.z};
+
+        meshPrimAccessors.indicesAccessor = createAccessor(idxBuffer.id, 0, mesh.triangleIndices.size(), "SCALAR", ComponentType.UNSIGNED_SHORT);
         return meshPrimAccessors;
+    }
+
+    private void accumulateMin(VifDecode.Vec3F minPos, VifDecode.Vec3F vec3) {
+        minPos.x = Math.min(minPos.x, vec3.x);
+        minPos.y = Math.min(minPos.y, vec3.y);
+        minPos.z = Math.min(minPos.z, vec3.z);
+    }
+
+    private void accumulateMax(VifDecode.Vec3F maxPos, VifDecode.Vec3F vec3) {
+        maxPos.x = Math.max(maxPos.x, vec3.x);
+        maxPos.y = Math.max(maxPos.y, vec3.y);
+        maxPos.z = Math.max(maxPos.z, vec3.z);
     }
 
     private int writeShort(byte[] buf, int idx, Integer val) {
@@ -269,7 +296,7 @@ public class Gltf
             writer.writeKeyValue("name", node.name);
         }
         if (node.mesh >= 0){
-            writer.writeKeyValue("name", node.name);
+            writer.writeKeyValue("mesh", node.mesh);
         }
         if (node.children != null && !node.children.isEmpty()){
             writeNodes(writer, "children", node.children);
@@ -298,7 +325,4 @@ public class Gltf
         writer.writeKeyValue("generator", "bgdatools");
         writer.closeObject();
     }
-
-
-
 }
