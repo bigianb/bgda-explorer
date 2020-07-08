@@ -23,7 +23,31 @@ public class JsonWriter {
         writeValue(value);
     }
 
+    public void writeKeyValue(String key, float[] value) throws IOException {
+        writeKey(key);
+        writeValue(value);
+    }
+
+    public void writeValue(float[] value) throws IOException {
+        openArray();
+        for (var f : value){
+            writeValue(f);
+        }
+        closeArray();
+    }
+
+    public void writeValue(float value) throws IOException {
+        if (needsComma){
+            writer.append(",");
+        }
+        writer.append(Float.toString(value));
+        needsComma = true;
+    }
+
     public void writeValue(String value) throws IOException {
+        if (needsComma){
+            writer.append(",");
+        }
         writer.append('"');
         writer.append(value);
         writer.append('"');
@@ -31,6 +55,9 @@ public class JsonWriter {
     }
 
     public void writeValue(int value) throws IOException {
+        if (needsComma){
+            writer.append(",");
+        }
         writer.append(Integer.toString(value));
         needsComma = true;
     }
