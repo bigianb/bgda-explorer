@@ -120,7 +120,7 @@ namespace WorldExplorer.DataLoaders
 
         public string ReadString(int length)
         {
-            if (_offset + length >= Length)
+            if (_offset + length > Length)
                 throw new ArgumentOutOfRangeException("length");
 
             var value = Encoding.ASCII.GetString(_data, _baseOffset + _offset, length);
@@ -140,7 +140,10 @@ namespace WorldExplorer.DataLoaders
                 stringLength++;
             }
             var value = ReadString(stringLength);
-            Skip(1); // Skip the zero
+            if (_offset != Length)
+            {
+                Skip(1); // Skip the zero
+            }
             return value;
         }
     }
