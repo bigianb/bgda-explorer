@@ -14,7 +14,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -35,24 +34,12 @@ namespace WorldExplorer
         private YakFile.Entry _entry;
         private string _name;
 
-        public YakFile.Child Value
-        {
-            get { return _value; }
-        }
+        public YakFile.Child Value => _value;
 
-        public YakFile.Entry ParentEntry
-        {
-            get { return _entry; }
-        }
+        public YakFile.Entry ParentEntry => _entry;
 
-        public YakFile YakFile
-        {
-            get { return _yakFile; }
-        }
+        public YakFile YakFile => _yakFile;
 
-        public string Text
-        {
-            get { return _name; }
-        }
+        public string Text => _name;
     }
 }

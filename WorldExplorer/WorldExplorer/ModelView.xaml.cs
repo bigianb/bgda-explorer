@@ -36,7 +36,9 @@ namespace WorldExplorer
             var model = DataContext as ModelViewModel;
 
             if (model == null)
+            {
                 return;
+            }
         }
 
         private void normalsBox_IsCheckedChanged(object sender, RoutedEventArgs e)

@@ -56,7 +56,7 @@ namespace WorldExplorer
                 {
                     if (item.DataContext is EngineVersion)
                     {
-                        return (EngineVersion) item.DataContext;
+                        return (EngineVersion)item.DataContext;
                     }
                 }
             }

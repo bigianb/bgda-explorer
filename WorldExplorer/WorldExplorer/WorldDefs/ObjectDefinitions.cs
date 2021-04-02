@@ -1,9 +1,9 @@
-﻿using System;
+﻿using HelixToolkit.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using HelixToolkit.Wpf;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.Logging;
 using WorldExplorer.Win3D;
@@ -16,7 +16,7 @@ namespace WorldExplorer.WorldDefs
 
         readonly ObjectManager _manager;
         Dictionary<string, ParseObjectDelegate> _objectDefinitions = new Dictionary<string, ParseObjectDelegate>();
-         
+
         public ObjectDefinitions(ObjectManager manager)
         {
             _manager = manager;
@@ -59,8 +59,7 @@ namespace WorldExplorer.WorldDefs
 
         public VisualObjectData Parse(VisualObjectData obj)
         {
-            ParseObjectDelegate del;
-            if (_objectDefinitions.TryGetValue(obj.ObjectData.Name, out del))
+            if (_objectDefinitions.TryGetValue(obj.ObjectData.Name, out var del))
             {
                 return del(obj);
             }
@@ -91,7 +90,9 @@ namespace WorldExplorer.WorldDefs
 
             // Black light, don't show so that we can see actual colors
             if (color.R == 0 && color.G == 0 && color.B == 0)
+            {
                 return null;
+            }
 
             sphere.Material = new DiffuseMaterial(new SolidColorBrush(color));
 
@@ -103,9 +104,11 @@ namespace WorldExplorer.WorldDefs
             obj.Offset = new Vector3D(0, 0, 0);
 
             if (obj.ObjectData.Name.EndsWith("D") || obj.ObjectData.Name.EndsWith("D2"))
+            {
                 return null;
+            }
 
-            string dName = obj.ObjectData.Name;
+            var dName = obj.ObjectData.Name;
 
             dName = dName.EndsWith("2") ? dName.Substring(0, dName.Length - 1) + "D2" : dName + "D";
 
@@ -121,7 +124,9 @@ namespace WorldExplorer.WorldDefs
 
             // Black light, don't show so that we can see actual colors
             if (color.R == 0 && color.G == 0 && color.B == 0)
+            {
                 return null;
+            }
 
             var point1 = new Point3D(0, 0, 0);
             var point2 = new Point3D(directionObj.Floats[0] * 10, directionObj.Floats[1] * 10, directionObj.Floats[2] * 10);
@@ -149,19 +154,18 @@ namespace WorldExplorer.WorldDefs
         {
             var box = new BoxVisual3D();
 
-            double tempValue = 0;
 
-            if (!double.TryParse(obj.ObjectData.GetProperty("w"), out tempValue))
+            if (!double.TryParse(obj.ObjectData.GetProperty("w"), out var tempValue))
             {
                 tempValue = 2.5 * 4;
             }
-            box.Width = tempValue/4;
+            box.Width = tempValue / 4;
             box.Length = tempValue / 4;
             if (!double.TryParse(obj.ObjectData.GetProperty("h"), out tempValue))
             {
                 tempValue = 2.5 * 4;
             }
-            box.Height = tempValue/4;
+            box.Height = tempValue / 4;
 
             box.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
 
@@ -173,18 +177,17 @@ namespace WorldExplorer.WorldDefs
         {
             var sphere = new SphereVisual3D();
 
-            double tempRadius = 0;
 
-            if (!double.TryParse(obj.ObjectData.GetProperty("radius"), out tempRadius))
+            if (!double.TryParse(obj.ObjectData.GetProperty("radius"), out var tempRadius))
             {
                 tempRadius = 2.5 * 4;
             }
 
-            tempRadius =  tempRadius / 4;
+            tempRadius = tempRadius / 4;
             sphere.Radius = tempRadius;
             obj.Offset.Z += tempRadius / 2;
 
-            sphere.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128,255,171,0)));
+            sphere.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
 
             obj.Model = sphere;
             return obj;
@@ -271,7 +274,7 @@ namespace WorldExplorer.WorldDefs
 
             if (par is GobTreeViewModel)
             {
-                var gob = (GobTreeViewModel) par;
+                var gob = (GobTreeViewModel)par;
                 foreach (LmpTreeViewModel child in gob.Children)
                 {
                     if (string.Compare(child.Text, lmpName, StringComparison.InvariantCultureIgnoreCase) == 0)
@@ -281,17 +284,19 @@ namespace WorldExplorer.WorldDefs
                         var texEntry = child.LmpFileProperty.FindFile(textureFile);
 
                         if (entry == null || texEntry == null)
-                            return CreateBox(5, Color.FromRgb(255,0,0));
+                        {
+                            return CreateBox(5, Color.FromRgb(255, 0, 0));
+                        }
 
                         var tex = TexDecoder.Decode(child.LmpFileProperty.FileData, texEntry.StartOffset);
 
                         var logger = new StringLogger();
                         var vifModel = VifDecoder.Decode(
-                            logger, 
-                            child.LmpFileProperty.FileData, 
-                            entry.StartOffset, 
+                            logger,
+                            child.LmpFileProperty.FileData,
+                            entry.StartOffset,
                             entry.Length,
-                            tex.PixelWidth, 
+                            tex.PixelWidth,
                             tex.PixelHeight);
 
                         var model = new ModelVisual3D

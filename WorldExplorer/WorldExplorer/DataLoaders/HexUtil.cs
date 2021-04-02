@@ -13,7 +13,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -31,9 +30,9 @@ namespace WorldExplorer.DataLoaders
 
         public static string formatHexShort(int num)
         {
-            short signed = (short)num;
-            string s = signed < 0 ? "-0x" : "0x";
-            short posval = (short)(signed < 0 ? -signed : signed);
+            var signed = (short)num;
+            var s = signed < 0 ? "-0x" : "0x";
+            var posval = (short)(signed < 0 ? -signed : signed);
             return s + posval.ToString("x4");
         }
 

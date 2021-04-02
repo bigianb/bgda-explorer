@@ -14,13 +14,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Windows.Media.Media3D;
 using System.Diagnostics;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows;
+using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer.Win3D
@@ -29,10 +28,10 @@ namespace WorldExplorer.Win3D
     {
         public static Model3D CreateModel3D(List<Mesh> meshGroups, BitmapSource texture, AnimData pose, int frame)
         {
-            GeometryModel3D model = new GeometryModel3D();
+            var model = new GeometryModel3D();
             var mesh3D = new MeshGeometry3D();
 
-            int numVertices = 0;
+            var numVertices = 0;
             foreach (var meshGroup in meshGroups)
             {
                 numVertices += meshGroup.Positions.Count;
@@ -41,18 +40,18 @@ namespace WorldExplorer.Win3D
             var positions = new Point3DCollection(numVertices);
             var normals = new Vector3DCollection(numVertices);
             var uvCoords = new PointCollection(numVertices);
-            int vstart = 0;
+            var vstart = 0;
 
             foreach (var meshGroup in meshGroups)
             {
-                bool hasVertexWeights = meshGroup.vertexWeights.Count > 0;
-                int vwNum = 0;
-                VertexWeight vw = new VertexWeight();
+                var hasVertexWeights = meshGroup.vertexWeights.Count > 0;
+                var vwNum = 0;
+                var vw = new VertexWeight();
                 if (meshGroup.vertexWeights.Count > 0)
                 {
                     vw = meshGroup.vertexWeights[vwNum];
                 }
-                int vnum = 0;
+                var vnum = 0;
                 foreach (var vertex in meshGroup.Positions)
                 {
                     var point = vertex;
@@ -67,9 +66,9 @@ namespace WorldExplorer.Win3D
                                 Debug.Fail("Vertex " + vnum + " out of range of bone weights " + vw.startVertex + " -> " + vw.endVertex);
                             }
                         }
-                        int bone1No = vw.bone1;
-                        Point3D bindingPos1 = pose.bindingPose[bone1No];
-                        AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
+                        var bone1No = vw.bone1;
+                        var bindingPos1 = pose.bindingPose[bone1No];
+                        var bone1Pose = pose.perFrameFKPoses[frame, bone1No];
                         var joint1Pos = bone1Pose.Position;
                         if (vw.bone2 == 0xFF)
                         {
@@ -77,7 +76,7 @@ namespace WorldExplorer.Win3D
                             {
                                 bone1No = 1;
                             }
-                            Matrix3D m = Matrix3D.Identity;
+                            var m = Matrix3D.Identity;
                             m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
                             m.Rotate(bone1Pose.Rotation);
                             m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
@@ -86,21 +85,21 @@ namespace WorldExplorer.Win3D
                         else
                         {
                             // multi-bone
-                            int bone2No = vw.bone2;
-                            Point3D bindingPos2 = pose.bindingPose[bone2No];
-                            AnimMeshPose bone2Pose = pose.perFrameFKPoses[frame, bone2No];
+                            var bone2No = vw.bone2;
+                            var bindingPos2 = pose.bindingPose[bone2No];
+                            var bone2Pose = pose.perFrameFKPoses[frame, bone2No];
                             double boneSum = vw.boneWeight1 + vw.boneWeight2;
-                            double bone1Coeff = vw.boneWeight1 / boneSum;
-                            double bone2Coeff = vw.boneWeight2 / boneSum;
+                            var bone1Coeff = vw.boneWeight1 / boneSum;
+                            var bone2Coeff = vw.boneWeight2 / boneSum;
 
-                            Matrix3D m = Matrix3D.Identity;
+                            var m = Matrix3D.Identity;
                             m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
                             m.Rotate(bone1Pose.Rotation);
                             m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
                             var point1 = m.Transform(point);
 
                             // Now rotate
-                            Matrix3D m2 = Matrix3D.Identity;
+                            var m2 = Matrix3D.Identity;
                             m2.Translate(new Vector3D(-bindingPos2.X, -bindingPos2.Y, -bindingPos2.Z));   // Inverse binding matrix
                             m2.Rotate(bone2Pose.Rotation);
                             m2.Translate(new Vector3D(bone2Pose.Position.X, bone2Pose.Position.Y, bone2Pose.Position.Z));

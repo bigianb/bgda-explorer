@@ -30,7 +30,9 @@ namespace WorldExplorer
             _children = new ObservableCollection<TreeViewItemViewModel>();
 
             if (lazyLoadChildren)
+            {
                 _children.Add(DummyChild);
+            }
         }
 
         // This is used to create the DummyChild instance.
@@ -47,10 +49,7 @@ namespace WorldExplorer
         /// <summary>
         /// Returns the logical child items of this object.
         /// </summary>
-        public ObservableCollection<TreeViewItemViewModel> Children
-        {
-            get { return _children; }
-        }
+        public ObservableCollection<TreeViewItemViewModel> Children => _children;
 
         #endregion // Children
 
@@ -59,10 +58,7 @@ namespace WorldExplorer
         /// <summary>
         /// Returns true if this object's Children have not yet been populated.
         /// </summary>
-        public bool HasDummyChild
-        {
-            get { return Children.Count == 1 && Children[0] == DummyChild; }
-        }
+        public bool HasDummyChild => Children.Count == 1 && Children[0] == DummyChild;
 
         #endregion // HasLoadedChildren
 
@@ -74,7 +70,7 @@ namespace WorldExplorer
         /// </summary>
         public bool IsExpanded
         {
-            get { return _isExpanded; }
+            get => _isExpanded;
             set
             {
                 if (value != _isExpanded)
@@ -85,7 +81,9 @@ namespace WorldExplorer
 
                 // Expand all the way up to the root.
                 if (_isExpanded && _parent != null)
+                {
                     _parent.IsExpanded = true;
+                }
 
                 // Lazy load the child items, if necessary.
                 if (HasDummyChild)
@@ -106,7 +104,7 @@ namespace WorldExplorer
         /// </summary>
         public bool IsSelected
         {
-            get { return _isSelected; }
+            get => _isSelected;
             set
             {
                 if (value != _isSelected)
@@ -149,10 +147,7 @@ namespace WorldExplorer
 
         #region Parent
 
-        public TreeViewItemViewModel Parent
-        {
-            get { return _parent; }
-        }
+        public TreeViewItemViewModel Parent => _parent;
 
         #endregion // Parent
 
@@ -165,7 +160,9 @@ namespace WorldExplorer
         protected virtual void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
+            {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         #endregion // INotifyPropertyChanged Members

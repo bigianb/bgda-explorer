@@ -15,8 +15,6 @@
 */
 
 using System;
-using WorldExplorer.DataLoaders;
-using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -24,7 +22,7 @@ namespace WorldExplorer
     {
         readonly World _world;
 
-        public WorldTreeViewModel(World world) 
+        public WorldTreeViewModel(World world)
             : base(null, true)
         {
             _world = world;
@@ -35,10 +33,7 @@ namespace WorldExplorer
             return _world;
         }
 
-        public string WorldName
-        {
-            get { return _world.Name; }
-        }
+        public string WorldName => _world.Name;
 
         protected override void LoadChildren()
         {

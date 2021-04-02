@@ -32,14 +32,8 @@ namespace WorldExplorer
         protected string _name;
         protected World _world;
 
-        public LmpFile LmpFileProperty
-        {
-            get { return _lmpFile; }
-        }
+        public LmpFile LmpFileProperty => _lmpFile;
 
-        public string Text
-        {
-            get { return _name; }
-        }
+        public string Text => _name;
     }
 }

@@ -23,11 +23,12 @@ namespace WorldExplorer.DataLoaders
     {
         public static string GetString(byte[] data, int index)
         {
-            StringBuilder sb = new StringBuilder();
-            int i = index;
+            var sb = new StringBuilder();
+            var i = index;
 
             // TODO: Check array length before access
-            while (data[i] != 0) {
+            while (data[i] != 0)
+            {
                 sb.Append((char)data[i]);
                 ++i;
             }

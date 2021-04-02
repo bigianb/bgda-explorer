@@ -14,7 +14,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -33,14 +32,11 @@ namespace WorldExplorer
         private YakFile.Entry _entry;
         private string _name;
 
-        public string Text
-        {
-            get { return _name; }
-        }
+        public string Text => _name;
 
         protected override void LoadChildren()
         {
-            int i = 0;
+            var i = 0;
             foreach (var child in _entry.children)
             {
                 Children.Add(new YakChildTreeViewItem(this, _yakFile, child, _entry, "Child " + i));

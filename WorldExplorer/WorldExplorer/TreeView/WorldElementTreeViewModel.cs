@@ -30,17 +30,13 @@ namespace WorldExplorer
         private string _name;
         private WorldElement _worldElement;
 
-        public WorldElement WorldElement
-        { get { return _worldElement; } }
+        public WorldElement WorldElement => _worldElement;
 
-        public string Text
-        {
-            get { return _name; }
-        }
+        public string Text => _name;
 
         protected override void LoadChildren()
         {
-            
+
         }
     }
 }

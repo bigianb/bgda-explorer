@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using Microsoft.Win32;
 using WorldExplorer.DataExporters;
 
 namespace WorldExplorer
@@ -58,14 +58,11 @@ namespace WorldExplorer
             }
         }
 
-        public MainWindowViewModel ViewModel
-        {
-            get { return _viewModel; }
-        }
+        public MainWindowViewModel ViewModel => _viewModel;
 
         public void ResetCamera()
         {
-            switch(tabControl.SelectedIndex)
+            switch (tabControl.SelectedIndex)
             {
                 case 1:
                     modelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
@@ -76,7 +73,7 @@ namespace WorldExplorer
                 case 3:
                     // hard coded for cuttown cut scene start. 187, 752, 414
                     // player 185.4157, 1401.184, 1
-                    levelView.viewport.SetView(new Point3D(187/4, 752/4, 414/4), new Vector3D(-2/4, 752/4, -400/4), new Vector3D(0, 0, 1), 0);
+                    levelView.viewport.SetView(new Point3D(187 / 4, 752 / 4, 414 / 4), new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1), 0);
                     break;
             }
         }
@@ -86,28 +83,46 @@ namespace WorldExplorer
             {
                 case 1:
                     if (title != null)
+                    {
                         modelView.viewport.Title = title;
+                    }
+
                     if (subTitle != null)
+                    {
                         modelView.viewport.SubTitle = subTitle;
+                    }
+
                     break;
                 case 2:
                     if (title != null)
+                    {
                         skeletonView.viewport.Title = title;
+                    }
+
                     if (subTitle != null)
+                    {
                         skeletonView.viewport.SubTitle = subTitle;
+                    }
+
                     break;
                 case 3:
                     if (title != null)
+                    {
                         levelView.viewport.Title = title;
+                    }
+
                     if (subTitle != null)
+                    {
                         levelView.viewport.SubTitle = subTitle;
+                    }
+
                     break;
             }
         }
-        
+
         private void SetupViewports()
         {
-            var viewports = new[] {modelView.viewport, skeletonView.viewport, levelView.viewport};
+            var viewports = new[] { modelView.viewport, skeletonView.viewport, levelView.viewport };
 
             foreach (var viewport in viewports)
             {
@@ -120,7 +135,7 @@ namespace WorldExplorer
                     {
                         if (e.ChangedButton == MouseButton.Middle && e.ClickCount > 1)
                         {
-                            var view = (HelixToolkit.Wpf.HelixViewport3D) sender;
+                            var view = (HelixToolkit.Wpf.HelixViewport3D)sender;
                             view.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 1000);
                             e.Handled = true;
                         }
@@ -137,14 +152,16 @@ namespace WorldExplorer
 
             // Remove 1 from the end and anything else just in case
             if (list.Count >= 10)
-            list.RemoveRange(9, list.Count - 9);
+            {
+                list.RemoveRange(9, list.Count - 9);
+            }
 
             // If the file is already listed remove it and add it to the top
             if (list.Contains(file))
             {
                 list.Remove(file);
             }
-            list.Insert(0,file);
+            list.Insert(0, file);
 
             App.Settings["Files.RecentFiles"] = string.Join(",", list);
             App.Settings["Files.LastLoadedFile"] = file;
@@ -186,7 +203,7 @@ namespace WorldExplorer
                 Multiselect = false
             };
 
-            bool? result = dialog.ShowDialog();
+            var result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
             {
                 OpenFile(dialog.FileName);
@@ -246,7 +263,7 @@ namespace WorldExplorer
 
             if (result.GetValueOrDefault(false))
             {
-                 VifExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
+                VifExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
             }
         }
 
@@ -279,7 +296,7 @@ namespace WorldExplorer
         {
             MenuRecentFiles.Items.Clear();
 
-            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries);
+            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (recentFiles.Length > 0)
             {
@@ -290,10 +307,10 @@ namespace WorldExplorer
                         Header = file,
                         Tag = file
                     };
-                    menu.Click += delegate(object o, RoutedEventArgs args)
+                    menu.Click += delegate (object o, RoutedEventArgs args)
                         {
-                            var menuItem = (MenuItem) o;
-                            OpenFile((string) menuItem.Tag);
+                            var menuItem = (MenuItem)o;
+                            OpenFile((string)menuItem.Tag);
                         };
 
                     MenuRecentFiles.Items.Add(menu);
@@ -301,7 +318,7 @@ namespace WorldExplorer
             }
             else
             {
-                var menu = new MenuItem {Header = "No Recent Files", IsEnabled = false};
+                var menu = new MenuItem { Header = "No Recent Files", IsEnabled = false };
                 MenuRecentFiles.Items.Add(menu);
             }
         }

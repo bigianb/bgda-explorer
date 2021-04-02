@@ -32,7 +32,8 @@ namespace WorldExplorer.DataModel
         public int FrameNum;
 
         public AnimMeshPose()
-        { }
+        {
+        }
 
         public AnimMeshPose(AnimMeshPose copyFrom)
         {
@@ -46,7 +47,7 @@ namespace WorldExplorer.DataModel
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("AnimMeshPose: BoneNum=").Append(BoneNum);
             sb.Append(", FrameNum=").Append(FrameNum);
             sb.Append(", Pos=(").Append(Position.ToString());
@@ -87,24 +88,24 @@ namespace WorldExplorer.DataModel
         public void BuildPerFrameFKPoses()
         {
             perFrameFKPoses = new AnimMeshPose[NumFrames, NumBones];
-            Point3D[] parentPoints = new Point3D[64];
-            Quaternion[] parentRotations = new Quaternion[64];
+            var parentPoints = new Point3D[64];
+            var parentRotations = new Quaternion[64];
             parentPoints[0] = new Point3D(0, 0, 0);
             parentRotations[0] = new Quaternion(0, 0, 0, 1);
-            for (int frame = 0; frame < NumFrames; ++frame)
+            for (var frame = 0; frame < NumFrames; ++frame)
             {
-                for (int jointNum = 0; jointNum < skeletonDef.GetLength(0); ++jointNum)
+                for (var jointNum = 0; jointNum < skeletonDef.GetLength(0); ++jointNum)
                 {
 
-                    int parentIndex = skeletonDef[jointNum];
-                    Point3D parentPos = parentPoints[parentIndex];
-                    Quaternion parentRot = parentRotations[parentIndex];
+                    var parentIndex = skeletonDef[jointNum];
+                    var parentPos = parentPoints[parentIndex];
+                    var parentRot = parentRotations[parentIndex];
 
                     // The world position of the child joint is the local position of the child joint rotated by the
                     // world rotation of the parent and then offset by the world position of the parent.
-                    AnimMeshPose pose = perFramePoses[frame, jointNum];
+                    var pose = perFramePoses[frame, jointNum];
 
-                    Matrix3D m = Matrix3D.Identity;
+                    var m = Matrix3D.Identity;
                     m.Rotate(parentRot);
                     var thisPos = m.Transform(pose.Position);
                     thisPos.Offset(parentPos.X, parentPos.Y, parentPos.Z);
@@ -112,10 +113,10 @@ namespace WorldExplorer.DataModel
                     // The world rotation of the child joint is the world rotation of the parent rotated by the local rotation of the child.
                     var poseRot = pose.Rotation;
                     poseRot.Normalize();
-                    Quaternion thisRot = Quaternion.Multiply(parentRot, poseRot);
+                    var thisRot = Quaternion.Multiply(parentRot, poseRot);
                     thisRot.Normalize();
 
-                    AnimMeshPose fkPose = new AnimMeshPose
+                    var fkPose = new AnimMeshPose
                     {
                         Position = thisPos,
                         Rotation = thisRot
@@ -131,28 +132,28 @@ namespace WorldExplorer.DataModel
         public void BuildPerFramePoses()
         {
             perFramePoses = new AnimMeshPose[NumFrames, NumBones];
-            foreach (AnimMeshPose pose in MeshPoses)
+            foreach (var pose in MeshPoses)
             {
                 if (pose != null && pose.FrameNum <= NumFrames)
                 {
                     perFramePoses[pose.FrameNum, pose.BoneNum] = pose;
                 }
             }
-            for (int bone = 0; bone < NumBones; ++bone)
+            for (var bone = 0; bone < NumBones; ++bone)
             {
                 AnimMeshPose prevPose = null;
-                for (int frame = 0; frame < NumFrames; ++frame)
+                for (var frame = 0; frame < NumFrames; ++frame)
                 {
                     if (perFramePoses[frame, bone] == null)
                     {
-                        int frameDiff = frame - prevPose.FrameNum;
-                        double avCoeff = frameDiff / 131072.0;
-                        Quaternion rotDelta = new Quaternion(prevPose.AngularVelocity.X * avCoeff, prevPose.AngularVelocity.Y * avCoeff, prevPose.AngularVelocity.Z * avCoeff, prevPose.AngularVelocity.W * avCoeff);
+                        var frameDiff = frame - prevPose.FrameNum;
+                        var avCoeff = frameDiff / 131072.0;
+                        var rotDelta = new Quaternion(prevPose.AngularVelocity.X * avCoeff, prevPose.AngularVelocity.Y * avCoeff, prevPose.AngularVelocity.Z * avCoeff, prevPose.AngularVelocity.W * avCoeff);
 
-                        double velCoeff = frameDiff / 512.0;
-                        Point3D posDelta = new Point3D(prevPose.Velocity.X * velCoeff, prevPose.Velocity.Y * velCoeff, prevPose.Velocity.Z * velCoeff);
+                        var velCoeff = frameDiff / 512.0;
+                        var posDelta = new Point3D(prevPose.Velocity.X * velCoeff, prevPose.Velocity.Y * velCoeff, prevPose.Velocity.Z * velCoeff);
 
-                        AnimMeshPose pose = new AnimMeshPose
+                        var pose = new AnimMeshPose
                         {
                             BoneNum = bone,
                             FrameNum = frame,
@@ -170,7 +171,7 @@ namespace WorldExplorer.DataModel
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("Num Bones = ").Append(NumBones).Append("\n");
             sb.Append("Num Frames = ").Append(NumFrames).Append("\n");
             sb.Append("Offset 4 val = ").Append(Offset4Val).Append("\n");
@@ -178,7 +179,7 @@ namespace WorldExplorer.DataModel
             sb.Append("Offset 0x18 val = ").Append(Offset18Val).Append("\n");
 
             sb.Append("skeleton def = ");
-            for (int b = 0; b < NumBones; ++b)
+            for (var b = 0; b < NumBones; ++b)
             {
                 if (b != 0)
                 {
@@ -189,7 +190,7 @@ namespace WorldExplorer.DataModel
             sb.Append("\n");
 
             sb.Append("Joint positions:\n");
-            for (int b = 0; b < NumBones; ++b)
+            for (var b = 0; b < NumBones; ++b)
             {
                 sb.Append("Joint: ").Append(b).Append(" ... ");
                 sb.Append(bindingPose[b].ToString()).Append("\n");

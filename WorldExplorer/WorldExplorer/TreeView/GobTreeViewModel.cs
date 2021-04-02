@@ -29,10 +29,7 @@ namespace WorldExplorer
 
         private World _world;
 
-        public string Text
-        {
-            get { return _world.WorldGob.Filename; }
-        }
+        public string Text => _world.WorldGob.Filename;
 
         protected override void LoadChildren()
         {

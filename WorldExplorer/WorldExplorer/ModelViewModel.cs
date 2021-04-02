@@ -14,10 +14,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
+using System;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
 using WorldExplorer.Win3D;
 
@@ -30,7 +30,7 @@ namespace WorldExplorer
 
         public AnimData AnimData
         {
-            get { return _animData; }
+            get => _animData;
             set
             {
                 _animData = value;
@@ -45,18 +45,15 @@ namespace WorldExplorer
 
         public WriteableBitmap Texture
         {
-            get { return _texture; }
-            set
-            {
-                _texture = value;
-            }
+            get => _texture;
+            set => _texture = value;
         }
 
         private Model _vifModel;
 
         public Model VifModel
         {
-            get { return _vifModel; }
+            get => _vifModel;
             set
             {
                 _vifModel = value;
@@ -101,16 +98,19 @@ namespace WorldExplorer
 
         public int MaximumFrame
         {
-            get { return _animData == null ? 0 : _animData.NumFrames-1; }
-            set { }
+            get => _animData == null ? 0 : _animData.NumFrames - 1;
+            set
+            {
+            }
         }
 
         private int _currentFrame = 0;
 
         public int CurrentFrame
         {
-            get { return _currentFrame; }
-            set {
+            get => _currentFrame;
+            set
+            {
                 _currentFrame = value;
                 UpdateModel(false);
                 OnPropertyChanged("CurrentFrame");
@@ -121,7 +121,7 @@ namespace WorldExplorer
 
         public string InfoText
         {
-            get { return _infoText; }
+            get => _infoText;
             set
             {
                 _infoText = value;
@@ -134,7 +134,7 @@ namespace WorldExplorer
 
         public ModelVisual3D Model
         {
-            get { return _model; }
+            get => _model;
             set
             {
                 _model = value;
@@ -152,7 +152,7 @@ namespace WorldExplorer
 
         public Transform3D CameraTransform
         {
-            get { return _cameraTransform; }
+            get => _cameraTransform;
             set
             {
                 _cameraTransform = value;
@@ -165,7 +165,7 @@ namespace WorldExplorer
 
         public Camera Camera
         {
-            get { return _camera; }
+            get => _camera;
             set
             {
                 _camera = value;
@@ -175,14 +175,14 @@ namespace WorldExplorer
 
         private void UpdateCamera(ModelVisual3D model)
         {
-            OrthographicCamera oCam = (OrthographicCamera)_camera;
+            var oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Content.Bounds;
-            Point3D centroid = new Point3D(0, 0, 0);
-            double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
-            double cameraDistance = radius * 3.0;
+            var centroid = new Point3D(0, 0, 0);
+            var radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
+            var cameraDistance = radius * 3.0;
 
-            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z);
+            var camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z);
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, 0);

@@ -39,8 +39,9 @@ namespace WorldExplorer
                 IsSelected = true;
                 return; // Return to prevent adding elements twice
             }
-            if (_world.worldData != null){
-                int i = 0;
+            if (_world.worldData != null)
+            {
+                var i = 0;
                 foreach (var element in _world.worldData.worldElements)
                 {
                     Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + i));

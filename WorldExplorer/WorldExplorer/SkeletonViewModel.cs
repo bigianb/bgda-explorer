@@ -27,7 +27,7 @@ namespace WorldExplorer
 
         public AnimData AnimData
         {
-            get { return _animData; }
+            get => _animData;
             set
             {
                 _animData = value;
@@ -40,7 +40,7 @@ namespace WorldExplorer
 
         public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
         {
-            
+
         }
 
         private void UpdateModel()
@@ -50,16 +50,19 @@ namespace WorldExplorer
 
         public int MaximumFrame
         {
-            get { return _animData == null ? 0 : _animData.NumFrames-1; }
-            set { }
+            get => _animData == null ? 0 : _animData.NumFrames - 1;
+            set
+            {
+            }
         }
 
         private int _currentFrame = 0;
 
         public int CurrentFrame
         {
-            get { return _currentFrame; }
-            set {
+            get => _currentFrame;
+            set
+            {
                 _currentFrame = value;
                 UpdateModel();
                 OnPropertyChanged("CurrentFrame");
@@ -70,7 +73,7 @@ namespace WorldExplorer
 
         public Model3D Model
         {
-            get { return _model; }
+            get => _model;
             set
             {
                 _model = value;
@@ -83,7 +86,7 @@ namespace WorldExplorer
 
         public Transform3D CameraTransform
         {
-            get { return _cameraTransform; }
+            get => _cameraTransform;
             set
             {
                 _cameraTransform = value;
@@ -96,7 +99,7 @@ namespace WorldExplorer
 
         public Camera Camera
         {
-            get { return _camera; }
+            get => _camera;
             set
             {
                 _camera = value;
@@ -106,18 +109,19 @@ namespace WorldExplorer
 
         private void UpdateCamera(Model3D model)
         {
-            if (model == null) {
+            if (model == null)
+            {
                 return;
             }
-            OrthographicCamera oCam = (OrthographicCamera)_camera;
+            var oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Bounds;
             //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
-            Point3D centroid = new Point3D(0, 0, 0);
-            double radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
-            double cameraDistance = radius * 2.0;
+            var centroid = new Point3D(0, 0, 0);
+            var radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
+            var cameraDistance = radius * 2.0;
 
-            Point3D camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
+            var camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, -1);

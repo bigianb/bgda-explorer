@@ -1,11 +1,11 @@
 ﻿
+using Microsoft.Win32;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Microsoft.Win32;
 using WorldExplorer.DataExporters;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.Logging;
@@ -22,7 +22,7 @@ namespace WorldExplorer
         MenuItem _saveRawData;
         MenuItem _saveParsedVifData;
         MenuItem _logTexData;
-        
+
         public FileTreeViewContextManager(MainWindow window, TreeView treeView)
         {
             _window = window;
@@ -56,7 +56,7 @@ namespace WorldExplorer
 
             if (dataContext is LmpEntryTreeViewModel) // files in .lmp files
             {
-                var lmpEntryItem = (LmpEntryTreeViewModel) dataContext;
+                var lmpEntryItem = (LmpEntryTreeViewModel)dataContext;
 
                 if ((Path.GetExtension(lmpEntryItem.Text) ?? "").ToLower() == ".vif")
                 {
@@ -96,11 +96,13 @@ namespace WorldExplorer
         void SaveRawDataClicked(object sender, RoutedEventArgs e)
         {
             if (_menu.DataContext == null)
+            {
                 return;
+            }
 
             if (_menu.DataContext is LmpTreeViewModel)
             {
-                var lmpItem = (LmpTreeViewModel) _menu.DataContext;
+                var lmpItem = (LmpTreeViewModel)_menu.DataContext;
                 var lmpFile = lmpItem.LmpFileProperty;
 
                 var dialog = new SaveFileDialog
@@ -108,7 +110,7 @@ namespace WorldExplorer
                     FileName = lmpItem.Text
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
                 {
                     using (var stream = new FileStream(dialog.FileName, FileMode.Create))
@@ -121,7 +123,7 @@ namespace WorldExplorer
             }
             else if (_menu.DataContext is LmpEntryTreeViewModel)
             {
-                var lmpEntry = (LmpEntryTreeViewModel) _menu.DataContext;
+                var lmpEntry = (LmpEntryTreeViewModel)_menu.DataContext;
                 SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Text);
             }
             else if (_menu.DataContext is WorldFileTreeViewModel)
@@ -147,7 +149,7 @@ namespace WorldExplorer
                 FileName = entryName
             };
 
-            bool? result = dialog.ShowDialog();
+            var result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
             {
                 using (var stream = new FileStream(dialog.FileName, FileMode.Create))
@@ -162,7 +164,9 @@ namespace WorldExplorer
         void SaveParsedDataClicked(object sender, RoutedEventArgs e)
         {
             if (_menu.DataContext == null)
+            {
                 return;
+            }
 
             if (_menu.DataContext is LmpEntryTreeViewModel)
             {
@@ -170,7 +174,7 @@ namespace WorldExplorer
                 var lmpFile = lmpEntry.LmpFileProperty;
 
                 var entry = lmpFile.Directory[lmpEntry.Text];
-                var texEntry = lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text)+".tex"];
+                var texEntry = lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex"];
 
                 var tex = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
 
@@ -185,15 +189,15 @@ namespace WorldExplorer
                     FileName = lmpEntry.Text + ".txt"
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
                 {
-                     var logger = new StringLogger();
+                    var logger = new StringLogger();
                     var chunks = VifDecoder.DecodeChunks(
-                        logger, 
-                        lmpFile.FileData, 
-                        entry.StartOffset, 
-                        entry.Length, 
+                        logger,
+                        lmpFile.FileData,
+                        entry.StartOffset,
+                        entry.Length,
                         tex.PixelWidth,
                         tex.PixelHeight);
 
@@ -211,10 +215,10 @@ namespace WorldExplorer
                     FileName = worldElement.Text + ".txt"
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
                 {
-                     var logger = new StringLogger();
+                    var logger = new StringLogger();
                     var chunks = VifDecoder.ReadVerts(
                         logger,
                         lmpFile.FileData,
@@ -241,7 +245,7 @@ namespace WorldExplorer
 
             sb.AppendLine("Debug Info For: " + _window.ViewModel.World.WorldTex.Filename);
             sb.AppendLine("");
-            for (int i= 0; i < entries.Length; i++)
+            for (var i = 0; i < entries.Length; i++)
             {
                 sb.AppendLine("Entry " + i);
                 sb.AppendLine("Cell Offset: " + entries[i].CellOffset);
@@ -277,9 +281,12 @@ namespace WorldExplorer
         // Static Methods
         private static TreeViewItem GetTreeViewItemFromPoint(TreeView treeView, Point point)
         {
-            DependencyObject obj = treeView.InputHitTest(point) as DependencyObject;
+            var obj = treeView.InputHitTest(point) as DependencyObject;
             while (obj != null && !(obj is TreeViewItem))
+            {
                 obj = VisualTreeHelper.GetParent(obj);
+            }
+
             return obj as TreeViewItem;
         }
     }

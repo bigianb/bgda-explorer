@@ -15,8 +15,8 @@
 */
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -38,11 +38,12 @@ namespace WorldExplorer.DataLoaders
 
         public void ReadDirectory()
         {
-            int index = 0;
-            string s = DataUtil.GetString(FileData, index);
-            while (s.Length > 0) {
-                int lmpOffset = BitConverter.ToInt32(FileData, index + 0x20);
-                int lmpLen = BitConverter.ToInt32(FileData, index + 0x24);
+            var index = 0;
+            var s = DataUtil.GetString(FileData, index);
+            while (s.Length > 0)
+            {
+                var lmpOffset = BitConverter.ToInt32(FileData, index + 0x20);
+                var lmpLen = BitConverter.ToInt32(FileData, index + 0x24);
                 Directory[s] = new LmpFile(_engineVersion, s, FileData, lmpOffset, lmpLen);
                 index += 0x28;
                 s = DataUtil.GetString(FileData, index);
@@ -51,6 +52,6 @@ namespace WorldExplorer.DataLoaders
 
         public byte[] FileData;
 
-        public Dictionary<string, LmpFile> Directory = new Dictionary<string, LmpFile>();       
+        public Dictionary<string, LmpFile> Directory = new Dictionary<string, LmpFile>();
     }
 }

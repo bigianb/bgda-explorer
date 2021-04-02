@@ -23,32 +23,32 @@ namespace WorldExplorer.DataLoaders
         // writes to the memory when destination format is set to PSMCT32
         public void writeTexPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh, byte[] data, int dataIndex)
         {
-            int startBlockPos = dbp * 64;
-            for (int y = dsay; y < dsay + rrh; y++)
+            var startBlockPos = dbp * 64;
+            for (var y = dsay; y < dsay + rrh; y++)
             {
-                for (int x = dsax; x < dsax + rrw; x++)
+                for (var x = dsax; x < dsax + rrw; x++)
                 {
-                    int pageX = x / 64;
-                    int pageY = y / 32;
-                    int page = pageX + pageY * dbw;
+                    var pageX = x / 64;
+                    var pageY = y / 32;
+                    var page = pageX + pageY * dbw;
 
-                    int px = x - (pageX * 64);
-                    int py = y - (pageY * 32);
+                    var px = x - (pageX * 64);
+                    var py = y - (pageY * 32);
 
-                    int blockX = px / 8;
-                    int blockY = py / 8;
-                    int block = block32[blockX + blockY * 8];
+                    var blockX = px / 8;
+                    var blockY = py / 8;
+                    var block = block32[blockX + blockY * 8];
 
-                    int bx = px - blockX * 8;
-                    int by = py - blockY * 8;
+                    var bx = px - blockX * 8;
+                    var by = py - blockY * 8;
 
-                    int column = by / 2;
+                    var column = by / 2;
 
-                    int cx = bx;
-                    int cy = by - column * 2;
-                    int cw = columnWord32[cx + cy * 8];
+                    var cx = bx;
+                    var cy = by - column * 2;
+                    var cw = columnWord32[cx + cy * 8];
 
-                    int gsIndex = startBlockPos + page * 2048 + block * 64 + column * 16 + cw;
+                    var gsIndex = startBlockPos + page * 2048 + block * 64 + column * 16 + cw;
                     gsIndex *= 4;
 
                     mem[gsIndex++] = data[dataIndex];
@@ -97,39 +97,39 @@ namespace WorldExplorer.DataLoaders
 
         public byte[] readTexPSMT8(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh)
         {
-            byte[] data = new byte[rrw * rrh];
-            int dataIndex = 0;
+            var data = new byte[rrw * rrh];
+            var dataIndex = 0;
 
             dbw >>= 1;
 
-            int startBlockPos = dbp * 64;
+            var startBlockPos = dbp * 64;
 
-            for (int y = dsay; y < dsay + rrh; y++)
+            for (var y = dsay; y < dsay + rrh; y++)
             {
-                for (int x = dsax; x < dsax + rrw; x++)
+                for (var x = dsax; x < dsax + rrw; x++)
                 {
-                    int pageX = x / 128;
-                    int pageY = y / 64;
-                    int page = pageX + pageY * dbw;
+                    var pageX = x / 128;
+                    var pageY = y / 64;
+                    var page = pageX + pageY * dbw;
 
-                    int px = x - (pageX * 128);
-                    int py = y - (pageY * 64);
+                    var px = x - (pageX * 128);
+                    var py = y - (pageY * 64);
 
-                    int blockX = px / 16;
-                    int blockY = py / 16;
-                    int block = block8[blockX + blockY * 8];
+                    var blockX = px / 16;
+                    var blockY = py / 16;
+                    var block = block8[blockX + blockY * 8];
 
-                    int bx = px - blockX * 16;
-                    int by = py - blockY * 16;
+                    var bx = px - blockX * 16;
+                    var by = py - blockY * 16;
 
-                    int column = by / 4;
+                    var column = by / 4;
 
-                    int cx = bx;
-                    int cy = by - column * 4;
-                    int cw = columnWord8[column & 1, cx + cy * 16];
-                    int cb = columnByte8[cx + cy * 16];
+                    var cx = bx;
+                    var cy = by - column * 4;
+                    var cw = columnWord8[column & 1, cx + cy * 16];
+                    var cb = columnByte8[cx + cy * 16];
 
-                    int gsIndex = startBlockPos + page * 2048 + block * 64 + column * 16 + cw;
+                    var gsIndex = startBlockPos + page * 2048 + block * 64 + column * 16 + cw;
                     gsIndex *= 4;
 
                     data[dataIndex++] = mem[gsIndex + cb];
@@ -180,41 +180,41 @@ namespace WorldExplorer.DataLoaders
         public byte[] readTexPSMT4(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh)
         {
 
-            int wBytes = rrw / 2;
-            byte[] data = new byte[wBytes * rrh];
+            var wBytes = rrw / 2;
+            var data = new byte[wBytes * rrh];
 
             dbw >>= 1;
-            int dataIndex = 0;
-            int startBlockPos = dbp * 64;
+            var dataIndex = 0;
+            var startBlockPos = dbp * 64;
 
-            bool odd = false;
+            var odd = false;
 
-            for (int y = dsay; y < dsay + rrh; y++)
+            for (var y = dsay; y < dsay + rrh; y++)
             {
-                for (int x = dsax; x < dsax + rrw; x++)
+                for (var x = dsax; x < dsax + rrw; x++)
                 {
-                    int pageX = x / 128;
-                    int pageY = y / 128;
-                    int page = pageX + pageY * dbw;
+                    var pageX = x / 128;
+                    var pageY = y / 128;
+                    var page = pageX + pageY * dbw;
 
-                    int px = x - (pageX * 128);
-                    int py = y - (pageY * 128);
+                    var px = x - (pageX * 128);
+                    var py = y - (pageY * 128);
 
-                    int blockX = px / 32;
-                    int blockY = py / 16;
-                    int block = block4[blockX + blockY * 4];
+                    var blockX = px / 32;
+                    var blockY = py / 16;
+                    var block = block4[blockX + blockY * 4];
 
-                    int bx = px - blockX * 32;
-                    int by = py - blockY * 16;
+                    var bx = px - blockX * 32;
+                    var by = py - blockY * 16;
 
-                    int column = by / 4;
+                    var column = by / 4;
 
-                    int cx = bx;
-                    int cy = by - column * 4;
-                    int cw = columnWord4[column & 1,cx + cy * 32];
-                    int cb = columnByte4[cx + cy * 32];
+                    var cx = bx;
+                    var cy = by - column * 4;
+                    var cw = columnWord4[column & 1, cx + cy * 32];
+                    var cb = columnByte4[cx + cy * 32];
 
-                    int gsIndex = 4 * (startBlockPos + page * 2048 + block * 64 + column * 16 + cw);
+                    var gsIndex = 4 * (startBlockPos + page * 2048 + block * 64 + column * 16 + cw);
                     gsIndex += (cb >> 1);
 
                     int gsVal = mem[gsIndex];

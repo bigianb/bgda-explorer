@@ -38,7 +38,8 @@ namespace WorldExplorer
                 try
                 {
                     ext = (System.IO.Path.GetExtension(entry.Key) ?? "").ToLower();
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine(e);
                     continue;

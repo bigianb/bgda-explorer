@@ -25,39 +25,39 @@ namespace WorldExplorer.DataLoaders
     {
         public WorldData Decode(EngineVersion engineVersion, WorldTexFile texFile, ILogger log, byte[] data, int startOffset, int length)
         {
-            WorldData worldData = new WorldData();
+            var worldData = new WorldData();
 
             var reader = new DataReader(data, startOffset, length);
 
-            int numElements = reader.ReadInt32();       // 0
+            var numElements = reader.ReadInt32();       // 0
 
             reader.Skip(12); // Skipping 3 ints
 
-            int numCols = reader.ReadInt32();           // x10        
-            int numRows = reader.ReadInt32();           // x14        
+            var numCols = reader.ReadInt32();           // x10        
+            var numRows = reader.ReadInt32();           // x14        
 
             reader.Skip(12); // Skipping 3 ints         // x18 x1c x20
-            int elementArrayStart = reader.ReadInt32(); // x24
+            var elementArrayStart = reader.ReadInt32(); // x24
 
             reader.Skip(8); // Skipping 2 ints
-            int off38Cols = reader.ReadInt32();
-            int off38Rows = reader.ReadInt32();
-            int off38 = reader.ReadInt32();
+            var off38Cols = reader.ReadInt32();
+            var off38Rows = reader.ReadInt32();
+            var off38 = reader.ReadInt32();
 
             reader.Skip(28);
-            int texll = reader.ReadInt32();
-            int texur = reader.ReadInt32();
-            int texX0 = texll % 100;
-            int texY0 = texll / 100;
-            int texX1 = texur % 100;
-            int texY1 = texur / 100;
+            var texll = reader.ReadInt32();
+            var texur = reader.ReadInt32();
+            var texX0 = texll % 100;
+            var texY0 = texll / 100;
+            var texX1 = texur % 100;
+            var texY1 = texur / 100;
 
             reader.Skip(4);
-            int worldTexOffsetsOffset = reader.ReadInt32();
-            worldData.textureChunkOffsets = readTextureChunkOffsets(engineVersion, data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1+1, texY1);
+            var worldTexOffsetsOffset = reader.ReadInt32();
+            worldData.textureChunkOffsets = readTextureChunkOffsets(engineVersion, data, startOffset + worldTexOffsetsOffset, texX0, texY0, texX1 + 1, texY1);
             worldData.worldElements = new List<WorldElement>(numElements);
 
-            for (int elementIdx = 0; elementIdx < numElements; ++elementIdx)
+            for (var elementIdx = 0; elementIdx < numElements; ++elementIdx)
             {
                 var element = new WorldElement();
 
@@ -70,37 +70,38 @@ namespace WorldExplorer.DataLoaders
                     reader.SetOffset(elementArrayStart + elementIdx * 0x38);
                 }
 
-                int vifDataOffset = reader.ReadInt32();
+                var vifDataOffset = reader.ReadInt32();
 
                 if (EngineVersion.DarkAlliance == engineVersion)
                 {
-                    int tex2 = reader.ReadInt32();
-                    if (tex2 != 0) {
+                    var tex2 = reader.ReadInt32();
+                    if (tex2 != 0)
+                    {
                         log.LogLine("Tex2=" + tex2);
                     }
                 }
 
-                int vifLen = reader.ReadInt32();
+                var vifLen = reader.ReadInt32();
                 log.LogLine("-----------");
                 log.LogLine("vifdata: " + vifDataOffset + ", " + vifLen);
 
-                float x1 = reader.ReadFloat();
-                float y1 = reader.ReadFloat();
-                float z1 = reader.ReadFloat();
-                float x2 = reader.ReadFloat();
-                float y2 = reader.ReadFloat();
-                float z2 = reader.ReadFloat();
+                var x1 = reader.ReadFloat();
+                var y1 = reader.ReadFloat();
+                var z1 = reader.ReadFloat();
+                var x2 = reader.ReadFloat();
+                var y2 = reader.ReadFloat();
+                var z2 = reader.ReadFloat();
 
                 element.boundingBox = new Rect3D(x1, y1, z1, x2 - x1, y2 - y1, z2 - z1);
 
                 log.LogLine("Bounding Box: " + element.boundingBox.ToString());
 
-                int textureNum = reader.ReadInt32() / 0x40;
+                var textureNum = reader.ReadInt32() / 0x40;
                 log.LogLine("Texture Num: " + textureNum);
 
                 int texCellxy = reader.ReadInt16();
-                int y = texCellxy / 100;
-                int x = texCellxy % 100;
+                var y = texCellxy / 100;
+                var x = texCellxy % 100;
 
                 if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
                 {
@@ -126,18 +127,18 @@ namespace WorldExplorer.DataLoaders
                 }
 
                 var vifLogger = new StringLogger();
-                int texWidth = 100;
-                int texHeight = 100;
+                var texWidth = 100;
+                var texHeight = 100;
                 if (element.Texture != null)
                 {
                     texWidth = element.Texture.PixelWidth;
                     texHeight = element.Texture.PixelHeight;
                 }
 
-                byte nregs = data[startOffset + vifDataOffset + 0x10];
-                int vifStartOffset = (nregs + 2) * 0x10;
+                var nregs = data[startOffset + vifDataOffset + 0x10];
+                var vifStartOffset = (nregs + 2) * 0x10;
                 element.VifDataOffset = startOffset + vifDataOffset + vifStartOffset;
-                element.VifDataLength = vifLen*0x10 - vifStartOffset;
+                element.VifDataLength = vifLen * 0x10 - vifStartOffset;
                 element.model = decodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
 
                 if (EngineVersion.ReturnToArms == engineVersion || EngineVersion.JusticeLeagueHeroes == engineVersion)
@@ -163,8 +164,8 @@ namespace WorldExplorer.DataLoaders
                 // I don't think RTA uses this flags scheme. From the data it looks like there are
                 // 2 shorts (or possibly floats) following.
 
-                int flags = reader.ReadInt32();
-                
+                var flags = reader.ReadInt32();
+
                 if ((flags & 0x01) == 0)
                 {
                     log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
@@ -202,8 +203,8 @@ namespace WorldExplorer.DataLoaders
 
         private string makeString(List<int> list)
         {
-            string s = "";
-            foreach (int i in list)
+            var s = "";
+            foreach (var i in list)
             {
                 if (s.Length != 0)
                 {
@@ -217,13 +218,13 @@ namespace WorldExplorer.DataLoaders
 
         private int[,] readTextureChunkOffsets(EngineVersion engineVersion, byte[] data, int offset, int x1, int y1, int x2, int y2)
         {
-            int[,] chunkOffsets = new int[100, 100];
+            var chunkOffsets = new int[100, 100];
             int addr;
-            for (int y = y1; y <= y2; ++y)
+            for (var y = y1; y <= y2; ++y)
             {
-                for (int x = x1; x <= x2; ++x)
+                for (var x = x1; x <= x2; ++x)
                 {
-                    int cellOffset = ((y - y1) * 100 + x - x1) * 8;
+                    var cellOffset = ((y - y1) * 100 + x - x1) * 8;
                     // This test is needed to deal with town.world in BGDA which addresses textures outside of the maximum x range.
                     if (data.Length >= offset + cellOffset + 4)
                     {
@@ -247,8 +248,7 @@ namespace WorldExplorer.DataLoaders
 
         public Model decodeModel(EngineVersion engineVersion, ILogger log, byte[] data, int startOffset, int length, int texWidth, int texHeight)
         {
-            Model model = null;
-            if (!modelMap.TryGetValue(startOffset, out model))
+            if (!modelMap.TryGetValue(startOffset, out var model))
             {
                 model = new Model
                 {

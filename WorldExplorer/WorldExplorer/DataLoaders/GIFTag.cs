@@ -24,11 +24,11 @@ namespace WorldExplorer.DataLoaders
 
         public void parse(byte[] data, int idx)
         {
-            int low32 = DataUtil.getLEInt(data, idx);
+            var low32 = DataUtil.getLEInt(data, idx);
             nloop = low32 & 0x7FFF;
             eop = (low32 & 0x8000) == 0x8000;
 
-            int next32 = DataUtil.getLEInt(data, idx + 4);
+            var next32 = DataUtil.getLEInt(data, idx + 4);
 
             // bit 32 is bit 0 of next 32
             pre = ((next32 >> (46 - 32)) & 1) == 1;
@@ -41,13 +41,13 @@ namespace WorldExplorer.DataLoaders
             {
                 nreg = 16;
             }
-            int regs64 = DataUtil.getLEInt(data, idx + 8);
-            int regs96 = DataUtil.getLEInt(data, idx + 12);
+            var regs64 = DataUtil.getLEInt(data, idx + 8);
+            var regs96 = DataUtil.getLEInt(data, idx + 12);
 
             regs = new int[nreg];
-            for (int reg = 0; reg < nreg; ++reg)
+            for (var reg = 0; reg < nreg; ++reg)
             {
-                int rgs = reg > 7 ? regs96 : regs64;
+                var rgs = reg > 7 ? regs96 : regs64;
                 regs[reg] = (rgs >> ((reg & 7) * 4)) & 0x0f;
             }
         }
@@ -62,7 +62,7 @@ namespace WorldExplorer.DataLoaders
             sb.Append("flg: ").Append(flagString()).Append(", ");
             sb.Append("nreg: ").Append(nreg).Append(", ");
             sb.Append("regs: ");
-            for (int r = 0; r < nreg; ++r)
+            for (var r = 0; r < nreg; ++r)
             {
                 sb.Append(regs[r]);
                 if (r != nreg)

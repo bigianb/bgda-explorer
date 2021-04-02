@@ -17,13 +17,14 @@ namespace WorldExplorer.DataLoaders
                 dataObj.Name = GetString(reader, entryOffset);
                 reader.SetOffset(entryOffset + 0x40);
                 dataObj.StartOffsetInVAFile = reader.ReadInt32();
-                
+
                 if (entry != numEntries - 1)
                 {
                     reader.SetOffset(entryOffset + 0x84);
                     var nextStart = reader.ReadInt32();
                     dataObj.Length = nextStart - dataObj.StartOffsetInVAFile;
-                } else
+                }
+                else
                 {
                     // Means to the end of the VA file
                     dataObj.Length = 0;
@@ -35,7 +36,7 @@ namespace WorldExplorer.DataLoaders
 
         private static string GetString(DataReader reader, int offset)
         {
-            int tempOffset = reader.Offset;
+            var tempOffset = reader.Offset;
             reader.SetOffset(offset);
             var value = reader.ReadZString();
             reader.SetOffset(tempOffset);
