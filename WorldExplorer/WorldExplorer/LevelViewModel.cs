@@ -28,7 +28,7 @@ namespace WorldExplorer
     {
         private WorldData _worldData;
         private List<ModelVisual3D> _scene;
-        private String _infoText;
+        private string _infoText;
         private ObjectManager _objectManager;
 
         public WorldFileTreeViewModel WorldNode { get; set; }
@@ -41,13 +41,13 @@ namespace WorldExplorer
                 NewWorldLoaded();
             }
         }
-        public String InfoText
+        public string InfoText
         {
             get { return _infoText; }
             set
             {
                 _infoText = value;
-                this.OnPropertyChanged("InfoText");
+                OnPropertyChanged("InfoText");
             }
         }
         public List<ModelVisual3D> Scene
@@ -56,7 +56,7 @@ namespace WorldExplorer
             set
             {
                 _scene = value;
-                this.OnPropertyChanged("Scene");
+                OnPropertyChanged("Scene");
             }
         }
         public ObjectManager ObjectManager
@@ -164,11 +164,15 @@ namespace WorldExplorer
         private List<ModelVisual3D> buildLights()
         {
             List<ModelVisual3D> scene = new List<ModelVisual3D>();
-            ModelVisual3D ambientLight = new ModelVisual3D();
-            ambientLight.Content = new AmbientLight(Color.FromRgb(0x80, 0x80, 0x80));
+            ModelVisual3D ambientLight = new ModelVisual3D
+            {
+                Content = new AmbientLight(Color.FromRgb(0x80, 0x80, 0x80))
+            };
             scene.Add(ambientLight);
-            ModelVisual3D directionalLight = new ModelVisual3D();
-            directionalLight.Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1));
+            ModelVisual3D directionalLight = new ModelVisual3D
+            {
+                Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1))
+            };
             scene.Add(directionalLight);
 
             return scene;

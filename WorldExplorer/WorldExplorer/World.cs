@@ -32,8 +32,8 @@ namespace WorldExplorer
             Name = name;
         }
 
-        public String DataPath;
-        public String Name;
+        public string DataPath;
+        public string Name;
         public EngineVersion EngineVersion;
 
         public GobFile WorldGob = null;

@@ -34,12 +34,12 @@ namespace WorldExplorer.DataLoaders
         private readonly EngineVersion _engineVersion;
         private string _filepath;
 
-        public String Filename;
+        public string Filename;
 
         public void ReadDirectory()
         {
             int index = 0;
-            String s = DataUtil.GetString(FileData, index);
+            string s = DataUtil.GetString(FileData, index);
             while (s.Length > 0) {
                 int lmpOffset = BitConverter.ToInt32(FileData, index + 0x20);
                 int lmpLen = BitConverter.ToInt32(FileData, index + 0x24);
@@ -51,6 +51,6 @@ namespace WorldExplorer.DataLoaders
 
         public byte[] FileData;
 
-        public Dictionary<String, LmpFile> Directory = new Dictionary<string, LmpFile>();       
+        public Dictionary<string, LmpFile> Directory = new Dictionary<string, LmpFile>();       
     }
 }

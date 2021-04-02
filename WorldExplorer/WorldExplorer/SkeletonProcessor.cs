@@ -51,8 +51,10 @@ namespace WorldExplorer
 
             model.Geometry = mesh;
 
-            DiffuseMaterial dm = new DiffuseMaterial();
-            dm.Brush = new SolidColorBrush(Colors.DarkGreen);
+            DiffuseMaterial dm = new DiffuseMaterial
+            {
+                Brush = new SolidColorBrush(Colors.DarkGreen)
+            };
             model.Material = dm;
 
             return model;

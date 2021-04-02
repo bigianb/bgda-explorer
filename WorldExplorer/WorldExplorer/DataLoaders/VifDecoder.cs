@@ -326,7 +326,7 @@ namespace WorldExplorer.DataLoaders
             public int v2;
             public int v3;
 
-            public override String ToString()
+            public override string ToString()
             {
                 return HexUtil.formatHexUShort(v1) + ", " + HexUtil.formatHexUShort(v2) + ", " + HexUtil.formatHexUShort(v3);
             }
@@ -450,7 +450,7 @@ namespace WorldExplorer.DataLoaders
                             bool usn = (immCommand & 0x4000) == 0x4000;
 
                             DebugWrite(HexUtil.formatHex(offset) + " ");
-                            String debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
+                            string debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
 
                             if (flag) {
                                 debugMsg += ", Flag";
@@ -487,10 +487,12 @@ namespace WorldExplorer.DataLoaders
                                         short z = DataUtil.getLEShort(fileData, offset + 4);
                                         offset += 6;
 
-                                        Vertex vertex = new Vertex();
-                                        vertex.x = x;
-                                        vertex.y = y;
-                                        vertex.z = z;
+                                        Vertex vertex = new Vertex
+                                        {
+                                            x = x,
+                                            y = y,
+                                            z = z
+                                        };
                                         currentChunk.vertices.Add(vertex);
                                     } else {
                                         int x = DataUtil.getLEUShort(fileData, offset);
@@ -498,10 +500,12 @@ namespace WorldExplorer.DataLoaders
                                         int z = DataUtil.getLEUShort(fileData, offset + 4);
                                         offset += 6;
 
-                                        VLoc vloc = new VLoc();
-                                        vloc.v1 = x;
-                                        vloc.v2 = y;
-                                        vloc.v3 = z;
+                                        VLoc vloc = new VLoc
+                                        {
+                                            v1 = x,
+                                            v2 = y,
+                                            v3 = z
+                                        };
                                         currentChunk.vlocs.Add(vloc);
                                     }
                                 }
@@ -510,10 +514,12 @@ namespace WorldExplorer.DataLoaders
                                 // v3-8
                                 int idx = offset;
                                 for (int vnum = 0; vnum < numCommand; ++vnum) {
-                                    SByteVector vec = new SByteVector();
-                                    vec.x = (sbyte)fileData[idx++];
-                                    vec.y = (sbyte)fileData[idx++];
-                                    vec.z = (sbyte)fileData[idx++];
+                                    SByteVector vec = new SByteVector
+                                    {
+                                        x = (sbyte)fileData[idx++],
+                                        y = (sbyte)fileData[idx++],
+                                        z = (sbyte)fileData[idx++]
+                                    };
                                     currentChunk.normals.Add(vec);
                                 }
                                 int numBytes = ((numCommand * 3) + 3) & ~3;
@@ -563,11 +569,13 @@ namespace WorldExplorer.DataLoaders
                                 currentChunk.vertexWeights = new List<VertexWeight>();
                                 int curVertex=0;
                                 for (int i = 0; i < numCommand; ++i) {
-                                    VertexWeight vw = new VertexWeight();
-                                    vw.startVertex = curVertex;
-                                    vw.bone1 = fileData[offset++] / 4;
-                                    vw.boneWeight1 = fileData[offset++];
-                                    vw.bone2 = fileData[offset++];
+                                    VertexWeight vw = new VertexWeight
+                                    {
+                                        startVertex = curVertex,
+                                        bone1 = fileData[offset++] / 4,
+                                        boneWeight1 = fileData[offset++],
+                                        bone2 = fileData[offset++]
+                                    };
                                     if (vw.bone2 == 0xFF) {
                                         // Single bone                                       
                                         vw.boneWeight2 = 0;

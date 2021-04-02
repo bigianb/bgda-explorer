@@ -21,7 +21,7 @@ namespace WorldExplorer.DataLoaders
 {
     class DataUtil
     {
-        public static String GetString(byte[] data, int index)
+        public static string GetString(byte[] data, int index)
         {
             StringBuilder sb = new StringBuilder();
             int i = index;

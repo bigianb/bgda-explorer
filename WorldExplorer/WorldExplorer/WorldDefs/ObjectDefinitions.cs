@@ -82,8 +82,10 @@ namespace WorldExplorer.WorldDefs
         private VisualObjectData ParseLightObject(VisualObjectData obj)
         {
             obj.Offset = new Vector3D(0, 0, 0);
-            var sphere = new SphereVisual3D();
-            sphere.Radius = 2.5;
+            var sphere = new SphereVisual3D
+            {
+                Radius = 2.5
+            };
 
             var color = ColorFromArray(obj.ObjectData.Floats);
 
@@ -292,9 +294,11 @@ namespace WorldExplorer.WorldDefs
                             tex.PixelWidth, 
                             tex.PixelHeight);
 
-                        var model = new ModelVisual3D();
-                        model.Content = Conversions.CreateModel3D(vifModel, tex, null, -1);
-                        model.Transform = new ScaleTransform3D(1.0 / 4, 1.0 / 4, 1.0 / 4);
+                        var model = new ModelVisual3D
+                        {
+                            Content = Conversions.CreateModel3D(vifModel, tex, null, -1),
+                            Transform = new ScaleTransform3D(1.0 / 4, 1.0 / 4, 1.0 / 4)
+                        };
                         return model;
                     }
                 }
@@ -310,12 +314,13 @@ namespace WorldExplorer.WorldDefs
         }
         private static BoxVisual3D CreateBox(double width, double height, double length, Color color)
         {
-            var box = new BoxVisual3D();
-
-            box.Width = width;
-            box.Height = height;
-            box.Length = length;
-            box.Material = new DiffuseMaterial(new SolidColorBrush(color));
+            var box = new BoxVisual3D
+            {
+                Width = width,
+                Height = height,
+                Length = length,
+                Material = new DiffuseMaterial(new SolidColorBrush(color))
+            };
 
             return box;
         }

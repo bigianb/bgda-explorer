@@ -33,7 +33,7 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// The .yak file name.
         /// </summary>
-        public String Name;
+        public string Name;
 
         /// <summary>
         /// The raw data of the .yak file.
@@ -87,10 +87,12 @@ namespace WorldExplorer.DataLoaders
             {
                 return null;
             }
-            Child child = new Child();
-            child.TextureOffset = t;
-            child.VifOffset = reader.ReadInt32();
-            child.VifLength = reader.ReadInt32();
+            Child child = new Child
+            {
+                TextureOffset = t,
+                VifOffset = reader.ReadInt32(),
+                VifLength = reader.ReadInt32()
+            };
             return child;
         }
 

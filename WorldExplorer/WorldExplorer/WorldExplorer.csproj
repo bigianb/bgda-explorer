@@ -130,11 +130,21 @@
       <DependentUpon>SkeletonView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SkeletonViewModel.cs" />
+    <Compile Include="TreeView\AbstractLmpTreeViewModel.cs" />
+    <Compile Include="TreeView\GobTreeViewModel.cs" />
+    <Compile Include="TreeView\LmpEntryTreeViewModel.cs" />
+    <Compile Include="TreeView\LmpTreeViewModel.cs" />
+    <Compile Include="TreeView\TextTreeViewModel.cs" />
+    <Compile Include="TreeView\WorldElementTreeViewModel.cs" />
+    <Compile Include="TreeView\WorldFileTreeViewModel.cs" />
     <Compile Include="TreeView\WorldTreeViewModel.cs" />
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TreeView\YakChildTreeViewItem.cs" />
+    <Compile Include="TreeView\YakTreeViewItem.cs" />
+    <Compile Include="TreeView\YakTreeViewModel.cs" />
     <Compile Include="Win3D\Conversions.cs" />
     <Compile Include="World.cs" />
     <Compile Include="WorldDefs\ObjectDefinitions.cs" />

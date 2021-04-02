@@ -32,11 +32,13 @@ namespace WorldExplorer.DataLoaders
         public static AnimData DecodeCRTA(EngineVersion engineVersion, byte[] data, int startOffset, int length)
         {
             int endIndex = startOffset + length;
-            AnimData animData = new AnimData();
-            animData.NumBones = DataUtil.getLEInt(data, startOffset);
-            animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);     // max frame
-            animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
-            animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
+            AnimData animData = new AnimData
+            {
+                NumBones = DataUtil.getLEInt(data, startOffset),
+                Offset4Val = DataUtil.getLEInt(data, startOffset + 4),     // max frame
+                Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14),
+                Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18)
+            };
             int offset8Val = DataUtil.getLEInt(data, startOffset + 8);
 
             int bindingPoseOffset = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
@@ -61,9 +63,11 @@ namespace WorldExplorer.DataLoaders
             AnimMeshPose pose = null;
             var bitReader = new BitstreamReader(data, startOffset + offset8Val, length - offset8Val);
             for (int boneNum = 0; boneNum < animData.NumBones; ++boneNum) {
-                pose = new AnimMeshPose();
-                pose.BoneNum = boneNum;
-                pose.FrameNum = 0;
+                pose = new AnimMeshPose
+                {
+                    BoneNum = boneNum,
+                    FrameNum = 0
+                };
 
                 int posLen = bitReader.Read(4) + 1;
                 pose.Position = new Point3D(
@@ -114,13 +118,15 @@ namespace WorldExplorer.DataLoaders
                     if (pose != null) {
                         animData.MeshPoses.Add(pose);
                     }
-                    pose = new AnimMeshPose();
-                    pose.FrameNum = totalFrame;
-                    pose.BoneNum = boneNum;
-                    pose.Position = curPose[boneNum].Position;
-                    pose.Rotation = curPose[boneNum].Rotation;
-                    pose.AngularVelocity = curPose[boneNum].AngularVelocity;
-                    pose.Velocity = curPose[boneNum].Velocity;
+                    pose = new AnimMeshPose
+                    {
+                        FrameNum = totalFrame,
+                        BoneNum = boneNum,
+                        Position = curPose[boneNum].Position,
+                        Rotation = curPose[boneNum].Rotation,
+                        AngularVelocity = curPose[boneNum].AngularVelocity,
+                        Velocity = curPose[boneNum].Velocity
+                    };
                 }
                 if (flag == 1) {
                     // xyz
@@ -175,11 +181,13 @@ namespace WorldExplorer.DataLoaders
         public static AnimData DecodeBGDA(EngineVersion engineVersion, byte[] data, int startOffset, int length)
         {
             int endIndex = startOffset + length;
-            AnimData animData = new AnimData();
-            animData.NumBones = DataUtil.getLEInt(data, startOffset);
-            animData.Offset4Val = DataUtil.getLEInt(data, startOffset + 4);
-            animData.Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14);
-            animData.Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18);
+            AnimData animData = new AnimData
+            {
+                NumBones = DataUtil.getLEInt(data, startOffset),
+                Offset4Val = DataUtil.getLEInt(data, startOffset + 4),
+                Offset14Val = DataUtil.getLEInt(data, startOffset + 0x14),
+                Offset18Val = DataUtil.getLEInt(data, startOffset + 0x18)
+            };
             int offset8Val = startOffset + DataUtil.getLEInt(data, startOffset + 8);
 
             int bindingPoseOffset = startOffset + DataUtil.getLEInt(data, startOffset + 0x0C);
@@ -206,9 +214,11 @@ namespace WorldExplorer.DataLoaders
             AnimMeshPose pose = null;
             for (int boneNum = 0; boneNum < animData.NumBones; ++boneNum)
             {
-                pose = new AnimMeshPose();
-                pose.BoneNum = boneNum;
-                pose.FrameNum = 0;
+                pose = new AnimMeshPose
+                {
+                    BoneNum = boneNum,
+                    FrameNum = 0
+                };
                 int frameOff = offset8Val + boneNum * 0x0e;
 
                 pose.Position = new Point3D(
@@ -253,13 +263,15 @@ namespace WorldExplorer.DataLoaders
                     {
                         animData.MeshPoses.Add(pose);
                     }
-                    pose = new AnimMeshPose();
-                    pose.FrameNum = totalFrame;
-                    pose.BoneNum = boneNum;
-                    pose.Position = curPose[boneNum].Position;
-                    pose.Rotation = curPose[boneNum].Rotation;
-                    pose.AngularVelocity = curPose[boneNum].AngularVelocity;
-                    pose.Velocity = curPose[boneNum].Velocity;
+                    pose = new AnimMeshPose
+                    {
+                        FrameNum = totalFrame,
+                        BoneNum = boneNum,
+                        Position = curPose[boneNum].Position,
+                        Rotation = curPose[boneNum].Rotation,
+                        AngularVelocity = curPose[boneNum].AngularVelocity,
+                        Velocity = curPose[boneNum].Velocity
+                    };
                 }
 
                 // bit 7 specifies whether to read 4 (set) or 3 elements following

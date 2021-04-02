@@ -62,7 +62,7 @@ namespace WorldExplorer.DataLoaders
                 gifTag2.parse(data, curIdx);
 
                 // 8 bit palletised
-                PalEntry[] palette = PalEntry.readPalette(data, curIdx + 0x10, palw, palh);
+                PalEntry[] palette = PalEntry.readPalette(data, curIdx + GIFTag.Size, palw, palh);
 
                 palette = PalEntry.unswizzlePalette(palette);
 
@@ -78,24 +78,24 @@ namespace WorldExplorer.DataLoaders
                 int startx = 0;
                 int starty = 0;
 
-                while (curIdx < endIndex - 0x10) {
+                while (curIdx < endIndex - GIFTag.Size) {
                     GIFTag gifTag3 = new GIFTag();
                     gifTag3.parse(data, curIdx);
-                    while (!gifTag3.isImage())
+                    while (!gifTag3.IsImage)
                     {
-                        int trxregOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXREG);
+                        int trxregOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXREG);
                         if (trxregOffset != 0)
                         {
                             rrw = DataUtil.getLEShort(data, trxregOffset);
                             rrh = DataUtil.getLEShort(data, trxregOffset + 4);
                         }
-                        int trxposOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXPOS);
+                        int trxposOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXPOS);
                         if (trxposOffset != 0)
                         {
                             startx = DataUtil.getLEShort(data, trxposOffset + 0x04) & 0x07FF;
                             starty = DataUtil.getLEShort(data, trxposOffset + 0x06) & 0x07FF;
                         }
-                        int bitbltOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
+                        int bitbltOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, BITBLTBUF);
                         if (bitbltOffset != 0)
                         {
                             //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
@@ -105,9 +105,11 @@ namespace WorldExplorer.DataLoaders
                         }
 
                         curIdx += gifTag3.Length;
+                        if (curIdx + GIFTag.Size >= endIndex)
+                            break;
                         gifTag3.parse(data, curIdx);
                     }
-                    curIdx += 0x10;     // image gif tag
+                    curIdx += GIFTag.Size;     // image gif tag
                     int bytesToTransfer = gifTag3.nloop * 16;
 
                     if (palette.Length == 16)
@@ -119,7 +121,7 @@ namespace WorldExplorer.DataLoaders
                             int imageDataIdx = curIdx;
                             // check for multiple IMAGE entries.
                             int nextTagInd = bytesToTransfer + curIdx;
-                            if (nextTagInd < endIndex - 0x10)
+                            if (nextTagInd < endIndex - GIFTag.Size)
                             {
                                 GIFTag imageTag2 = new GIFTag();
                                 imageTag2.parse(data, nextTagInd);
@@ -134,7 +136,7 @@ namespace WorldExplorer.DataLoaders
                                     {
                                         imageData[i] = data[j];
                                     }
-                                    j = nextTagInd + 0x10;
+                                    j = nextTagInd + GIFTag.Size;
                                     for (int i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i)
                                     {
                                         imageData[i] = data[j];
@@ -164,6 +166,13 @@ namespace WorldExplorer.DataLoaders
                     curIdx += bytesToTransfer;
                 }
                 if (palette.Length == 256)
+                {
+                    destWBytes = (finalw + 0x3f) & ~0x3f;
+                    dbw = destWBytes / 0x40;
+                    bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
+                }
+                // THIS IS A HACK
+                if (palette.Length == 1024)
                 {
                     destWBytes = (finalw + 0x3f) & ~0x3f;
                     dbw = destWBytes / 0x40;
@@ -296,11 +305,13 @@ namespace WorldExplorer.DataLoaders
             int destIdx = 0;
             int endOffset = startOffset + numPixels * 4;
             for (int idx = startOffset; idx < endOffset; ) {
-                PalEntry pe = new PalEntry();
-                pe.r = fileData[idx++];
-                pe.g = fileData[idx++];
-                pe.b = fileData[idx++];
-                pe.a = fileData[idx++];
+                PalEntry pe = new PalEntry
+                {
+                    r = fileData[idx++],
+                    g = fileData[idx++],
+                    b = fileData[idx++],
+                    a = fileData[idx++]
+                };
 
                 pixels[destIdx++] = pe;
             }

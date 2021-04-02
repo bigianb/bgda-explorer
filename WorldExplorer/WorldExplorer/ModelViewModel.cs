@@ -17,7 +17,6 @@
 using System;
 using System.Windows.Media.Media3D;
 using HelixToolkit.Wpf;
-using WorldExplorer.DataLoaders;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataModel;
 using WorldExplorer.Win3D;
@@ -37,8 +36,8 @@ namespace WorldExplorer
                 _animData = value;
                 CurrentFrame = 0;
                 UpdateModel(false);
-                this.OnPropertyChanged("AnimData");
-                this.OnPropertyChanged("MaximumFrame");
+                OnPropertyChanged("AnimData");
+                OnPropertyChanged("MaximumFrame");
             }
         }
 
@@ -62,7 +61,7 @@ namespace WorldExplorer
             {
                 _vifModel = value;
                 UpdateModel(true);
-                this.OnPropertyChanged("VifModel");
+                OnPropertyChanged("VifModel");
             }
         }
 
@@ -71,7 +70,7 @@ namespace WorldExplorer
             _modelView = MainViewModel.MainWindow.modelView;
         }
 
-        private void UpdateModel(Boolean updateCamera)
+        private void UpdateModel(bool updateCamera)
         {
             if (_vifModel != null)
             {
@@ -114,19 +113,19 @@ namespace WorldExplorer
             set {
                 _currentFrame = value;
                 UpdateModel(false);
-                this.OnPropertyChanged("CurrentFrame");
+                OnPropertyChanged("CurrentFrame");
             }
         }
 
-        private String _infoText;
+        private string _infoText;
 
-        public String InfoText
+        public string InfoText
         {
             get { return _infoText; }
             set
             {
                 _infoText = value;
-                this.OnPropertyChanged("InfoText");
+                OnPropertyChanged("InfoText");
             }
 
         }
@@ -145,7 +144,7 @@ namespace WorldExplorer
                 _modelView.modelObject = _model;
                 _modelView.viewport.Children.Add(_modelView.modelObject);
 
-                this.OnPropertyChanged("Model");
+                OnPropertyChanged("Model");
             }
         }
 
@@ -158,7 +157,7 @@ namespace WorldExplorer
             {
                 _cameraTransform = value;
                 _camera.Transform = _cameraTransform;
-                this.OnPropertyChanged("CameraTransform");
+                OnPropertyChanged("CameraTransform");
             }
         }
 
@@ -170,7 +169,7 @@ namespace WorldExplorer
             set
             {
                 _camera = value;
-                this.OnPropertyChanged("Camera");
+                OnPropertyChanged("Camera");
             }
         }
 

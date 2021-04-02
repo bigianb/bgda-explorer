@@ -9,7 +9,7 @@ namespace WorldExplorer.WorldDefs
     {
         public ObjectData ObjectData;
         public Vector3D Offset = new Vector3D(0, 0, 0);
-        public Double zRotation;
+        public double zRotation;
         public ModelVisual3D Model;
 
         public void AddToScene(List<ModelVisual3D> scene)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
@@ -16,12 +15,14 @@ namespace WorldExplorer.DataLoaders
 
             var reader = new DataReader(data, startOffset, length);
 
-            var scene = new CutScene();
-            scene.flags = reader.ReadInt32();
-            scene.keyframeOffset = reader.ReadInt32();
-            scene.numKeyframes = reader.ReadInt32();
-            scene.characterBlockOffset = reader.ReadInt32();
-            scene.numCharacters = reader.ReadInt32();
+            var scene = new CutScene
+            {
+                flags = reader.ReadInt32(),
+                keyframeOffset = reader.ReadInt32(),
+                numKeyframes = reader.ReadInt32(),
+                characterBlockOffset = reader.ReadInt32(),
+                numCharacters = reader.ReadInt32()
+            };
 
             reader.SetOffset(0x20);
             scene.subtitles = reader.ReadZString();

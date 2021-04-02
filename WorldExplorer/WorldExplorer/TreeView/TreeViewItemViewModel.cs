@@ -1,5 +1,4 @@
-﻿
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace WorldExplorer
@@ -62,7 +61,7 @@ namespace WorldExplorer
         /// </summary>
         public bool HasDummyChild
         {
-            get { return this.Children.Count == 1 && this.Children[0] == DummyChild; }
+            get { return Children.Count == 1 && Children[0] == DummyChild; }
         }
 
         #endregion // HasLoadedChildren
@@ -81,7 +80,7 @@ namespace WorldExplorer
                 if (value != _isExpanded)
                 {
                     _isExpanded = value;
-                    this.OnPropertyChanged("IsExpanded");
+                    OnPropertyChanged("IsExpanded");
                 }
 
                 // Expand all the way up to the root.
@@ -89,10 +88,10 @@ namespace WorldExplorer
                     _parent.IsExpanded = true;
 
                 // Lazy load the child items, if necessary.
-                if (this.HasDummyChild)
+                if (HasDummyChild)
                 {
-                    this.Children.Remove(DummyChild);
-                    this.LoadChildren();
+                    Children.Remove(DummyChild);
+                    LoadChildren();
                 }
             }
         }
@@ -113,7 +112,7 @@ namespace WorldExplorer
                 if (value != _isSelected)
                 {
                     _isSelected = value;
-                    this.OnPropertyChanged("IsSelected");
+                    OnPropertyChanged("IsSelected");
                 }
             }
         }
@@ -139,7 +138,7 @@ namespace WorldExplorer
         /// </summary>
         public void ForceLoadChildren()
         {
-            if (this.HasDummyChild)
+            if (HasDummyChild)
             {
                 Children.Remove(DummyChild);
                 LoadChildren();
@@ -165,8 +164,8 @@ namespace WorldExplorer
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion // INotifyPropertyChanged Members

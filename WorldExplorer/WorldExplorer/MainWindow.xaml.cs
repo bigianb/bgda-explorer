@@ -15,21 +15,13 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
 using WorldExplorer.DataExporters;
 
@@ -57,7 +49,7 @@ namespace WorldExplorer
             var binding = new CommandBinding(ApplicationCommands.Properties);
             binding.Executed += Properties_Executed;
             binding.CanExecute += Properties_CanExecute;
-            this.CommandBindings.Add(binding);
+            CommandBindings.Add(binding);
 
             var lastLoadedFile = App.Settings.Get<string>("Files.LastLoadedFile", "");
             if (!string.IsNullOrEmpty(lastLoadedFile))
@@ -170,11 +162,12 @@ namespace WorldExplorer
         }
         private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var window = new SettingsWindow();
-            window.Owner = this;
-            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            bool? result = window.ShowDialog();
-            if (result.GetValueOrDefault(false))
+            var window = new SettingsWindow
+            {
+                Owner = this,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            if (window.ShowDialog() == true)
             {
                 // User pressed save, so we should re-init things.
                 _viewModel.SettingsChanged();
@@ -188,8 +181,10 @@ namespace WorldExplorer
 
         private void MenuOpenFileClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Multiselect = false;
+            var dialog = new OpenFileDialog
+            {
+                Multiselect = false
+            };
 
             bool? result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
@@ -199,7 +194,7 @@ namespace WorldExplorer
         }
         private void MenuExitClick(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void Menu_Export_Texture_Click(object sender, RoutedEventArgs e)
@@ -210,8 +205,10 @@ namespace WorldExplorer
                 return;
             }
 
-            var dialog = new SaveFileDialog();
-            dialog.Filter = "PNG Image|*.png";
+            var dialog = new SaveFileDialog
+            {
+                Filter = "PNG Image|*.png"
+            };
             var result = dialog.ShowDialog(this);
 
             if (result.GetValueOrDefault(false))
@@ -239,10 +236,12 @@ namespace WorldExplorer
                 MessageBox.Show(this, "Model does not have a texture.", "Error", MessageBoxButton.OK);
                 return;
             }
-            
 
-            var dialog = new SaveFileDialog();
-            dialog.Filter = "OBJ File|*.obj";
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "OBJ File|*.obj"
+            };
             var result = dialog.ShowDialog(this);
 
             if (result.GetValueOrDefault(false))
@@ -286,10 +285,11 @@ namespace WorldExplorer
             {
                 foreach (var file in recentFiles)
                 {
-                    var menu = new MenuItem();
-
-                    menu.Header = file;
-                    menu.Tag = file;
+                    var menu = new MenuItem
+                    {
+                        Header = file,
+                        Tag = file
+                    };
                     menu.Click += delegate(object o, RoutedEventArgs args)
                         {
                             var menuItem = (MenuItem) o;

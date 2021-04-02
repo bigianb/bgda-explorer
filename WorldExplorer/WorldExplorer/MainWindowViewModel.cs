@@ -55,7 +55,7 @@ namespace WorldExplorer
 
             _world = new World(engineVersion, folderPath,  Path.GetFileName(_gobFile));
             _worldTreeViewModel = new WorldTreeViewModel(_world);
-            this.OnPropertyChanged("Children");
+            OnPropertyChanged("Children");
         }
 
         public void SettingsChanged()
@@ -86,7 +86,7 @@ namespace WorldExplorer
             set
             {
                 _selectedNodeImage = value;
-                this.OnPropertyChanged("SelectedNodeImage");
+                OnPropertyChanged("SelectedNodeImage");
             }
         }
 
@@ -98,7 +98,7 @@ namespace WorldExplorer
             set
             {
                 _skeletonViewModel = value;
-                this.OnPropertyChanged("TheSkeletonViewModel");
+                OnPropertyChanged("TheSkeletonViewModel");
             }
         }
 
@@ -110,7 +110,7 @@ namespace WorldExplorer
             set
             {
                 _modelViewModel = value;
-                this.OnPropertyChanged("TheModelViewModel");
+                OnPropertyChanged("TheModelViewModel");
             }
         }
 
@@ -122,7 +122,7 @@ namespace WorldExplorer
             set
             {
                 _levelViewModel = value;
-                this.OnPropertyChanged("TheLevelViewModel");
+                OnPropertyChanged("TheLevelViewModel");
             }
         }
 
@@ -152,7 +152,7 @@ namespace WorldExplorer
                 {
                     OnYakChildElementSelected((YakChildTreeViewItem) _selectedNode);
                 }
-                this.OnPropertyChanged("SelectedNode");
+                OnPropertyChanged("SelectedNode");
             }
         }
 
@@ -167,13 +167,13 @@ namespace WorldExplorer
         }
 
         public string _logText;
-        public String LogText
+        public string LogText
         {
             get { return _logText; }
             set
             {
                 _logText = value;
-                this.OnPropertyChanged("LogText");
+                OnPropertyChanged("LogText");
             }
         }
 
@@ -201,9 +201,11 @@ namespace WorldExplorer
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
-                        Model model = new Model();
-                        model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
+                        Model model = new Model
+                        {
+                            meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
+                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight)
+                        };
                         _modelViewModel.VifModel = model;
 
                         /*// Load animation data
@@ -353,14 +355,16 @@ namespace WorldExplorer
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
-            Model model = new Model();
-            model.meshList = VifDecoder.Decode(
-                log, 
-                childEntry.YakFile.FileData, 
+            Model model = new Model
+            {
+                meshList = VifDecoder.Decode(
+                log,
+                childEntry.YakFile.FileData,
                 childEntry.Value.VifOffset,
                 childEntry.Value.TextureOffset,
                 SelectedNodeImage.PixelWidth,
-                SelectedNodeImage.PixelHeight);
+                SelectedNodeImage.PixelHeight)
+            };
             _modelViewModel.VifModel = model;
 
             LogText += log.ToString();
@@ -388,8 +392,8 @@ namespace WorldExplorer
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion // INotifyPropertyChanged Members

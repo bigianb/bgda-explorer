@@ -115,9 +115,11 @@ namespace WorldExplorer.DataModel
                     Quaternion thisRot = Quaternion.Multiply(parentRot, poseRot);
                     thisRot.Normalize();
 
-                    AnimMeshPose fkPose = new AnimMeshPose();
-                    fkPose.Position = thisPos;
-                    fkPose.Rotation = thisRot;
+                    AnimMeshPose fkPose = new AnimMeshPose
+                    {
+                        Position = thisPos,
+                        Rotation = thisRot
+                    };
                     perFrameFKPoses[frame, jointNum] = fkPose;
 
                     parentPoints[parentIndex + 1] = fkPose.Position;
@@ -150,13 +152,15 @@ namespace WorldExplorer.DataModel
                         double velCoeff = frameDiff / 512.0;
                         Point3D posDelta = new Point3D(prevPose.Velocity.X * velCoeff, prevPose.Velocity.Y * velCoeff, prevPose.Velocity.Z * velCoeff);
 
-                        AnimMeshPose pose = new AnimMeshPose();
-                        pose.BoneNum = bone;
-                        pose.FrameNum = frame;
-                        pose.Position = new Point3D(prevPose.Position.X + posDelta.X, prevPose.Position.Y + posDelta.Y, prevPose.Position.Z + posDelta.Z);
-                        pose.Rotation = new Quaternion(prevPose.Rotation.X + rotDelta.X, prevPose.Rotation.Y + rotDelta.Y, prevPose.Rotation.Z + rotDelta.Z, prevPose.Rotation.W + rotDelta.W);
-                        pose.AngularVelocity = prevPose.AngularVelocity;
-                        pose.Velocity = prevPose.Velocity;
+                        AnimMeshPose pose = new AnimMeshPose
+                        {
+                            BoneNum = bone,
+                            FrameNum = frame,
+                            Position = new Point3D(prevPose.Position.X + posDelta.X, prevPose.Position.Y + posDelta.Y, prevPose.Position.Z + posDelta.Z),
+                            Rotation = new Quaternion(prevPose.Rotation.X + rotDelta.X, prevPose.Rotation.Y + rotDelta.Y, prevPose.Rotation.Z + rotDelta.Z, prevPose.Rotation.W + rotDelta.W),
+                            AngularVelocity = prevPose.AngularVelocity,
+                            Velocity = prevPose.Velocity
+                        };
                         perFramePoses[frame, bone] = pose;
                     }
                     prevPose = perFramePoses[frame, bone];

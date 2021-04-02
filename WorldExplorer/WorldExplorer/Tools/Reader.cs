@@ -102,7 +102,7 @@ namespace WorldExplorer.Tools
 
         public override int GetHashCode()
         {
-            return this.CharOffset.GetHashCode();
+            return CharOffset.GetHashCode();
         }
 
 		public static long DistanceBetween(Location a, Location b)
@@ -149,7 +149,7 @@ namespace WorldExplorer.Tools
 
         public bool Intersects(TextBounds bounds)
         {
-            if (this.Location.CharOffset <= bounds.Location.CharOffset && this.EndOffset > bounds.Location.CharOffset)
+            if (Location.CharOffset <= bounds.Location.CharOffset && EndOffset > bounds.Location.CharOffset)
                 return true;
             if (bounds.Location.CharOffset <= Location.CharOffset && bounds.EndOffset > Location.CharOffset)
                 return true;
@@ -293,8 +293,8 @@ namespace WorldExplorer.Tools
 		private void SetInput(TextReader input, long inputLength)
 		{
 			Reset();
-			this._length = inputLength;
-			this._baseReader = input;
+			_length = inputLength;
+			_baseReader = input;
 		}
 
 		public void Dispose()
@@ -358,7 +358,7 @@ namespace WorldExplorer.Tools
 		{
 			var builder = new StringBuilder();
 			char c = Read(false);
-			while (c != '\n' && this.AmountLeft > 0)
+			while (c != '\n' && AmountLeft > 0)
 			{
 				builder.Append(c);
 				c = Read(false);

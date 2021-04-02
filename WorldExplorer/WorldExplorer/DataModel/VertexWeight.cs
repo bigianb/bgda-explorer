@@ -15,9 +15,9 @@ namespace WorldExplorer.DataModel
         public int boneWeight3;
         public int boneWeight4;
 
-        public override String ToString()
+        public override string ToString()
         {
-            String s = "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1;
+            string s = "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1;
             if (bone2 != 255) {
                 s += "; bone2=" + bone2 + ", weight=" + boneWeight2;
             }

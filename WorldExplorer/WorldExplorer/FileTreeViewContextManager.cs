@@ -103,8 +103,10 @@ namespace WorldExplorer
                 var lmpItem = (LmpTreeViewModel) _menu.DataContext;
                 var lmpFile = lmpItem.LmpFileProperty;
 
-                var dialog = new SaveFileDialog();
-                dialog.FileName = lmpItem.Text;
+                var dialog = new SaveFileDialog
+                {
+                    FileName = lmpItem.Text
+                };
 
                 bool? result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
@@ -140,8 +142,10 @@ namespace WorldExplorer
         {
             var entry = lmpFile.Directory[entryName];
 
-            var dialog = new SaveFileDialog();
-            dialog.FileName = entryName;
+            var dialog = new SaveFileDialog
+            {
+                FileName = entryName
+            };
 
             bool? result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
@@ -176,8 +180,10 @@ namespace WorldExplorer
                     return;
                 }
 
-                var dialog = new SaveFileDialog();
-                dialog.FileName = lmpEntry.Text+".txt";
+                var dialog = new SaveFileDialog
+                {
+                    FileName = lmpEntry.Text + ".txt"
+                };
 
                 bool? result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
@@ -200,8 +206,10 @@ namespace WorldExplorer
                 var lmpEntry = (LmpTreeViewModel)worldElement.Parent;
                 var lmpFile = lmpEntry.LmpFileProperty;
 
-                var dialog = new SaveFileDialog();
-                dialog.FileName = worldElement.Text + ".txt";
+                var dialog = new SaveFileDialog
+                {
+                    FileName = worldElement.Text + ".txt"
+                };
 
                 bool? result = dialog.ShowDialog();
                 if (result.GetValueOrDefault(false))
@@ -255,8 +263,10 @@ namespace WorldExplorer
         // Item Helpers
         private MenuItem AddItem(string text, RoutedEventHandler clickHandler)
         {
-            var item = new MenuItem();
-            item.Header = text;
+            var item = new MenuItem
+            {
+                Header = text
+            };
             item.Click += clickHandler;
 
             _menu.Items.Add(item);

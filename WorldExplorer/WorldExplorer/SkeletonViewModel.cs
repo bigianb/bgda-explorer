@@ -33,8 +33,8 @@ namespace WorldExplorer
                 _animData = value;
                 CurrentFrame = 0;
                 UpdateModel();
-                this.OnPropertyChanged("AnimData");
-                this.OnPropertyChanged("MaximumFrame");
+                OnPropertyChanged("AnimData");
+                OnPropertyChanged("MaximumFrame");
             }
         }
 
@@ -62,7 +62,7 @@ namespace WorldExplorer
             set {
                 _currentFrame = value;
                 UpdateModel();
-                this.OnPropertyChanged("CurrentFrame");
+                OnPropertyChanged("CurrentFrame");
             }
         }
 
@@ -75,7 +75,7 @@ namespace WorldExplorer
             {
                 _model = value;
                 UpdateCamera(_model);
-                this.OnPropertyChanged("Model");
+                OnPropertyChanged("Model");
             }
         }
 
@@ -88,7 +88,7 @@ namespace WorldExplorer
             {
                 _cameraTransform = value;
                 _camera.Transform = _cameraTransform;
-                this.OnPropertyChanged("CameraTransform");
+                OnPropertyChanged("CameraTransform");
             }
         }
 
@@ -100,7 +100,7 @@ namespace WorldExplorer
             set
             {
                 _camera = value;
-                this.OnPropertyChanged("Camera");
+                OnPropertyChanged("Camera");
             }
         }
 

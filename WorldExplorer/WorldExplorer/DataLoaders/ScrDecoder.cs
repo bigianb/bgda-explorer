@@ -17,25 +17,26 @@ namespace WorldExplorer.DataLoaders
 
             var reader = new DataReader(data, startOffset + HEADER_SIZE, length);
 
-            var script = new Script();
+            var script = new Script
+            {
+                offset0 = reader.ReadInt32(),
+                hw1 = reader.ReadInt16(),
+                hw2 = reader.ReadInt16(),
+                hw3 = reader.ReadInt16(),
+                hw4 = reader.ReadInt16(),
 
-            script.offset0 = reader.ReadInt32();
-            script.hw1 = reader.ReadInt16();
-            script.hw2 = reader.ReadInt16();
-            script.hw3 = reader.ReadInt16();
-            script.hw4 = reader.ReadInt16();
+                instructionsOffset = reader.ReadInt32(),
+                stringsOffset = reader.ReadInt32(),
 
-            script.instructionsOffset = reader.ReadInt32();
-            script.stringsOffset = reader.ReadInt32();
+                offset3 = reader.ReadInt32(),
+                offset4 = reader.ReadInt32(),
+                offset5 = reader.ReadInt32(),
 
-            script.offset3 = reader.ReadInt32();
-            script.offset4 = reader.ReadInt32();
-            script.offset5 = reader.ReadInt32();
-
-            script.numInternals = reader.ReadInt32();
-            script.offsetInternals = reader.ReadInt32();
-            script.numExternals = reader.ReadInt32();
-            script.offsetExternals = reader.ReadInt32();
+                numInternals = reader.ReadInt32(),
+                offsetInternals = reader.ReadInt32(),
+                numExternals = reader.ReadInt32(),
+                offsetExternals = reader.ReadInt32()
+            };
 
             var internalOffset = startOffset + script.offsetInternals + HEADER_SIZE;
             for (int i=0; i<script.numInternals; ++i)
@@ -387,7 +388,7 @@ namespace WorldExplorer.DataLoaders
         private string DisassembleInstruction(Instruction inst, Stack<int> stack)
         {
             var sb = new StringBuilder();
-            if (!String.IsNullOrEmpty(inst.label))
+            if (!string.IsNullOrEmpty(inst.label))
             {
                 sb.Append("\n").Append(inst.label).Append(":\n");
             }
@@ -694,9 +695,12 @@ namespace WorldExplorer.DataLoaders
             int size = enumerator.Current;
             enumerator.MoveNext();
             int arg1 = enumerator.Current;
-            enumerator.MoveNext();
-            int arg2 = enumerator.Current;
-            sb.Append(stringTable[arg1]).AppendFormat(", {0}", arg2);
+            sb.Append(stringTable[arg1]);
+            if (enumerator.MoveNext())
+            {
+                int arg2 = enumerator.Current;
+                sb.AppendFormat(", {0}", arg2);
+            }
         }
         private void PrintISIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {

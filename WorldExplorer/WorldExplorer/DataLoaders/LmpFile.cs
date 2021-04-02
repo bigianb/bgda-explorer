@@ -35,7 +35,7 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// The .lmp file name.
         /// </summary>
-        public String Name;
+        public string Name;
 
         public void ReadDirectory()
         {
@@ -60,7 +60,7 @@ namespace WorldExplorer.DataLoaders
                 else
                 {
                     int headerOffset = _startOffset + 4 + entry * 64;
-                    String subfileName = DataUtil.GetString(FileData, headerOffset);
+                    string subfileName = DataUtil.GetString(FileData, headerOffset);
 
                     int subOffset = BitConverter.ToInt32(FileData, headerOffset + 56);
                     int subLen = BitConverter.ToInt32(FileData, headerOffset + 60);
@@ -89,9 +89,9 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// A directory of embeded files where the file names are the keys.
         /// </summary>
-        public Dictionary<String, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
+        public Dictionary<string, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
 
-        public EntryInfo FindFirstEntryWithSuffix(String suffix)
+        public EntryInfo FindFirstEntryWithSuffix(string suffix)
         {
             EntryInfo entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
             return entry;
@@ -100,7 +100,7 @@ namespace WorldExplorer.DataLoaders
         {
             foreach (var ent in Directory)
             {
-                if (String.Compare(ent.Key, file, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Compare(ent.Key, file, StringComparison.InvariantCultureIgnoreCase) == 0)
                     return ent.Value;
             }
             return null;

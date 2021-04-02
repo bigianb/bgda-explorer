@@ -45,7 +45,7 @@ namespace WorldExplorer.Win3D
 
             foreach (var meshGroup in meshGroups)
             {
-                Boolean hasVertexWeights = meshGroup.vertexWeights.Count > 0;
+                bool hasVertexWeights = meshGroup.vertexWeights.Count > 0;
                 int vwNum = 0;
                 VertexWeight vw = new VertexWeight();
                 if (meshGroup.vertexWeights.Count > 0)
@@ -134,8 +134,10 @@ namespace WorldExplorer.Win3D
             var dm = new DiffuseMaterial();
             if (texture != null && texture.Width > 0 && texture.Height > 0)
             {
-                var ib = new ImageBrush(texture);
-                ib.ViewportUnits = BrushMappingMode.Absolute;
+                var ib = new ImageBrush(texture)
+                {
+                    ViewportUnits = BrushMappingMode.Absolute
+                };
                 // May be needed at a later point
                 //ib.TileMode = TileMode.Tile;
                 dm.Brush = ib;

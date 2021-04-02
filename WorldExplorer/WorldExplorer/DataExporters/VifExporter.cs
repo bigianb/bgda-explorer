@@ -12,7 +12,7 @@ namespace WorldExplorer.DataExporters
 {
     class VifExporter
     {
-        static void WriteMtlFile(string mtlFile, String name)
+        static void WriteMtlFile(string mtlFile, string name)
         {
             using (var stream = new FileStream(mtlFile, FileMode.Create))
             using (var writer = new StreamWriter(stream))
@@ -24,7 +24,7 @@ namespace WorldExplorer.DataExporters
             }
         }
 
-        public static void WriteObj(String savePath, Model model, WriteableBitmap texture, double scale)
+        public static void WriteObj(string savePath, Model model, WriteableBitmap texture, double scale)
         {
             WritePosedObj(savePath, model, texture, null, 1, scale);
         }
@@ -60,7 +60,7 @@ namespace WorldExplorer.DataExporters
                 writer.WriteLine("g Mesh_" + meshCount);
                 writer.WriteLine("usemtl " + name);
 
-                Boolean hasVertexWeights = mesh.vertexWeights.Count > 0;
+                bool hasVertexWeights = mesh.vertexWeights.Count > 0;
                 int vwNum = 0;
                 VertexWeight vw = new VertexWeight();
                 if (mesh.vertexWeights.Count > 0)

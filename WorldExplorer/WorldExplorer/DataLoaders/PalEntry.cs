@@ -44,11 +44,13 @@ namespace WorldExplorer.DataLoaders
             int numEntries = palw * palh;
             PalEntry[] palette = new PalEntry[numEntries];
             for (int i = 0; i < numEntries; ++i) {
-                PalEntry pe = new PalEntry();
-                pe.r = fileData[startOffset + i * 4];
-                pe.g = fileData[startOffset + i * 4 + 1];
-                pe.b = fileData[startOffset + i * 4 + 2];
-                pe.a = fileData[startOffset + i * 4 + 3];
+                PalEntry pe = new PalEntry
+                {
+                    r = fileData[startOffset + i * 4],
+                    g = fileData[startOffset + i * 4 + 1],
+                    b = fileData[startOffset + i * 4 + 2],
+                    a = fileData[startOffset + i * 4 + 3]
+                };
 
                 palette[i] = pe;
             }

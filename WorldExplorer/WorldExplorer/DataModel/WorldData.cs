@@ -35,13 +35,13 @@ namespace WorldExplorer.DataModel
         // The position before rotation
         public Vector3D pos;
 
-        public Boolean usesRotFlags;
+        public bool usesRotFlags;
         public int xyzRotFlags;
 
         public double cosAlpha;
         public double sinAlpha;
         // Whether we should flip the y axis (when not using rot flags)
-        public Boolean negYaxis;
+        public bool negYaxis;
 
         // Store info to access again
         public int VifDataOffset;

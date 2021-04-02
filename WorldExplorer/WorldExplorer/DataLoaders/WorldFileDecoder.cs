@@ -200,9 +200,9 @@ namespace WorldExplorer.DataLoaders
             return worldData;
         }
 
-        private String makeString(List<int> list)
+        private string makeString(List<int> list)
         {
-            String s = "";
+            string s = "";
             foreach (int i in list)
             {
                 if (s.Length != 0)
@@ -250,8 +250,10 @@ namespace WorldExplorer.DataLoaders
             Model model = null;
             if (!modelMap.TryGetValue(startOffset, out model))
             {
-                model = new Model();
-                model.meshList = new List<Mesh>(1);
+                model = new Model
+                {
+                    meshList = new List<Mesh>(1)
+                };
                 model.meshList.Add(VifDecoder.DecodeMesh(log, data, startOffset, length, texWidth, texHeight));
                 modelMap.Add(startOffset, model);
             }

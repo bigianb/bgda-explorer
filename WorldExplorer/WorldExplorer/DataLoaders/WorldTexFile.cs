@@ -4,7 +4,6 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
-using System.Diagnostics;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -26,7 +25,7 @@ namespace WorldExplorer.DataLoaders
         private readonly EngineVersion _engineVersion;
         private readonly TexEntry[] _entries;
         private string _filepath;
-        public String Filename;
+        public string Filename;
         public byte[] fileData;
 
         private Dictionary<int, WriteableBitmap> texMap = new Dictionary<int, WriteableBitmap>();
@@ -240,11 +239,12 @@ namespace WorldExplorer.DataLoaders
 
             while (true)
             {
-                var entry = new TexEntry();
-
-                entry.CellOffset = reader.ReadInt32();
-                entry.DirectoryOffset = reader.ReadInt32();
-                entry.Size = reader.ReadInt32();
+                var entry = new TexEntry
+                {
+                    CellOffset = reader.ReadInt32(),
+                    DirectoryOffset = reader.ReadInt32(),
+                    Size = reader.ReadInt32()
+                };
 
                 if (entry.CellOffset < 0)
                     break;

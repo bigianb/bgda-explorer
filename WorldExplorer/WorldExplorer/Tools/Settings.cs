@@ -151,7 +151,7 @@ namespace WorldExplorer.Tools
 						if (lastSection != null)
 							lastSection.Add(setting);
 						else
-							this.Add(setting);
+							Add(setting);
 					}
 					else
 					{
@@ -161,7 +161,7 @@ namespace WorldExplorer.Tools
 						if (lastSection != null)
 							lastSection.Add(section);
 						else
-							this.Add(section);
+							Add(section);
 
 						lastSection = section;
 					}
@@ -193,7 +193,7 @@ namespace WorldExplorer.Tools
 					{
 						// We're at the last section so remove it
 						if (lastSection == null)
-							this._children.Remove(lastSetting);
+							_children.Remove(lastSetting);
 						else
 							lastSection._children.Remove(lastSetting);
 						return;
@@ -213,7 +213,7 @@ namespace WorldExplorer.Tools
 			{
 				if (value is T)
 					return (T)value;
-                if (value.GetType() != typeof(String))
+                if (value.GetType() != typeof(string))
                     return defaultValue;
 				try
 				{
@@ -232,7 +232,7 @@ namespace WorldExplorer.Tools
 		}
 		public Section(string name) : this()
 		{
-			this.Name = name;
+			Name = name;
 		}
 
 		public IEnumerator<Setting> GetEnumerator()
@@ -261,7 +261,7 @@ namespace WorldExplorer.Tools
 			if (obj != null && obj is Setting)
 			{
 				Setting setting = (Setting)obj;
-				return this.Name == setting.Name && this.Value == setting.Value;
+				return Name == setting.Name && Value == setting.Value;
 			}
 			return false;
 		}
