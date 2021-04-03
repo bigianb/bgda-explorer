@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
@@ -16,12 +15,14 @@ namespace WorldExplorer.DataLoaders
 
             var reader = new DataReader(data, startOffset, length);
 
-            var scene = new CutScene();
-            scene.flags = reader.ReadInt32();
-            scene.keyframeOffset = reader.ReadInt32();
-            scene.numKeyframes = reader.ReadInt32();
-            scene.characterBlockOffset = reader.ReadInt32();
-            scene.numCharacters = reader.ReadInt32();
+            var scene = new CutScene
+            {
+                flags = reader.ReadInt32(),
+                keyframeOffset = reader.ReadInt32(),
+                numKeyframes = reader.ReadInt32(),
+                characterBlockOffset = reader.ReadInt32(),
+                numCharacters = reader.ReadInt32()
+            };
 
             reader.SetOffset(0x20);
             scene.subtitles = reader.ReadZString();
@@ -31,16 +32,16 @@ namespace WorldExplorer.DataLoaders
             scene.scale = reader.ReadInt32();
             scene.string74 = reader.ReadZString();
 
-            for (int c=0; c < scene.numCharacters; ++c)
+            for (var c = 0; c < scene.numCharacters; ++c)
             {
-                CutScene.Character character = new CutScene.Character();
+                var character = new CutScene.Character();
 
                 var charOffset = scene.characterBlockOffset + c * 0x2C;
                 reader.SetOffset(charOffset);
                 character.extra0 = reader.ReadInt32();
                 character.extra4 = reader.ReadInt32();
                 character.name = reader.ReadZString();
-                reader.SetOffset(charOffset+0x1C);
+                reader.SetOffset(charOffset + 0x1C);
                 character.x = reader.ReadFloat();
                 character.y = reader.ReadFloat();
                 character.z = reader.ReadFloat();
@@ -48,9 +49,9 @@ namespace WorldExplorer.DataLoaders
                 scene.cast.Add(character);
             }
 
-            for (int kf=0; kf < scene.numKeyframes; ++kf)
+            for (var kf = 0; kf < scene.numKeyframes; ++kf)
             {
-                CutScene.Keyframe keyframe = new CutScene.Keyframe();
+                var keyframe = new CutScene.Keyframe();
                 var kfOffset = scene.keyframeOffset + kf * 0x14;
                 reader.SetOffset(kfOffset);
                 keyframe.time = reader.ReadFloat();
@@ -118,10 +119,12 @@ namespace WorldExplorer.DataLoaders
                 if (actorNum == -100)
                 {
                     return "camera";
-                } else if (actorNum == -99)
+                }
+                else if (actorNum == -99)
                 {
                     return "sound";
-                } else
+                }
+                else
                 {
                     return cast[actorNum].name;
                 }
@@ -133,7 +136,7 @@ namespace WorldExplorer.DataLoaders
 
                 var sb = new StringBuilder();
                 sb.AppendFormat("time: {0}, {1} ", keyframe.time, actorName);
-                bool understood = false;
+                var understood = false;
                 switch (keyframe.actor)
                 {
                     case -100:
@@ -150,7 +153,7 @@ namespace WorldExplorer.DataLoaders
                                 break;
                             case 2:
                                 {
-                                    int adjustedAngle = (keyframe.i8 + 0x3fd3) & 0xFFFF;    // +89 degrees
+                                    var adjustedAngle = (keyframe.i8 + 0x3fd3) & 0xFFFF;    // +89 degrees
                                     sb.AppendFormat(" rotate x, {0} deg", adjustedAngle * 360.0 / 65535.0);
                                     understood = true;
                                 }
@@ -214,7 +217,7 @@ namespace WorldExplorer.DataLoaders
                 sb.AppendFormat("string74:  {0}\n", string74);
 
                 sb.Append("\nCast\n~~~~\n");
-                foreach(var c in cast)
+                foreach (var c in cast)
                 {
                     sb.Append(c.Disassemble()).Append('\n');
                 }

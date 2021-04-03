@@ -35,19 +35,20 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// The .lmp file name.
         /// </summary>
-        public String Name;
+        public string Name;
 
         public void ReadDirectory()
         {
             var reader = new DataReader(FileData, _startOffset, _dataLen);
-            int numEntries = reader.ReadInt32();
+            var numEntries = reader.ReadInt32();
 
-            for (int entry = 0; entry < numEntries; ++entry) {
+            for (var entry = 0; entry < numEntries; ++entry)
+            {
                 if (EngineVersion.ReturnToArms == _engineVersion || EngineVersion.JusticeLeagueHeroes == _engineVersion)
                 {
-                    int stringOffset = reader.ReadInt32();
-                    int dataOffset = reader.ReadInt32();
-                    int dataLength = reader.ReadInt32();
+                    var stringOffset = reader.ReadInt32();
+                    var dataOffset = reader.ReadInt32();
+                    var dataLength = reader.ReadInt32();
 
                     var tempOffset = reader.Offset;
                     reader.SetOffset(stringOffset);
@@ -59,14 +60,18 @@ namespace WorldExplorer.DataLoaders
                 }
                 else
                 {
-                    int headerOffset = _startOffset + 4 + entry * 64;
-                    String subfileName = DataUtil.GetString(FileData, headerOffset);
+                    var headerOffset = _startOffset + 4 + entry * 64;
+                    var subfileName = DataUtil.GetString(FileData, headerOffset);
 
-                    int subOffset = BitConverter.ToInt32(FileData, headerOffset + 56);
-                    int subLen = BitConverter.ToInt32(FileData, headerOffset + 60);
+                    var subOffset = BitConverter.ToInt32(FileData, headerOffset + 56);
+                    var subLen = BitConverter.ToInt32(FileData, headerOffset + 60);
 
                     var info = new EntryInfo()
-                    {Name = subfileName, StartOffset = subOffset + _startOffset, Length = subLen};
+                    {
+                        Name = subfileName,
+                        StartOffset = subOffset + _startOffset,
+                        Length = subLen
+                    };
                     Directory[subfileName] = info;
                 }
             }
@@ -89,19 +94,21 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// A directory of embeded files where the file names are the keys.
         /// </summary>
-        public Dictionary<String, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
+        public Dictionary<string, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
 
-        public EntryInfo FindFirstEntryWithSuffix(String suffix)
+        public EntryInfo FindFirstEntryWithSuffix(string suffix)
         {
-            EntryInfo entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
+            var entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
             return entry;
         }
         public EntryInfo FindFile(string file)
         {
             foreach (var ent in Directory)
             {
-                if (String.Compare(ent.Key, file, StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (string.Compare(ent.Key, file, StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
                     return ent.Value;
+                }
             }
             return null;
         }

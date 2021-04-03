@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Generic;
-using System.Windows.Media.Media3D;
 using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace WorldExplorer
 {
@@ -14,11 +14,11 @@ namespace WorldExplorer
 
         public List<ModelVisual3D> Scene
         {
-            set { SetValue(SceneProperty, value); }
-            get { return (List<ModelVisual3D>)GetValue(SceneProperty); }
+            set => SetValue(SceneProperty, value);
+            get => (List<ModelVisual3D>)GetValue(SceneProperty);
         }
 
-        protected static void ScenePropertyChanged(DependencyObject obj,DependencyPropertyChangedEventArgs args)
+        protected static void ScenePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
             if (obj != null)
             {
@@ -29,7 +29,7 @@ namespace WorldExplorer
         protected void ScenePropertyChanged(DependencyPropertyChangedEventArgs args)
         {
             Children.Clear();
-            List<ModelVisual3D> theScene = Scene;
+            var theScene = Scene;
             if (theScene != null)
             {
                 foreach (var element in theScene)

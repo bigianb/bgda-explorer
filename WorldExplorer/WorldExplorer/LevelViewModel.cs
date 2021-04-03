@@ -14,13 +14,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
-using System.Windows.Media;
-using WorldExplorer.WorldDefs;
 using WorldExplorer.Win3D;
+using WorldExplorer.WorldDefs;
 
 namespace WorldExplorer
 {
@@ -28,41 +27,41 @@ namespace WorldExplorer
     {
         private WorldData _worldData;
         private List<ModelVisual3D> _scene;
-        private String _infoText;
+        private string _infoText;
         private ObjectManager _objectManager;
 
-        public WorldFileTreeViewModel WorldNode { get; set; }
+        public WorldFileTreeViewModel WorldNode
+        {
+            get; set;
+        }
         public WorldData WorldData
         {
-            get { return _worldData; }
+            get => _worldData;
             set
             {
                 _worldData = value;
                 NewWorldLoaded();
             }
         }
-        public String InfoText
+        public string InfoText
         {
-            get { return _infoText; }
+            get => _infoText;
             set
             {
                 _infoText = value;
-                this.OnPropertyChanged("InfoText");
+                OnPropertyChanged("InfoText");
             }
         }
         public List<ModelVisual3D> Scene
         {
-            get { return _scene; }
+            get => _scene;
             set
             {
                 _scene = value;
-                this.OnPropertyChanged("Scene");
+                OnPropertyChanged("Scene");
             }
         }
-        public ObjectManager ObjectManager
-        {
-            get { return _objectManager; }
-        }
+        public ObjectManager ObjectManager => _objectManager;
 
         public LevelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
         {
@@ -71,22 +70,24 @@ namespace WorldExplorer
 
         public void RebuildScene()
         {
-            List<ModelVisual3D> scene = buildLights();
+            var scene = buildLights();
 
             foreach (var element in _worldData.worldElements)
             {
-                ModelVisual3D mv3d = new ModelVisual3D();
+                var mv3d = new ModelVisual3D();
                 var model3D = Conversions.CreateModel3D(element.model.meshList, element.Texture, null, 0);
                 mv3d.Content = model3D;
 
                 var modelBounds = model3D.Bounds;
 
-                Transform3DGroup transform3DGroup = new Transform3DGroup();
+                var transform3DGroup = new Transform3DGroup();
 
                 transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
-                Matrix3D mtx = Matrix3D.Identity;
-                if (element.usesRotFlags) {
-                    if ((element.xyzRotFlags & 4) == 4) {
+                var mtx = Matrix3D.Identity;
+                if (element.usesRotFlags)
+                {
+                    if ((element.xyzRotFlags & 4) == 4)
+                    {
                         // Flip x, y
                         mtx.M11 = 0;
                         mtx.M21 = 1;
@@ -95,12 +96,14 @@ namespace WorldExplorer
                         mtx.M22 = 0;
                     }
 
-                    if ((element.xyzRotFlags & 2) == 2) {
+                    if ((element.xyzRotFlags & 2) == 2)
+                    {
                         mtx.M11 = -mtx.M11;
                         mtx.M21 = -mtx.M21;
                     }
 
-                    if ((element.xyzRotFlags & 1) == 1) {
+                    if ((element.xyzRotFlags & 1) == 1)
+                    {
                         mtx.M12 = -mtx.M12;
                         mtx.M22 = -mtx.M22;
                     }
@@ -120,13 +123,16 @@ namespace WorldExplorer
                         mtx.M11 = -mtx.M11;
                         mtx.M21 = -mtx.M21;
                     }
-                } else {
+                }
+                else
+                {
                     // Change handedness by reversing angle (sign on sin)
                     mtx.M11 = element.cosAlpha;
                     mtx.M21 = -element.sinAlpha;
                     mtx.M12 = element.sinAlpha;
                     mtx.M22 = element.cosAlpha;
-                    if (element.negYaxis) {
+                    if (element.negYaxis)
+                    {
                         // Should this be col1 due to handed change?
                         mtx.M12 = -mtx.M12;
                         mtx.M22 = -mtx.M22;
@@ -137,7 +143,7 @@ namespace WorldExplorer
                     transform3DGroup.Children.Add(new MatrixTransform3D(mtx));
                 }
                 mv3d.Transform = transform3DGroup;
-                
+
                 scene.Add(mv3d);
             }
 
@@ -163,12 +169,16 @@ namespace WorldExplorer
 
         private List<ModelVisual3D> buildLights()
         {
-            List<ModelVisual3D> scene = new List<ModelVisual3D>();
-            ModelVisual3D ambientLight = new ModelVisual3D();
-            ambientLight.Content = new AmbientLight(Color.FromRgb(0x80, 0x80, 0x80));
+            var scene = new List<ModelVisual3D>();
+            var ambientLight = new ModelVisual3D
+            {
+                Content = new AmbientLight(Color.FromRgb(0x80, 0x80, 0x80))
+            };
             scene.Add(ambientLight);
-            ModelVisual3D directionalLight = new ModelVisual3D();
-            directionalLight.Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1));
+            var directionalLight = new ModelVisual3D
+            {
+                Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1))
+            };
             scene.Add(directionalLight);
 
             return scene;

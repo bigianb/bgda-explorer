@@ -8,7 +8,10 @@ namespace WorldExplorer
         /// <summary>
         /// The MainWindowViewModel that contains a lot of the information about the application.
         /// </summary>
-        public MainWindowViewModel MainViewModel { get; set; }
+        public MainWindowViewModel MainViewModel
+        {
+            get; set;
+        }
 
         public BaseViewModel(MainWindowViewModel mainViewModel)
         {
@@ -21,8 +24,10 @@ namespace WorldExplorer
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         #endregion // INotifyPropertyChanged Members
