@@ -35,7 +35,7 @@ namespace WorldExplorer
             InitializeComponent();
 
             viewport.MouseUp += new MouseButtonEventHandler(viewport_MouseUp);
-            
+
 
             ElementSelected(null);
         }
@@ -58,7 +58,7 @@ namespace WorldExplorer
             {
                 var hitResult = GetHitTestResult(e.GetPosition(viewport));
 
-                var levelViewModel = (LevelViewModel) DataContext;
+                var levelViewModel = (LevelViewModel)DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
                 /*if (!worldNode.IsExpanded)
@@ -82,7 +82,7 @@ namespace WorldExplorer
                     return;
                 }
 
-                for (int i = 0; i < worldNode.Children.Count; i++)
+                for (var i = 0; i < worldNode.Children.Count; i++)
                 {
                     if (levelViewModel.Scene[i + 2] == hitResult)
                     {
@@ -114,7 +114,7 @@ namespace WorldExplorer
 
             editor_NameText.Text = ele.Text;
             editor_UseRotFlagsBox.IsChecked = ele.WorldElement.usesRotFlags;
-            editor_XYZRotFlagsBox.Text = "0x"+ele.WorldElement.xyzRotFlags.ToString("X4");
+            editor_XYZRotFlagsBox.Text = "0x" + ele.WorldElement.xyzRotFlags.ToString("X4");
             editor_CosBox.Text = ele.WorldElement.cosAlpha.ToString(CultureInfo.InvariantCulture);
             editor_SinBox.Text = ele.WorldElement.sinAlpha.ToString(CultureInfo.InvariantCulture);
             editor_PosXBox.Text = ele.WorldElement.pos.X.ToString(CultureInfo.InvariantCulture);
@@ -126,7 +126,9 @@ namespace WorldExplorer
 
             // Expand after values have changed
             if (!editorExpander.IsExpanded)
+            {
                 editorExpander.IsExpanded = true;
+            }
         }
         private void ObjectSelected(VisualObjectData obj)
         {
@@ -163,13 +165,17 @@ namespace WorldExplorer
 
             // Expand after values have changed
             if (!editorExpander.IsExpanded)
+            {
                 editorExpander.IsExpanded = true;
+            }
         }
 
         private void ApplyChangesClicked(object sender, RoutedEventArgs e)
         {
             if (_selectedElement == null && _selectedObject == null)
+            {
                 return;
+            }
 
             int tempIntValue;
             double tempDoubleValue;
@@ -180,17 +186,34 @@ namespace WorldExplorer
                 _selectedElement.WorldElement.usesRotFlags =
                     editor_UseRotFlagsBox.IsChecked.GetValueOrDefault(); // Uses Rot Flags
                 if (GetIntHex(editor_XYZRotFlagsBox.Text, out tempIntValue)) // XYZ Rot Flags
+                {
                     _selectedElement.WorldElement.xyzRotFlags = tempIntValue;
+                }
+
                 if (GetDouble(editor_CosBox.Text, out tempDoubleValue)) // Cos
+                {
                     _selectedElement.WorldElement.cosAlpha = tempDoubleValue;
+                }
+
                 if (GetDouble(editor_SinBox.Text, out tempDoubleValue)) // Sin
+                {
                     _selectedElement.WorldElement.sinAlpha = tempDoubleValue;
+                }
+
                 if (GetDouble(editor_PosXBox.Text, out tempDoubleValue)) // X
+                {
                     _selectedElement.WorldElement.pos.X = tempDoubleValue;
+                }
+
                 if (GetDouble(editor_PosYBox.Text, out tempDoubleValue)) // Y
+                {
                     _selectedElement.WorldElement.pos.Y = tempDoubleValue;
+                }
+
                 if (GetDouble(editor_PosZBox.Text, out tempDoubleValue)) // Z
+                {
                     _selectedElement.WorldElement.pos.Z = tempDoubleValue;
+                }
 
                 levelViewModel.RebuildScene();
             }
@@ -198,16 +221,27 @@ namespace WorldExplorer
             {
                 _selectedObject.ObjectData.Name = editor_Obj_NameBox.Text; // Name
                 if (GetIntHex(editor_Obj_I6Box.Text, out tempIntValue)) // I6
+                {
                     _selectedObject.ObjectData.I6 = (short)tempIntValue;
+                }
+
                 if (GetDouble(editor_Obj_Float1Box.Text, out tempDoubleValue)) // Float 1
+                {
                     _selectedObject.ObjectData.Floats[0] = (float)tempDoubleValue;
+                }
+
                 if (GetDouble(editor_Obj_Float2Box.Text, out tempDoubleValue)) // Float 2
+                {
                     _selectedObject.ObjectData.Floats[1] = (float)tempDoubleValue;
+                }
+
                 if (GetDouble(editor_Obj_Float3Box.Text, out tempDoubleValue)) // Float 3
+                {
                     _selectedObject.ObjectData.Floats[2] = (float)tempDoubleValue;
+                }
 
                 _selectedObject.ObjectData.Properties.Clear();
-                _selectedObject.ObjectData.Properties.AddRange(editor_Obj_PropertiesBox.Text.Split(new []{'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries));
+                _selectedObject.ObjectData.Properties.AddRange(editor_Obj_PropertiesBox.Text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries));
 
                 levelViewModel.ObjectManager.RemoveObjectFromList(_selectedObject);
 
@@ -274,10 +308,10 @@ namespace WorldExplorer
 
         ModelVisual3D GetHitTestResult(Point location)
         {
-            HitTestResult result = VisualTreeHelper.HitTest(viewport, location);
+            var result = VisualTreeHelper.HitTest(viewport, location);
             if (result != null && result.VisualHit is ModelVisual3D)
             {
-                ModelVisual3D visual = (ModelVisual3D)result.VisualHit;
+                var visual = (ModelVisual3D)result.VisualHit;
                 return visual;
             }
 

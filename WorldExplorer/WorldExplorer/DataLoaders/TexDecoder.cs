@@ -14,9 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
-using System.Windows.Media.Imaging;
-using System.Windows.Media;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace WorldExplorer.DataLoaders
 {
@@ -31,71 +31,73 @@ namespace WorldExplorer.DataLoaders
 
         public static WriteableBitmap Decode(byte[] data, int startOffset)
         {
-            GSMemory gsMem = new GSMemory();
+            var gsMem = new GSMemory();
 
-            int length = DataUtil.getLEShort(data, startOffset + 6) * 16;
+            var length = DataUtil.getLEShort(data, startOffset + 6) * 16;
 
             int finalw = BitConverter.ToInt16(data, startOffset);
             int finalh = BitConverter.ToInt16(data, startOffset + 2);
-            int offsetToGIF = DataUtil.getLEInt(data, startOffset + 16);
+            var offsetToGIF = DataUtil.getLEInt(data, startOffset + 16);
 
-            int sourcew = finalw;
-            int sourceh = finalh;
+            var sourcew = finalw;
+            var sourceh = finalh;
             PalEntry[] pixels = null;
             byte[] bytes = null;
 
-            int curIdx = offsetToGIF + startOffset;
-            int endIndex = curIdx + length;
+            var curIdx = offsetToGIF + startOffset;
+            var endIndex = curIdx + length;
 
-            GIFTag gifTag = new GIFTag();
+            var gifTag = new GIFTag();
             gifTag.parse(data, curIdx);
 
             // This is basically heuristics. Writing a full GIF parser is complex and as the texture files are written by a tool,
             // we can safely make some assumptions about their structure.
-            if (gifTag.nloop == 4) {
+            if (gifTag.nloop == 4)
+            {
 
                 int palw = DataUtil.getLEShort(data, curIdx + 0x30);
                 int palh = DataUtil.getLEShort(data, curIdx + 0x34);
 
                 curIdx += gifTag.Length;
-                GIFTag gifTag2 = new GIFTag();
+                var gifTag2 = new GIFTag();
                 gifTag2.parse(data, curIdx);
 
                 // 8 bit palletised
-                PalEntry[] palette = PalEntry.readPalette(data, curIdx + 0x10, palw, palh);
+                var palette = PalEntry.readPalette(data, curIdx + GIFTag.Size, palw, palh);
 
                 palette = PalEntry.unswizzlePalette(palette);
 
                 curIdx += gifTag2.Length;
-                int destWBytes = (finalw + 0x0f) & ~0x0f;
-                int destHBytes = (finalh + 0x0f) & ~0x0f;
+                var destWBytes = (finalw + 0x0f) & ~0x0f;
+                var destHBytes = (finalh + 0x0f) & ~0x0f;
 
-                int dpsm = PSMCT32;
-                int dbw = 0;
-                int dbp = 0;
-                int rrw = 0;
-                int rrh = 0;
-                int startx = 0;
-                int starty = 0;
+                var dpsm = PSMCT32;
+                var dbw = 0;
+                var dbp = 0;
+                var rrw = 0;
+                var rrh = 0;
+                var startx = 0;
+                var starty = 0;
 
-                while (curIdx < endIndex - 0x10) {
-                    GIFTag gifTag3 = new GIFTag();
+                while (curIdx < endIndex - GIFTag.Size)
+                {
+                    var gifTag3 = new GIFTag();
                     gifTag3.parse(data, curIdx);
-                    while (!gifTag3.isImage())
+                    while (!gifTag3.IsImage)
                     {
-                        int trxregOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXREG);
+                        var trxregOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXREG);
                         if (trxregOffset != 0)
                         {
                             rrw = DataUtil.getLEShort(data, trxregOffset);
                             rrh = DataUtil.getLEShort(data, trxregOffset + 4);
                         }
-                        int trxposOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, TRXPOS);
+                        var trxposOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXPOS);
                         if (trxposOffset != 0)
                         {
                             startx = DataUtil.getLEShort(data, trxposOffset + 0x04) & 0x07FF;
                             starty = DataUtil.getLEShort(data, trxposOffset + 0x06) & 0x07FF;
                         }
-                        int bitbltOffset = findADEntry(data, curIdx + 0x10, gifTag3.nloop, BITBLTBUF);
+                        var bitbltOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, BITBLTBUF);
                         if (bitbltOffset != 0)
                         {
                             //int sbw = fileData[bitbltOffset + 0x02] & 0x3F;
@@ -105,37 +107,42 @@ namespace WorldExplorer.DataLoaders
                         }
 
                         curIdx += gifTag3.Length;
+                        if (curIdx + GIFTag.Size >= endIndex)
+                        {
+                            break;
+                        }
+
                         gifTag3.parse(data, curIdx);
                     }
-                    curIdx += 0x10;     // image gif tag
-                    int bytesToTransfer = gifTag3.nloop * 16;
+                    curIdx += GIFTag.Size;     // image gif tag
+                    var bytesToTransfer = gifTag3.nloop * 16;
 
                     if (palette.Length == 16)
                     {
                         // source is PSMT4. Dest can be PSMT4 or PSMCT32
                         if (dpsm == PSMCT32)
                         {
-                            byte[] imageData = data;
-                            int imageDataIdx = curIdx;
+                            var imageData = data;
+                            var imageDataIdx = curIdx;
                             // check for multiple IMAGE entries.
-                            int nextTagInd = bytesToTransfer + curIdx;
-                            if (nextTagInd < endIndex - 0x10)
+                            var nextTagInd = bytesToTransfer + curIdx;
+                            if (nextTagInd < endIndex - GIFTag.Size)
                             {
-                                GIFTag imageTag2 = new GIFTag();
+                                var imageTag2 = new GIFTag();
                                 imageTag2.parse(data, nextTagInd);
                                 if (imageTag2.flg == 2)
                                 {
                                     // IMAGE
-                                    int bytesToTransfer2 = imageTag2.nloop * 16;
+                                    var bytesToTransfer2 = imageTag2.nloop * 16;
                                     imageDataIdx = 0;
                                     imageData = new byte[bytesToTransfer + bytesToTransfer2];
-                                    int j = curIdx;
-                                    for (int i = 0; i < bytesToTransfer; ++i)
+                                    var j = curIdx;
+                                    for (var i = 0; i < bytesToTransfer; ++i)
                                     {
                                         imageData[i] = data[j];
                                     }
-                                    j = nextTagInd + 0x10;
-                                    for (int i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i)
+                                    j = nextTagInd + GIFTag.Size;
+                                    for (var i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i)
                                     {
                                         imageData[i] = data[j];
                                     }
@@ -169,36 +176,47 @@ namespace WorldExplorer.DataLoaders
                     dbw = destWBytes / 0x40;
                     bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
                 }
+                // THIS IS A HACK
+                if (palette.Length == 1024)
+                {
+                    destWBytes = (finalw + 0x3f) & ~0x3f;
+                    dbw = destWBytes / 0x40;
+                    bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
+                }
                 pixels = applyPalette(palette, bytes);
                 sourcew = destWBytes;
                 sourceh = destHBytes;
             }
-            else if (gifTag.nloop == 3) {
-                GIFTag gifTag2 = new GIFTag();
+            else if (gifTag.nloop == 3)
+            {
+                var gifTag2 = new GIFTag();
                 gifTag2.parse(data, startOffset + 0xC0);
 
-                if (gifTag2.flg == 2) {
+                if (gifTag2.flg == 2)
+                {
                     // image mode
                     pixels = readPixels32(data, startOffset + 0xD0, finalw, finalh);
                 }
             }
             WriteableBitmap image = null;
-            if (finalw != 0) {
+            if (finalw != 0)
+            {
                 image = new WriteableBitmap(
                     finalw, finalh,
                     96, 96,
                     PixelFormats.Bgr32,
                     null);
                 image.Lock();
-                if (pixels != null) { 
-                unsafe
+                if (pixels != null)
+                {
+                    unsafe
                     {
-                        IntPtr pBackBuffer = image.BackBuffer;
-                        for (int y = 0; y < sourceh && y < finalh; ++y)
+                        var pBackBuffer = image.BackBuffer;
+                        for (var y = 0; y < sourceh && y < finalh; ++y)
                         {
-                            for (int x = 0; x < sourcew && x < finalw; ++x)
+                            for (var x = 0; x < sourcew && x < finalw; ++x)
                             {
-                                PalEntry pixel = pixels[y * sourcew + x];
+                                var pixel = pixels[y * sourcew + x];
                                 if (pixel != null)
                                 {
                                     if (x < finalw && y < finalh)
@@ -221,35 +239,35 @@ namespace WorldExplorer.DataLoaders
         }
 
 
-    // Take an image where the pixels are packed and expand them to one byte per pixel.
-    private static byte[] expand4bit(byte[] bytes)
-    {
-        byte[] outbytes = new byte[bytes.Length * 2];
-        int j = 0;
-        foreach (int val in bytes)
+        // Take an image where the pixels are packed and expand them to one byte per pixel.
+        private static byte[] expand4bit(byte[] bytes)
         {
-            outbytes[j++] = (byte) (val & 0x0f);
-            outbytes[j++] = (byte) ((val >> 4) & 0x0f);
-        }
-        return outbytes;
-    }
-
-    private static PalEntry[] applyPalette(PalEntry[] palette, byte[] bytes)
-    {
-        PalEntry[] pixels = new PalEntry[bytes.Length];
-        for (int i = 0; i < bytes.Length; ++i)
-        {
-            pixels[i] = palette[bytes[i] & 0xFF];
-        }
-        return pixels;
-    }
-
-    private static int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
-        {
-            int retval = 0;
-            for (int i = 0; i < nloop; ++i)
+            var outbytes = new byte[bytes.Length * 2];
+            var j = 0;
+            foreach (int val in bytes)
             {
-                int reg = DataUtil.getLEInt(fileData, dataStartIdx + i * 0x10 + 0x08);
+                outbytes[j++] = (byte)(val & 0x0f);
+                outbytes[j++] = (byte)((val >> 4) & 0x0f);
+            }
+            return outbytes;
+        }
+
+        private static PalEntry[] applyPalette(PalEntry[] palette, byte[] bytes)
+        {
+            var pixels = new PalEntry[bytes.Length];
+            for (var i = 0; i < bytes.Length; ++i)
+            {
+                pixels[i] = palette[bytes[i] & 0xFF];
+            }
+            return pixels;
+        }
+
+        private static int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
+        {
+            var retval = 0;
+            for (var i = 0; i < nloop; ++i)
+            {
+                var reg = DataUtil.getLEInt(fileData, dataStartIdx + i * 0x10 + 0x08);
                 if (reg == registerId)
                 {
                     retval = dataStartIdx + i * 0x10;
@@ -267,21 +285,21 @@ namespace WorldExplorer.DataLoaders
                 pixels = new byte[destWBytes * destHBytes];
             }
 
-            int nybble = 2;
-            byte[] nybbles = new byte[2];
-            int idx = startOffset;
-            for (int y = 0; y < rrh && (y + starty) < destHBytes; ++y)
+            var nybble = 2;
+            var nybbles = new byte[2];
+            var idx = startOffset;
+            for (var y = 0; y < rrh && (y + starty) < destHBytes; ++y)
             {
-                for (int x = 0; x < rrw; ++x)
+                for (var x = 0; x < rrw; ++x)
                 {
                     if (nybble > 1)
                     {
-                        byte twoPix = fileData[idx++];
+                        var twoPix = fileData[idx++];
                         nybbles[0] = (byte)((twoPix) & 0x0f);
                         nybbles[1] = (byte)((twoPix >> 4) & 0x0f);
                         nybble = 0;
                     }
-                    int destIdx = (y + starty) * destWBytes + (x + startx);
+                    var destIdx = (y + starty) * destWBytes + (x + startx);
                     pixels[destIdx] = nybbles[nybble];
                     ++nybble;
                 }
@@ -291,16 +309,19 @@ namespace WorldExplorer.DataLoaders
 
         private static PalEntry[] readPixels32(byte[] fileData, int startOffset, int w, int h)
         {
-            int numPixels = w * h;
-            PalEntry[] pixels = new PalEntry[numPixels];
-            int destIdx = 0;
-            int endOffset = startOffset + numPixels * 4;
-            for (int idx = startOffset; idx < endOffset; ) {
-                PalEntry pe = new PalEntry();
-                pe.r = fileData[idx++];
-                pe.g = fileData[idx++];
-                pe.b = fileData[idx++];
-                pe.a = fileData[idx++];
+            var numPixels = w * h;
+            var pixels = new PalEntry[numPixels];
+            var destIdx = 0;
+            var endOffset = startOffset + numPixels * 4;
+            for (var idx = startOffset; idx < endOffset;)
+            {
+                var pe = new PalEntry
+                {
+                    r = fileData[idx++],
+                    g = fileData[idx++],
+                    b = fileData[idx++],
+                    a = fileData[idx++]
+                };
 
                 pixels[destIdx++] = pe;
             }

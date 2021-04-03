@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Media.Imaging;
@@ -12,7 +11,7 @@ namespace WorldExplorer.DataExporters
 {
     class VifExporter
     {
-        static void WriteMtlFile(string mtlFile, String name)
+        static void WriteMtlFile(string mtlFile, string name)
         {
             using (var stream = new FileStream(mtlFile, FileMode.Create))
             using (var writer = new StreamWriter(stream))
@@ -24,15 +23,15 @@ namespace WorldExplorer.DataExporters
             }
         }
 
-        public static void WriteObj(String savePath, Model model, WriteableBitmap texture, double scale)
+        public static void WriteObj(string savePath, Model model, WriteableBitmap texture, double scale)
         {
             WritePosedObj(savePath, model, texture, null, 1, scale);
         }
 
         public static void WritePosedObj(string savePath, Model model, WriteableBitmap texture, AnimData pose, int frame, double scale)
         {
-            string dir = Path.GetDirectoryName(savePath) ?? "";
-            string name = Path.GetFileNameWithoutExtension(savePath);
+            var dir = Path.GetDirectoryName(savePath) ?? "";
+            var name = Path.GetFileNameWithoutExtension(savePath);
 
             // Save the texture to a .png file
             using (var stream = new FileStream(Path.Combine(dir, name + ".png"), FileMode.Create))
@@ -53,21 +52,21 @@ namespace WorldExplorer.DataExporters
             writer.WriteLine("mtllib " + name + ".mtl");
             writer.WriteLine("");
 
-            int vStart = 0;
-            int meshCount = 1;
+            var vStart = 0;
+            var meshCount = 1;
             foreach (var mesh in model.meshList)
             {
                 writer.WriteLine("g Mesh_" + meshCount);
                 writer.WriteLine("usemtl " + name);
 
-                Boolean hasVertexWeights = mesh.vertexWeights.Count > 0;
-                int vwNum = 0;
-                VertexWeight vw = new VertexWeight();
+                var hasVertexWeights = mesh.vertexWeights.Count > 0;
+                var vwNum = 0;
+                var vw = new VertexWeight();
                 if (mesh.vertexWeights.Count > 0)
                 {
                     vw = mesh.vertexWeights[vwNum];
                 }
-                int vnum = 0;
+                var vnum = 0;
                 foreach (var vertex in mesh.Positions)
                 {
                     var point = vertex;
@@ -82,9 +81,9 @@ namespace WorldExplorer.DataExporters
                                 Debug.Fail("Vertex " + vnum + " out of range of bone weights " + vw.startVertex + " -> " + vw.endVertex);
                             }
                         }
-                        int bone1No = vw.bone1;
-                        Point3D bindingPos1 = pose.bindingPose[bone1No];
-                        AnimMeshPose bone1Pose = pose.perFrameFKPoses[frame, bone1No];
+                        var bone1No = vw.bone1;
+                        var bindingPos1 = pose.bindingPose[bone1No];
+                        var bone1Pose = pose.perFrameFKPoses[frame, bone1No];
                         var joint1Pos = bone1Pose.Position;
                         if (vw.bone2 == 0xFF)
                         {
@@ -92,7 +91,7 @@ namespace WorldExplorer.DataExporters
                             {
                                 bone1No = 1;
                             }
-                            Matrix3D m = Matrix3D.Identity;
+                            var m = Matrix3D.Identity;
                             m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
                             m.Rotate(bone1Pose.Rotation);
                             m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
@@ -101,21 +100,21 @@ namespace WorldExplorer.DataExporters
                         else
                         {
                             // multi-bone
-                            int bone2No = vw.bone2;
-                            Point3D bindingPos2 = pose.bindingPose[bone2No];
-                            AnimMeshPose bone2Pose = pose.perFrameFKPoses[frame, bone2No];
+                            var bone2No = vw.bone2;
+                            var bindingPos2 = pose.bindingPose[bone2No];
+                            var bone2Pose = pose.perFrameFKPoses[frame, bone2No];
                             double boneSum = vw.boneWeight1 + vw.boneWeight2;
-                            double bone1Coeff = vw.boneWeight1 / boneSum;
-                            double bone2Coeff = vw.boneWeight2 / boneSum;
+                            var bone1Coeff = vw.boneWeight1 / boneSum;
+                            var bone2Coeff = vw.boneWeight2 / boneSum;
 
-                            Matrix3D m = Matrix3D.Identity;
+                            var m = Matrix3D.Identity;
                             m.Translate(new Vector3D(-bindingPos1.X, -bindingPos1.Y, -bindingPos1.Z));   // Inverse binding matrix
                             m.Rotate(bone1Pose.Rotation);
                             m.Translate(new Vector3D(bone1Pose.Position.X, bone1Pose.Position.Y, bone1Pose.Position.Z));
                             var point1 = m.Transform(point);
 
                             // Now rotate
-                            Matrix3D m2 = Matrix3D.Identity;
+                            var m2 = Matrix3D.Identity;
                             m2.Translate(new Vector3D(-bindingPos2.X, -bindingPos2.Y, -bindingPos2.Z));   // Inverse binding matrix
                             m2.Rotate(bone2Pose.Rotation);
                             m2.Translate(new Vector3D(bone2Pose.Position.X, bone2Pose.Position.Y, bone2Pose.Position.Z));
@@ -125,17 +124,17 @@ namespace WorldExplorer.DataExporters
                         }
                     }
                     ++vnum;
-                    writer.WriteLine("v {0} {1} {2}", 
-                        FormatDouble(point.X / scale), 
-                        FormatDouble(point.Y / scale), 
+                    writer.WriteLine("v {0} {1} {2}",
+                        FormatDouble(point.X / scale),
+                        FormatDouble(point.Y / scale),
                         FormatDouble(point.Z / scale));
                 }
                 writer.WriteLine("");
 
                 foreach (var uv in mesh.TextureCoordinates)
                 {
-                    writer.WriteLine("vt {0} {1}", 
-                        FormatDouble(uv.X), 
+                    writer.WriteLine("vt {0} {1}",
+                        FormatDouble(uv.X),
                         FormatDouble(1 - uv.Y)); // Flip uv's vertically
                 }
                 writer.WriteLine("");
@@ -143,14 +142,14 @@ namespace WorldExplorer.DataExporters
                 foreach (var vec in mesh.Normals)
                 {
                     // TODO: If the mesh is posed, the normals needs modifying too.
-                    writer.WriteLine("vn {0} {1} {2}", 
-                        FormatDouble(vec.X), 
-                        FormatDouble(vec.Y), 
+                    writer.WriteLine("vn {0} {1} {2}",
+                        FormatDouble(vec.X),
+                        FormatDouble(vec.Y),
                         FormatDouble(vec.Z));
                 }
                 writer.WriteLine("");
 
-                for (int i = 0; i < mesh.TriangleIndices.Count-3; i += 6)
+                for (var i = 0; i < mesh.TriangleIndices.Count - 3; i += 6)
                 {
                     writer.WriteLine("f {0}/{1}/{2} {3}/{4}/{5} {6}/{7}/{8}",
                         mesh.TriangleIndices[i] + 1 + vStart,
@@ -180,7 +179,7 @@ namespace WorldExplorer.DataExporters
             using (var objFile = File.Open(savePath, FileMode.Create))
             using (var writer = new StreamWriter(objFile))
             {
-                for (int i = 0; i < chunks.Count; i++)
+                for (var i = 0; i < chunks.Count; i++)
                 {
                     var chunk = chunks[i];
 
@@ -188,9 +187,14 @@ namespace WorldExplorer.DataExporters
 
                     writer.WriteLine("MSCAL: {0}", chunk.mscalID);
                     if (chunk.gifTag0 != null)
+                    {
                         writer.WriteLine("GifTag0: {0}", chunk.gifTag0.ToString());
+                    }
+
                     if (chunk.gifTag1 != null)
+                    {
                         writer.WriteLine("GifTag1: {0}", chunk.gifTag1.ToString());
+                    }
 
                     writer.WriteLine("");
                     writer.WriteLine("==== Vertices ====");
@@ -212,7 +216,7 @@ namespace WorldExplorer.DataExporters
 
                     writer.WriteLine("");
                     writer.WriteLine("==== Extra VLocs ====");
-                    for (int o = 0; o + 3 < chunk.extraVlocs.Length; o += 4)
+                    for (var o = 0; o + 3 < chunk.extraVlocs.Length; o += 4)
                     {
                         writer.WriteLine(
                             "V1: {0}, V2: {1}, V3: {2}, V4: {3}",
@@ -227,9 +231,9 @@ namespace WorldExplorer.DataExporters
                     foreach (var uv in chunk.uvs)
                     {
                         writer.WriteLine(
-                            "U: {0}, V: {1}", 
-                            FormatDouble(uv.u/16.0), 
-                            FormatDouble(uv.v/16.0));
+                            "U: {0}, V: {1}",
+                            FormatDouble(uv.u / 16.0),
+                            FormatDouble(uv.v / 16.0));
                     }
 
                     writer.WriteLine("");
@@ -284,7 +288,7 @@ namespace WorldExplorer.DataExporters
         }
         private static string FormatFlag(int i)
         {
-            return "0x"+i.ToString("X8");
+            return "0x" + i.ToString("X8");
         }
     }
 }

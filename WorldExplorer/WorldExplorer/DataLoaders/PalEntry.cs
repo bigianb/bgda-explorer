@@ -28,11 +28,11 @@ namespace WorldExplorer.DataLoaders
             // in ps2 0x80 is fully transparent and 0 is opaque.
             // in java 0 is transparent and 0xFF is opaque.
 
-            byte java_a = (byte)(256 - (byte)(a*2));
+            var java_a = (byte)(256 - (byte)(a * 2));
 
             //java_a = (byte)0xFF;
 
-            int argb = (java_a << 24) |
+            var argb = (java_a << 24) |
                     ((r << 16) & 0xFF0000) |
                     ((g << 8) & 0xFF00) |
                     (b & 0xFF);
@@ -41,14 +41,17 @@ namespace WorldExplorer.DataLoaders
 
         public static PalEntry[] readPalette(byte[] fileData, int startOffset, int palw, int palh)
         {
-            int numEntries = palw * palh;
-            PalEntry[] palette = new PalEntry[numEntries];
-            for (int i = 0; i < numEntries; ++i) {
-                PalEntry pe = new PalEntry();
-                pe.r = fileData[startOffset + i * 4];
-                pe.g = fileData[startOffset + i * 4 + 1];
-                pe.b = fileData[startOffset + i * 4 + 2];
-                pe.a = fileData[startOffset + i * 4 + 3];
+            var numEntries = palw * palh;
+            var palette = new PalEntry[numEntries];
+            for (var i = 0; i < numEntries; ++i)
+            {
+                var pe = new PalEntry
+                {
+                    r = fileData[startOffset + i * 4],
+                    g = fileData[startOffset + i * 4 + 1],
+                    b = fileData[startOffset + i * 4 + 2],
+                    a = fileData[startOffset + i * 4 + 3]
+                };
 
                 palette[i] = pe;
             }
@@ -57,25 +60,30 @@ namespace WorldExplorer.DataLoaders
 
         public static PalEntry[] unswizzlePalette(PalEntry[] palette)
         {
-            if (palette.Length == 256) {
-                PalEntry[] unswizzled = new PalEntry[palette.Length];
+            if (palette.Length == 256)
+            {
+                var unswizzled = new PalEntry[palette.Length];
 
-                int j = 0;
-                for (int i = 0; i < 256; i += 32, j += 32) {
+                var j = 0;
+                for (var i = 0; i < 256; i += 32, j += 32)
+                {
                     copy(unswizzled, i, palette, j, 8);
                     copy(unswizzled, i + 16, palette, j + 8, 8);
                     copy(unswizzled, i + 8, palette, j + 16, 8);
                     copy(unswizzled, i + 24, palette, j + 24, 8);
                 }
                 return unswizzled;
-            } else {
+            }
+            else
+            {
                 return palette;
             }
         }
 
         private static void copy(PalEntry[] unswizzled, int i, PalEntry[] swizzled, int j, int num)
         {
-            for (int x = 0; x < num; ++x) {
+            for (var x = 0; x < num; ++x)
+            {
                 unswizzled[i + x] = swizzled[j + x];
             }
         }

@@ -13,10 +13,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-using System;
 using System.Collections.Generic;
-using System.Windows.Media.Media3D;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 
 namespace WorldExplorer.DataModel
 {
@@ -35,13 +34,13 @@ namespace WorldExplorer.DataModel
         // The position before rotation
         public Vector3D pos;
 
-        public Boolean usesRotFlags;
+        public bool usesRotFlags;
         public int xyzRotFlags;
 
         public double cosAlpha;
         public double sinAlpha;
         // Whether we should flip the y axis (when not using rot flags)
-        public Boolean negYaxis;
+        public bool negYaxis;
 
         // Store info to access again
         public int VifDataOffset;

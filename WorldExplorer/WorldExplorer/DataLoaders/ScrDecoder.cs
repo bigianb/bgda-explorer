@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
@@ -17,39 +16,40 @@ namespace WorldExplorer.DataLoaders
 
             var reader = new DataReader(data, startOffset + HEADER_SIZE, length);
 
-            var script = new Script();
+            var script = new Script
+            {
+                offset0 = reader.ReadInt32(),
+                hw1 = reader.ReadInt16(),
+                hw2 = reader.ReadInt16(),
+                hw3 = reader.ReadInt16(),
+                hw4 = reader.ReadInt16(),
 
-            script.offset0 = reader.ReadInt32();
-            script.hw1 = reader.ReadInt16();
-            script.hw2 = reader.ReadInt16();
-            script.hw3 = reader.ReadInt16();
-            script.hw4 = reader.ReadInt16();
+                instructionsOffset = reader.ReadInt32(),
+                stringsOffset = reader.ReadInt32(),
 
-            script.instructionsOffset = reader.ReadInt32();
-            script.stringsOffset = reader.ReadInt32();
+                offset3 = reader.ReadInt32(),
+                offset4 = reader.ReadInt32(),
+                offset5 = reader.ReadInt32(),
 
-            script.offset3 = reader.ReadInt32();
-            script.offset4 = reader.ReadInt32();
-            script.offset5 = reader.ReadInt32();
-
-            script.numInternals = reader.ReadInt32();
-            script.offsetInternals = reader.ReadInt32();
-            script.numExternals = reader.ReadInt32();
-            script.offsetExternals = reader.ReadInt32();
+                numInternals = reader.ReadInt32(),
+                offsetInternals = reader.ReadInt32(),
+                numExternals = reader.ReadInt32(),
+                offsetExternals = reader.ReadInt32()
+            };
 
             var internalOffset = startOffset + script.offsetInternals + HEADER_SIZE;
-            for (int i=0; i<script.numInternals; ++i)
+            for (var i = 0; i < script.numInternals; ++i)
             {
                 var internalReader = new DataReader(data, internalOffset, 0x18);
                 var labelAddress = internalReader.ReadInt32();
-                string label = internalReader.ReadZString();
+                var label = internalReader.ReadZString();
                 script.internalsByAddr.Add(labelAddress, label);
                 internalOffset += 0x18;
             }
 
             var externalOffset = startOffset + script.offsetExternals + HEADER_SIZE;
             script.externals = new string[script.numExternals];
-            for (int i = 0; i < script.numExternals; ++i)
+            for (var i = 0; i < script.numExternals; ++i)
             {
                 var externalReader = new DataReader(data, externalOffset, 0x18);
                 var labelAddress = externalReader.ReadInt32();
@@ -57,31 +57,32 @@ namespace WorldExplorer.DataLoaders
                 {
                     script.parseWarnings += "found a non-zero external label address\n";
                 }
-                string label = externalReader.ReadZString();
+                var label = externalReader.ReadZString();
                 script.externals[i] = label;
 
                 externalOffset += 0x18;
             }
 
-            int stringTableLen = script.offset3 - script.stringsOffset;
-            int instructionLen = script.stringsOffset - script.instructionsOffset;
-            int thisStringStart = -1;
-            var stringReader = new DataReader(data, startOffset + HEADER_SIZE + script.stringsOffset, stringTableLen+1);
-            StringBuilder thisString = new StringBuilder();
-            for (int i=0; i < stringTableLen; i+= 4)
+            var stringTableLen = script.offset3 - script.stringsOffset;
+            var instructionLen = script.stringsOffset - script.instructionsOffset;
+            var thisStringStart = -1;
+            var stringReader = new DataReader(data, startOffset + HEADER_SIZE + script.stringsOffset, stringTableLen + 1);
+            var thisString = new StringBuilder();
+            for (var i = 0; i < stringTableLen; i += 4)
             {
                 if (thisStringStart < 0)
                 {
                     thisString = new StringBuilder();
                     thisStringStart = i;
                 }
-                byte[] bytes = stringReader.ReadBytes(4);
-                for (int b=3; b >= 0; --b)
+                var bytes = stringReader.ReadBytes(4);
+                for (var b = 3; b >= 0; --b)
                 {
                     if (bytes[b] != 0)
                     {
                         thisString.Append((char)bytes[b]);
-                    } else
+                    }
+                    else
                     {
                         script.stringTable.Add(thisStringStart, thisString.ToString());
                         thisStringStart = -1;
@@ -97,10 +98,10 @@ namespace WorldExplorer.DataLoaders
         {
             var reader = new DataReader(data, startOffset, len);
 
-            for (int i = 0; i < len; i += 4)
+            for (var i = 0; i < len; i += 4)
             {
-                int opcode = reader.ReadInt32();
-                Instruction inst = new Instruction
+                var opcode = reader.ReadInt32();
+                var inst = new Instruction
                 {
                     opCode = opcode,
                     addr = i
@@ -109,7 +110,7 @@ namespace WorldExplorer.DataLoaders
                 {
                     inst.label = script.internalsByAddr[i];
                 }
-                ARGS_TYPE type = bgdaOpCodeArgs[opcode];
+                var type = bgdaOpCodeArgs[opcode];
                 switch (type)
                 {
                     case ARGS_TYPE.NO_ARGS:
@@ -129,16 +130,16 @@ namespace WorldExplorer.DataLoaders
                         i += 8;
                         break;
                     case ARGS_TYPE.VAR_ARGS:
-                        int numArgs = reader.ReadInt32();
-                        for (int j=0; j<numArgs-1; ++j)
+                        var numArgs = reader.ReadInt32();
+                        for (var j = 0; j < numArgs - 1; ++j)
                         {
                             inst.args.Add(reader.ReadInt32());
                         }
                         i += numArgs * 4;
                         break;
                     case ARGS_TYPE.ARGS_130:
-                        int num = reader.ReadInt32(); i += 4;
-                        for (int j = 0; j < num; ++j)
+                        var num = reader.ReadInt32(); i += 4;
+                        for (var j = 0; j < num; ++j)
                         {
                             inst.args.Add(reader.ReadInt32());
                             inst.args.Add(reader.ReadInt32());
@@ -324,7 +325,7 @@ namespace WorldExplorer.DataLoaders
 
         // Maps an address to a label
         public Dictionary<int, string> internalsByAddr = new Dictionary<int, string>();
-        
+
         public int numInternals;
         public int offsetInternals;
 
@@ -340,7 +341,8 @@ namespace WorldExplorer.DataLoaders
         public string Disassemble()
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(parseWarnings)) {
+            if (!string.IsNullOrEmpty(parseWarnings))
+            {
                 sb.Append("Warnings:\n").Append(parseWarnings).Append("\n");
             }
 
@@ -354,29 +356,29 @@ namespace WorldExplorer.DataLoaders
             sb.AppendFormat("Offset5: 0x{0}\n", offset5.ToString("X4"));
             sb.Append("\nInternals\n~~~~~~~~~\n");
             sb.AppendFormat("{0} internals at  0x{1}\n\n", numInternals, offsetInternals.ToString("X4"));
-            foreach (int key in internalsByAddr.Keys)
+            foreach (var key in internalsByAddr.Keys)
             {
                 sb.AppendFormat("{0}: 0x{1}\n", internalsByAddr[key], key.ToString("X4"));
             }
 
             sb.Append("\nExternals\n~~~~~~~~~\n");
             sb.AppendFormat("{0} externals at  0x{1}\n\n", numExternals, offsetExternals.ToString("X4"));
-            for (int i=0; i<numExternals; ++i)
+            for (var i = 0; i < numExternals; ++i)
             {
                 sb.AppendFormat("{0}: {1}\n", i, externals[i]);
             }
             sb.Append("\nStrings\n~~~~~~~\n");
-            foreach (int key in stringTable.Keys)
+            foreach (var key in stringTable.Keys)
             {
                 sb.AppendFormat("0x{0}: {1}\n", key.ToString("X4"), stringTable[key]);
             }
 
             sb.Append("\nScript\n~~~~~~\n");
             // Assume that stacks are always deterministic and nothing clever is done with jumps
-            Stack<int> stack = new Stack<int>();
-            foreach (Instruction inst in instructions)
+            var stack = new Stack<int>();
+            foreach (var inst in instructions)
             {
-                string s = DisassembleInstruction(inst, stack);
+                var s = DisassembleInstruction(inst, stack);
                 sb.Append(s);
                 if (s.Length > 0) { sb.Append('\n'); }
             }
@@ -387,7 +389,7 @@ namespace WorldExplorer.DataLoaders
         private string DisassembleInstruction(Instruction inst, Stack<int> stack)
         {
             var sb = new StringBuilder();
-            if (!String.IsNullOrEmpty(inst.label))
+            if (!string.IsNullOrEmpty(inst.label))
             {
                 sb.Append("\n").Append(inst.label).Append(":\n");
             }
@@ -435,7 +437,7 @@ namespace WorldExplorer.DataLoaders
                     stack.Push(0);
                     sb.Append("push s3");
                     break;
-                case 0x27:      
+                case 0x27:
                     stack.Push(inst.args[0]);
                     sb.AppendFormat("push 0x{0:x}", inst.args[0]);
                     break;
@@ -443,7 +445,7 @@ namespace WorldExplorer.DataLoaders
                     stack.Push(inst.args[0]);   // not correct as it not an immediate
                     sb.AppendFormat("push var {0}", inst.args[0]);
                     break;
-                case 0x29:      
+                case 0x29:
                     stack.Push(inst.args[0]);   // not correct as it not an immediate
                     sb.AppendFormat("push t4 var {0}", inst.args[0]);
                     break;
@@ -458,8 +460,8 @@ namespace WorldExplorer.DataLoaders
                     break;
                 case 0x2C:
                     {
-                        int numInts = inst.args[0] / 4;
-                        for (int i = 0; i < numInts && stack.Count > 0; ++i)
+                        var numInts = inst.args[0] / 4;
+                        for (var i = 0; i < numInts && stack.Count > 0; ++i)
                         {
                             stack.Pop();
                         }
@@ -549,14 +551,14 @@ namespace WorldExplorer.DataLoaders
                     break;
                 case 0x82:
                     sb.Append("switch vector table");
-                    foreach (int arg in inst.args)
+                    foreach (var arg in inst.args)
                     {
                         sb.AppendFormat(" 0x{0:x}", arg);
                     }
                     break;
                 default:
                     sb.AppendFormat("unknown opcode 0x{0:x}", inst.opCode);
-                    foreach (int arg in inst.args)
+                    foreach (var arg in inst.args)
                     {
                         sb.AppendFormat(" 0x{0:x}", arg);
                     }
@@ -586,12 +588,13 @@ namespace WorldExplorer.DataLoaders
                     if (stack.Count > 3)
                     {
                         PrintSSIArgs(enumerator, sb);
-                    } else
+                    }
+                    else
                     {
                         sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
                     }
                     break;
-                
+
                 case "getv":
                 case "removeQuest":
                 case "stopPropAnim":
@@ -614,7 +617,8 @@ namespace WorldExplorer.DataLoaders
                     if (stack.Count > 3)
                     {
                         PrintIIIArgs(enumerator, sb);
-                    } else
+                    }
+                    else
                     {
                         sb.AppendFormat(" ** only {0} entries on the stack", stack.Count);
                     }
@@ -625,11 +629,11 @@ namespace WorldExplorer.DataLoaders
                 case "setv":
                     if (stack.Count >= 3)
                     {
-                        int size = enumerator.Current;
+                        var size = enumerator.Current;
                         enumerator.MoveNext();
-                        int stringId = enumerator.Current;
+                        var stringId = enumerator.Current;
                         enumerator.MoveNext();
-                        int val = enumerator.Current;
+                        var val = enumerator.Current;
                         sb.Append(stringTable[stringId]).Append(" = ").Append(val);
                     }
                     break;
@@ -639,92 +643,95 @@ namespace WorldExplorer.DataLoaders
 
         private void PrintSArg(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int stringId = enumerator.Current;
+            var stringId = enumerator.Current;
 
             sb.Append(stringTable[stringId]);
         }
 
         private void PrintIArg(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
+            var arg1 = enumerator.Current;
 
             sb.AppendFormat("{0}", arg1);
         }
 
         private void PrintSSArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int body = enumerator.Current;
+            var body = enumerator.Current;
             enumerator.MoveNext();
-            int title = enumerator.Current;
+            var title = enumerator.Current;
             sb.Append(stringTable[title]).Append(", ").Append(stringTable[body]);
         }
 
         private void PrintSSIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
+            var arg1 = enumerator.Current;
             enumerator.MoveNext();
-            int arg2 = enumerator.Current;
+            var arg2 = enumerator.Current;
             enumerator.MoveNext();
-            int arg3 = enumerator.Current;
+            var arg3 = enumerator.Current;
             sb.AppendFormat("{0}, {1}, {2}", stringTable[arg1], stringTable[arg2], arg3);
         }
 
         private void PrintIIIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
+            var arg1 = enumerator.Current;
             enumerator.MoveNext();
-            int arg2 = enumerator.Current;
+            var arg2 = enumerator.Current;
             enumerator.MoveNext();
-            int arg3 = enumerator.Current;
+            var arg3 = enumerator.Current;
             sb.AppendFormat("{0}, {1}, {2}", arg1, arg2, arg3);
         }
 
         private void PrintSIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
-            enumerator.MoveNext();
-            int arg2 = enumerator.Current;
-            sb.Append(stringTable[arg1]).AppendFormat(", {0}", arg2);
+            var arg1 = enumerator.Current;
+            sb.Append(stringTable[arg1]);
+            if (enumerator.MoveNext())
+            {
+                var arg2 = enumerator.Current;
+                sb.AppendFormat(", {0}", arg2);
+            }
         }
         private void PrintISIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
+            var arg1 = enumerator.Current;
             enumerator.MoveNext();
-            int arg2 = enumerator.Current;
+            var arg2 = enumerator.Current;
             enumerator.MoveNext();
-            int arg3 = enumerator.Current;
+            var arg3 = enumerator.Current;
             sb.AppendFormat("{0}, ", arg1).Append(stringTable[arg2]).AppendFormat(", {0}", arg3);
         }
 
         private void PrintSIIIIIArgs(Stack<int>.Enumerator enumerator, StringBuilder sb)
         {
-            int size = enumerator.Current;
+            var size = enumerator.Current;
             enumerator.MoveNext();
-            int arg1 = enumerator.Current;
+            var arg1 = enumerator.Current;
             enumerator.MoveNext();
-            int arg2 = enumerator.Current;
+            var arg2 = enumerator.Current;
             enumerator.MoveNext();
-            int arg3 = enumerator.Current;
+            var arg3 = enumerator.Current;
             enumerator.MoveNext();
-            int arg4 = enumerator.Current;
+            var arg4 = enumerator.Current;
             enumerator.MoveNext();
-            int arg5 = enumerator.Current;
+            var arg5 = enumerator.Current;
             enumerator.MoveNext();
-            int arg6 = enumerator.Current;
+            var arg6 = enumerator.Current;
             sb.AppendFormat("{0}, {1}, {2}, {3}, {4}, {5}", stringTable[arg1], arg2, arg3, arg4, arg5, arg6);
         }
     }

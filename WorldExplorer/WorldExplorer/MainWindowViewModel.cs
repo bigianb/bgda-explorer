@@ -14,16 +14,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
-using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
-using WorldExplorer.Logging;
 using WorldExplorer.DataModel;
+using WorldExplorer.Logging;
 
 namespace WorldExplorer
 {
@@ -53,9 +52,9 @@ namespace WorldExplorer
             var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             _gobFile = file;
 
-            _world = new World(engineVersion, folderPath,  Path.GetFileName(_gobFile));
+            _world = new World(engineVersion, folderPath, Path.GetFileName(_gobFile));
             _worldTreeViewModel = new WorldTreeViewModel(_world);
-            this.OnPropertyChanged("Children");
+            OnPropertyChanged("Children");
         }
 
         public void SettingsChanged()
@@ -73,20 +72,17 @@ namespace WorldExplorer
         private WorldTreeViewModel _worldTreeViewModel;
 
         // This is what the tree view binds to.
-        public ReadOnlyCollection<WorldTreeViewModel> Children
-        {
-            get { return new ReadOnlyCollection<WorldTreeViewModel>(new[] { _worldTreeViewModel }); }
-        }
+        public ReadOnlyCollection<WorldTreeViewModel> Children => new ReadOnlyCollection<WorldTreeViewModel>(new[] { _worldTreeViewModel });
 
-        private WriteableBitmap _selectedNodeImage=null;
+        private WriteableBitmap _selectedNodeImage = null;
 
         public WriteableBitmap SelectedNodeImage
         {
-            get { return _selectedNodeImage; }
+            get => _selectedNodeImage;
             set
             {
                 _selectedNodeImage = value;
-                this.OnPropertyChanged("SelectedNodeImage");
+                OnPropertyChanged("SelectedNodeImage");
             }
         }
 
@@ -94,11 +90,11 @@ namespace WorldExplorer
 
         public SkeletonViewModel TheSkeletonViewModel
         {
-            get { return _skeletonViewModel; }
+            get => _skeletonViewModel;
             set
             {
                 _skeletonViewModel = value;
-                this.OnPropertyChanged("TheSkeletonViewModel");
+                OnPropertyChanged("TheSkeletonViewModel");
             }
         }
 
@@ -106,11 +102,11 @@ namespace WorldExplorer
 
         public ModelViewModel TheModelViewModel
         {
-            get { return _modelViewModel; }
+            get => _modelViewModel;
             set
             {
                 _modelViewModel = value;
-                this.OnPropertyChanged("TheModelViewModel");
+                OnPropertyChanged("TheModelViewModel");
             }
         }
 
@@ -118,11 +114,11 @@ namespace WorldExplorer
 
         public LevelViewModel TheLevelViewModel
         {
-            get { return _levelViewModel; }
+            get => _levelViewModel;
             set
             {
                 _levelViewModel = value;
-                this.OnPropertyChanged("TheLevelViewModel");
+                OnPropertyChanged("TheLevelViewModel");
             }
         }
 
@@ -130,14 +126,15 @@ namespace WorldExplorer
 
         public object SelectedNode
         {
-            get { return _selectedNode; }
+            get => _selectedNode;
             set
             {
                 // Clear log text
                 LogText = null;
 
                 _selectedNode = value;
-                if (_selectedNode is LmpEntryTreeViewModel) {
+                if (_selectedNode is LmpEntryTreeViewModel)
+                {
                     OnLmpEntrySelected((LmpEntryTreeViewModel)_selectedNode);
                 }
                 else if (_selectedNode is WorldFileTreeViewModel)
@@ -150,30 +147,24 @@ namespace WorldExplorer
                 }
                 else if (_selectedNode is YakChildTreeViewItem)
                 {
-                    OnYakChildElementSelected((YakChildTreeViewItem) _selectedNode);
+                    OnYakChildElementSelected((YakChildTreeViewItem)_selectedNode);
                 }
-                this.OnPropertyChanged("SelectedNode");
+                OnPropertyChanged("SelectedNode");
             }
         }
 
-        public World World
-        {
-            get { return _world; }
-        }
+        public World World => _world;
 
-        public MainWindow MainWindow
-        {
-            get { return _window; }
-        }
+        public MainWindow MainWindow => _window;
 
         public string _logText;
-        public String LogText
+        public string LogText
         {
-            get { return _logText; }
+            get => _logText;
             set
             {
                 _logText = value;
-                this.OnPropertyChanged("LogText");
+                OnPropertyChanged("LogText");
             }
         }
 
@@ -195,15 +186,17 @@ namespace WorldExplorer
                     break;
                 case ".vif":
                     {
-                        string texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
+                        var texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
                         SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
-                        Model model = new Model();
-                        model.meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight);
+                        var model = new Model
+                        {
+                            meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
+                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight)
+                        };
                         _modelViewModel.VifModel = model;
 
                         /*// Load animation data
@@ -228,7 +221,7 @@ namespace WorldExplorer
 
                         if (_modelViewModel.VifModel != null)
                         {
-                            int boneCount = _modelViewModel.VifModel.CountBones();
+                            var boneCount = _modelViewModel.VifModel.CountBones();
                             if (boneCount != 0 && boneCount == animData.NumBones)
                             {
                                 _modelViewModel.AnimData = animData;
@@ -307,7 +300,7 @@ namespace WorldExplorer
                             sb.AppendFormat("Length: 0x{0:x}\n", obj.Length);
                             sb.Append("\n");
                         }
-                    
+
                         LogText = sb.ToString();
                     }
                     _window.tabControl.SelectedIndex = 4; // Log View
@@ -321,7 +314,7 @@ namespace WorldExplorer
             var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
-            WorldFileDecoder decoder = new WorldFileDecoder();
+            var decoder = new WorldFileDecoder();
             var log = new StringLogger();
             _world.worldData = decoder.Decode(engineVersion, _worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
             worldFileModel.ReloadChildren();
@@ -353,14 +346,16 @@ namespace WorldExplorer
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
-            Model model = new Model();
-            model.meshList = VifDecoder.Decode(
-                log, 
-                childEntry.YakFile.FileData, 
+            var model = new Model
+            {
+                meshList = VifDecoder.Decode(
+                log,
+                childEntry.YakFile.FileData,
                 childEntry.Value.VifOffset,
                 childEntry.Value.TextureOffset,
                 SelectedNodeImage.PixelWidth,
-                SelectedNodeImage.PixelHeight);
+                SelectedNodeImage.PixelHeight)
+            };
             _modelViewModel.VifModel = model;
 
             LogText += log.ToString();
@@ -372,7 +367,7 @@ namespace WorldExplorer
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)
         {
-            List<AnimData> animList = new List<AnimData>();
+            var animList = new List<AnimData>();
             var animEntry = lmpFile.FindFirstEntryWithSuffix(".anm");
             if (animEntry != null)
             {
@@ -388,8 +383,10 @@ namespace WorldExplorer
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         #endregion // INotifyPropertyChanged Members

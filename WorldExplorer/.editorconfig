@@ -1,0 +1,11 @@
+# You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+[*.cs]
+
+#Style - implicit and explicit types
+
+#prefer explicit type over var in all cases, unless overridden by another code style rule
+csharp_style_var_elsewhere = true:warning
+#prefer explicit type over var to declare variables with built-in system types such as int
+csharp_style_var_for_built_in_types = true:warning
+#prefer explicit type over var when the type is already mentioned on the right-hand side of a declaration
+csharp_style_var_when_type_is_apparent = true:warning

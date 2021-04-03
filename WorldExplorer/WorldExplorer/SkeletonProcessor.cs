@@ -14,8 +14,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Windows.Media.Media3D;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer
@@ -24,25 +24,26 @@ namespace WorldExplorer
     {
         public static Model3D GetSkeletonModel(AnimData animData, int frameNo)
         {
-            if (null == animData) {
+            if (null == animData)
+            {
                 return null;
             }
 
-            GeometryModel3D model = new GeometryModel3D();
-            MeshGeometry3D mesh = new MeshGeometry3D();
+            var model = new GeometryModel3D();
+            var mesh = new MeshGeometry3D();
 
-            Point3D[] parentPoints = new Point3D[64];
-            parentPoints[0] = new Point3D(0, 0, 0);            
+            var parentPoints = new Point3D[64];
+            parentPoints[0] = new Point3D(0, 0, 0);
 
-            for (int jointNum = 0; jointNum < animData.skeletonDef.GetLength(0); ++jointNum)
+            for (var jointNum = 0; jointNum < animData.skeletonDef.GetLength(0); ++jointNum)
             {
-                int parentIndex = animData.skeletonDef[jointNum];
+                var parentIndex = animData.skeletonDef[jointNum];
                 // Binding position
-                Point3D pos = animData.bindingPose[jointNum];
+                var pos = animData.bindingPose[jointNum];
 
                 if (frameNo >= 0)
                 {
-                    AnimMeshPose pose = animData.perFrameFKPoses[frameNo, jointNum];
+                    var pose = animData.perFrameFKPoses[frameNo, jointNum];
                     pos = pose.Position;
                 }
                 parentPoints[parentIndex + 1] = pos;
@@ -51,8 +52,10 @@ namespace WorldExplorer
 
             model.Geometry = mesh;
 
-            DiffuseMaterial dm = new DiffuseMaterial();
-            dm.Brush = new SolidColorBrush(Colors.DarkGreen);
+            var dm = new DiffuseMaterial
+            {
+                Brush = new SolidColorBrush(Colors.DarkGreen)
+            };
             model.Material = dm;
 
             return model;
@@ -62,10 +65,10 @@ namespace WorldExplorer
 
         private static void AddBone(MeshGeometry3D mesh, Point3D startPoint, Point3D endPoint)
         {
-            AxisAngleRotation3D rotate = new AxisAngleRotation3D();
-            RotateTransform3D xform = new RotateTransform3D(rotate);
+            var rotate = new AxisAngleRotation3D();
+            var xform = new RotateTransform3D(rotate);
 
-            Vector3D boneVec = endPoint - startPoint;
+            var boneVec = endPoint - startPoint;
 
             // radius always points towards -Z (when possible)
             Vector3D radius;
@@ -91,17 +94,17 @@ namespace WorldExplorer
 
             var positions = mesh.Positions;
             const int slices = 10;
-            for (int slice = 0; slice < slices; ++slice)
+            for (var slice = 0; slice < slices; ++slice)
             {
                 // Rotate radius vector 
                 rotate.Angle = slice * 360.0 / slices;
-                Vector3D vectRadius = radius * xform.Value;
+                var vectRadius = radius * xform.Value;
                 rotate.Angle = (slice + 1) * 360.0 / slices;
-                Vector3D vectRadius1 = radius * xform.Value;
+                var vectRadius1 = radius * xform.Value;
 
                 // Bit of a hack to avoid having to set the normals or worry about consistent winding.
                 positions.Add(startPoint);
-                positions.Add(endPoint + delta * vectRadius);             
+                positions.Add(endPoint + delta * vectRadius);
                 positions.Add(endPoint + delta * vectRadius1);
 
                 positions.Add(startPoint);

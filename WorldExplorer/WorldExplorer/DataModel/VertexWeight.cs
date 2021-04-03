@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace WorldExplorer.DataModel
+﻿namespace WorldExplorer.DataModel
 {
     public struct VertexWeight
     {
@@ -15,16 +13,19 @@ namespace WorldExplorer.DataModel
         public int boneWeight3;
         public int boneWeight4;
 
-        public override String ToString()
+        public override string ToString()
         {
-            String s = "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1;
-            if (bone2 != 255) {
+            var s = "Vertex Weight: " + startVertex + " -> " + endVertex + ", bone1=" + bone1 + ", weight=" + boneWeight1;
+            if (bone2 != 255)
+            {
                 s += "; bone2=" + bone2 + ", weight=" + boneWeight2;
             }
-            if (bone3 != 255) {
+            if (bone3 != 255)
+            {
                 s += "; bone3=" + bone3 + ", weight=" + boneWeight3;
             }
-            if (bone4 != 255) {
+            if (bone4 != 255)
+            {
                 s += "; bone4=" + bone4 + ", weight=" + boneWeight4;
             }
             return s;

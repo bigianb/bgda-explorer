@@ -59,11 +59,11 @@
     <StartupObject>WorldExplorer.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HelixToolkit, Version=2.11.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <HintPath>..\packages\HelixToolkit.2.11.0\lib\netstandard1.1\HelixToolkit.dll</HintPath>
+    <Reference Include="HelixToolkit, Version=2.15.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.2.15.0\lib\netstandard1.1\HelixToolkit.dll</HintPath>
     </Reference>
-    <Reference Include="HelixToolkit.Wpf, Version=2.11.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
-      <HintPath>..\packages\HelixToolkit.Wpf.2.11.0\lib\net45\HelixToolkit.Wpf.dll</HintPath>
+    <Reference Include="HelixToolkit.Wpf, Version=2.15.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.Wpf.2.15.0\lib\net45\HelixToolkit.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -130,11 +130,21 @@
       <DependentUpon>SkeletonView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SkeletonViewModel.cs" />
+    <Compile Include="TreeView\AbstractLmpTreeViewModel.cs" />
+    <Compile Include="TreeView\GobTreeViewModel.cs" />
+    <Compile Include="TreeView\LmpEntryTreeViewModel.cs" />
+    <Compile Include="TreeView\LmpTreeViewModel.cs" />
+    <Compile Include="TreeView\TextTreeViewModel.cs" />
+    <Compile Include="TreeView\WorldElementTreeViewModel.cs" />
+    <Compile Include="TreeView\WorldFileTreeViewModel.cs" />
     <Compile Include="TreeView\WorldTreeViewModel.cs" />
     <Compile Include="TreeView\TreeViewItemViewModel.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TreeView\YakChildTreeViewItem.cs" />
+    <Compile Include="TreeView\YakTreeViewItem.cs" />
+    <Compile Include="TreeView\YakTreeViewModel.cs" />
     <Compile Include="Win3D\Conversions.cs" />
     <Compile Include="World.cs" />
     <Compile Include="WorldDefs\ObjectDefinitions.cs" />

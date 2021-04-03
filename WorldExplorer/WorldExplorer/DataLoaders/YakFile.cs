@@ -14,7 +14,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace WorldExplorer.DataLoaders
@@ -33,7 +32,7 @@ namespace WorldExplorer.DataLoaders
         /// <summary>
         /// The .yak file name.
         /// </summary>
-        public String Name;
+        public string Name;
 
         /// <summary>
         /// The raw data of the .yak file.
@@ -57,7 +56,7 @@ namespace WorldExplorer.DataLoaders
         public void ReadEntries()
         {
             Entries.Clear();
-            DataReader reader = new DataReader(FileData);
+            var reader = new DataReader(FileData);
             Entry entry;
             while ((entry = readEntry(reader)) != null)
             {
@@ -67,12 +66,12 @@ namespace WorldExplorer.DataLoaders
 
         Entry readEntry(DataReader reader)
         {
-            Child child1 = readChild(reader);
+            var child1 = readChild(reader);
             if (child1 == null)
             {
                 return null;
             }
-            Entry entry = new Entry();
+            var entry = new Entry();
             entry.children[0] = child1;
             entry.children[1] = readChild(reader);
             entry.children[2] = readChild(reader);
@@ -82,15 +81,17 @@ namespace WorldExplorer.DataLoaders
 
         Child readChild(DataReader reader)
         {
-            int t = reader.ReadInt32();
+            var t = reader.ReadInt32();
             if (t == 0)
             {
                 return null;
             }
-            Child child = new Child();
-            child.TextureOffset = t;
-            child.VifOffset = reader.ReadInt32();
-            child.VifLength = reader.ReadInt32();
+            var child = new Child
+            {
+                TextureOffset = t,
+                VifOffset = reader.ReadInt32(),
+                VifLength = reader.ReadInt32()
+            };
             return child;
         }
 

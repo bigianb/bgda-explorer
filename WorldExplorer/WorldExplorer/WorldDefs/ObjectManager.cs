@@ -11,10 +11,7 @@ namespace WorldExplorer.WorldDefs
         readonly List<ObjectData> _objects = new List<ObjectData>();
         readonly ObjectDefinitions _defs;
 
-        public LevelViewModel LevelViewModel
-        {
-            get { return _levelViewModel; }
-        }
+        public LevelViewModel LevelViewModel => _levelViewModel;
 
         public ObjectManager(LevelViewModel levelViewModel)
         {
@@ -46,15 +43,19 @@ namespace WorldExplorer.WorldDefs
         public void RemoveObjectFromList(VisualObjectData vod)
         {
             if (_visualObjects.Contains(vod))
+            {
                 _visualObjects.Remove(vod);
+            }
         }
 
         public VisualObjectData ParseObject(ObjectData obj)
         {
-            var vod = new VisualObjectData();
-            vod.ObjectData = obj;
-            vod.Offset = new Vector3D(obj.Floats[0] / 4, obj.Floats[1] / 4, obj.Floats[2] / 4);
-            vod.zRotation = 22.5 * (obj.I6 >> 12);
+            var vod = new VisualObjectData
+            {
+                ObjectData = obj,
+                Offset = new Vector3D(obj.Floats[0] / 4, obj.Floats[1] / 4, obj.Floats[2] / 4),
+                zRotation = 22.5 * (obj.I6 >> 12)
+            };
 
             vod = _defs.Parse(vod);
 
@@ -71,7 +72,9 @@ namespace WorldExplorer.WorldDefs
             foreach (var vod in _visualObjects)
             {
                 if (HitTestModel(vod.Model, hitResult))
+                {
                     return vod;
+                }
             }
             return null;
         }
@@ -79,16 +82,23 @@ namespace WorldExplorer.WorldDefs
         private bool HitTestModel(ModelVisual3D obj, ModelVisual3D hitResult)
         {
             if (obj == hitResult)
+            {
                 return true;
+            }
+
             foreach (var child in obj.Children)
             {
                 if (child == hitResult)
+                {
                     return true;
+                }
 
                 if (child is ModelVisual3D)
                 {
                     if (HitTestModel((ModelVisual3D)child, hitResult))
+                    {
                         return true;
+                    }
                 }
             }
 

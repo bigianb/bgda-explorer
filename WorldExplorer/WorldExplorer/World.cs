@@ -26,14 +26,17 @@ namespace WorldExplorer
         public World(EngineVersion engineVersion, string dataPath, string name)
         {
             if (string.IsNullOrEmpty(dataPath))
+            {
                 Debug.Fail("Datapath is null");
+            }
+
             EngineVersion = engineVersion;
             DataPath = dataPath;
             Name = name;
         }
 
-        public String DataPath;
-        public String Name;
+        public string DataPath;
+        public string Name;
         public EngineVersion EngineVersion;
 
         public GobFile WorldGob = null;
