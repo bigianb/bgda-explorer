@@ -42,14 +42,14 @@ public class TexDecode
         obj.extract("lowbartender.tex", new File(outDir + "tavern/bartend_lmp"));
         obj.extract("bartender.tex", new File(outDir + "tavern/bartend_lmp"));
 */
-        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+        GameType gameType = GameType.DARK_ALLIANCE;
 
         Config config = new Config(gameType);
         String inDir = config.getDataDir();
         String outDir = inDir+"../DATA_extracted/";
 
         TexDecode obj = new TexDecode();
-        obj.extract("zatanna.tex", new File(outDir + "ZATANNA_LMP"));
+        obj.extract("loading_us.tex", new File(outDir + "LOADING_LMP"));
     }
 
     // Texture format is something like as follows:

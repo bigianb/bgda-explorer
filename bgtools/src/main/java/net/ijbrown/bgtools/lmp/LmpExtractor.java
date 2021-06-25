@@ -30,14 +30,14 @@ public class LmpExtractor {
 
     public static void main(String[] args) throws IOException
     {
-        GameType gameType = GameType.JUSTICE_LEAGUE_HEROES;
+        GameType gameType = GameType.DARK_ALLIANCE;
 
         Config config = new Config(gameType);
         String inDir = config.getDataDir();
         String outDir = inDir+"../DATA_extracted/";
 
         LmpExtractor obj = new LmpExtractor(gameType);
-        obj.extractAll(inDir, outDir, "ZATANNA.LMP");
+        obj.extractAll(inDir, outDir, "LOADING.LMP");
     }
 
     private void extractAll(String inDirname, String outDirname, String lmpFilename) throws IOException
