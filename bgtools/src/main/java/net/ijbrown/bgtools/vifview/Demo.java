@@ -4,24 +4,17 @@ import com.google.devtools.common.options.OptionsParser;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.lwjgl.system.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.*;
 import java.util.Collections;
 
-import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11C.GL_RENDERER;
 import static org.lwjgl.opengl.GL11C.GL_VENDOR;
 import static org.lwjgl.opengl.GL11C.GL_VERSION;
 import static org.lwjgl.opengl.GL11C.glGetString;
-import static org.lwjgl.system.MemoryStack.*;
-import static org.lwjgl.system.MemoryUtil.*;
+
 
 public class Demo {
 
@@ -41,7 +34,6 @@ public class Demo {
         window = new Window("VIF Viewer", 600, 600, true);
     }
 
-
     public void run(String gameDir, String characterName) throws Exception {
         GameConfigs cfg = new GameConfigs();
         try {
@@ -54,14 +46,13 @@ public class Demo {
         gameDataManager.discover();
 
         GameConfig.Character characterConfig = gameDataManager.findCharacter(characterName);
-        if (characterConfig == null){
+        if (characterConfig == null) {
             throw new RuntimeException("Couldn't find character config for " + characterName);
         }
         System.out.println("Using LWJGL " + Version.getVersion() + "!");
 
         init();
         loop(gameDataManager, characterConfig);
-
         renderer.cleanup();
     }
 
@@ -75,7 +66,7 @@ public class Demo {
         camera.setPosition(0,-10,0);
     }
 
-    private final Vector3f cameraInc = new Vector3f(0.0f, 0.0f, 0.0f);;
+    private final Vector3f cameraInc = new Vector3f(0.0f, 0.0f, 0.0f);
 
     private void input()
     {

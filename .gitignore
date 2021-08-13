@@ -4,5 +4,7 @@ bin
 packages
 .vs
 .idea
+.gradle
 target
+build
 .DS_Store
