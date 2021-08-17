@@ -172,7 +172,7 @@ public class TexDecode
             while (curIdx < endIndex - 0x10) {
                 GIFTag gifTag3 = new GIFTag();
                 gifTag3.parse(fileData, curIdx);
-                while (!gifTag3.isImage()) {
+                while (!gifTag3.isImage() && curIdx < endIndex - 0x10) {
                     int trxregOffset = findADEntry(fileData, curIdx + 0x10, gifTag3.nloop, TRXREG);
                     if (trxregOffset != 0) {
                         rrw = DataUtil.getLEShort(fileData, trxregOffset);
@@ -190,6 +190,8 @@ public class TexDecode
                         dbw = fileData[bitbltOffset + 0x06] & 0x3F;
                         dpsm = fileData[bitbltOffset + 0x07] & 0x3F;
                     }
+
+                    // TODO: look at the EOP in the giftag
 
                     curIdx += gifTag3.getLength();
                     gifTag3.parse(fileData, curIdx);

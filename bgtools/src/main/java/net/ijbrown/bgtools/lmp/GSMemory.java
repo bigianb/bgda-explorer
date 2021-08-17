@@ -55,11 +55,13 @@ public class GSMemory {
                 mem[gsIndex++] = data[dataIndex + 1];
                 mem[gsIndex] = data[dataIndex];
 */
-                mem[gsIndex++] = data[dataIndex];
-                mem[gsIndex++] = data[dataIndex + 1];
-                mem[gsIndex++] = data[dataIndex + 2];
-                mem[gsIndex] = data[dataIndex + 3];
-                dataIndex += 4;
+                if (dataIndex < data.length) {
+                    mem[gsIndex++] = data[dataIndex];
+                    mem[gsIndex++] = data[dataIndex + 1];
+                    mem[gsIndex++] = data[dataIndex + 2];
+                    mem[gsIndex] = data[dataIndex + 3];
+                    dataIndex += 4;
+                }
             }
         }
     }
