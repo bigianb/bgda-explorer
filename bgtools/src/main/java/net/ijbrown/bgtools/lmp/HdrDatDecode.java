@@ -48,24 +48,25 @@ public class HdrDatDecode
     private void extractFiles(File dir, File outDirFile)throws IOException
     {
         File datFile = new File(dir, baseFilename+".DAT");
-        var entry = headerEntries[0];
-        for (int el=0; el<2; ++el){
-            var element = entry.headerElements[el];
-            var elData = readData(datFile, element.startPosBytes, element.lenBytes);
+        for (int entryNo=0; entryNo<20 /*headerEntries.length*/; ++entryNo){
+            var entry = headerEntries[entryNo];
+            for (int el=0; el<entry.headerElements.length; ++el) {
+                var element = entry.headerElements[el];
+                var elData = readData(datFile, element.startPosBytes, element.lenBytes);
 
 
-            var elBaseName = baseFilename+"_"+entry.name+element.id+"_"+el;
+                var elBaseName = baseFilename + "_" + entry.name + element.id + "_" + el;
 
-            File outFile = new File(outDirFile, elBaseName + ".dat");
-            BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(outFile));
-            os.write(elData, 0, element.lenBytes);
-            os.close();
+                File outFile = new File(outDirFile, elBaseName + ".dat");
+                BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(outFile));
+                os.write(elData, 0, element.lenBytes);
+                os.close();
 
-            // elements come in pairs, the first looks like a texture
-            if ((el & 1) == 0){
-                new TexDecode().extract(outDirFile, elData, 0, elBaseName, elData.length);
+                // elements come in pairs, the first looks like a texture
+                if ((el & 1) == 0) {
+                    new TexDecode().extract(outDirFile, elData, 0, elBaseName, elData.length);
+                }
             }
-
         }
     }
 
