@@ -43,6 +43,7 @@ namespace WorldExplorer
         public WorldTexFile WorldTex = null;
         public LmpFile WorldLmp = null;
         public YakFile WorldYak = null;
+        public CacheFile HdrDatFile = null;
 
         // The parsed data from the various files.
         public WorldData worldData = null;
@@ -66,6 +67,12 @@ namespace WorldExplorer
                 case ".yak":
                     var yakData = File.ReadAllBytes(Path.Combine(DataPath, Name));
                     WorldYak = new YakFile(EngineVersion, Name, yakData);
+                    break;
+                case ".hdr":
+                    var baseName = Name.Substring(0, Name.Length - 4);
+                    var hdrData = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                    var datData = File.ReadAllBytes(Path.Combine(DataPath, baseName+".DAT"));
+                    HdrDatFile = new CacheFile(EngineVersion, baseName, hdrData, datData);
                     break;
                 default:
                     throw new NotSupportedException("Unsupported file type");
