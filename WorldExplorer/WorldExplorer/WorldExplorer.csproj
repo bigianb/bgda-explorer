@@ -92,6 +92,7 @@
     <Compile Include="DataLoaders\DialogDecoder.cs" />
     <Compile Include="DataLoaders\GSMemory.cs" />
     <Compile Include="DataLoaders\ScrDecoder.cs" />
+    <Compile Include="DataLoaders\CacheFile.cs" />
     <Compile Include="DataLoaders\YakFile.cs" />
     <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="DataLoaders\EngineVersion.cs" />
