@@ -37,5 +37,22 @@
         ]
       }
     ]
+  },
+  {
+    "title": "Dark Alliance",
+    "ids": ["SLES_506.72"],
+    "dataDir": "BG/DATA",
+    "type": "DARK_ALLIANCE",
+    "characters": [
+      {
+        "name": "zombie",
+        "lmp": "ZOMBIE.LMP",
+        "body": {
+          "vif": "zombie.vif"
+        },
+        "extras":[
+        ]
+      }
+    ]
   }
 ]
