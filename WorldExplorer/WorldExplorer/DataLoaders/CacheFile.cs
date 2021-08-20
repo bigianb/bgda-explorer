@@ -101,13 +101,13 @@ namespace WorldExplorer.DataLoaders
 
         Child readChild(DataReader reader)
         {
-            var id = reader.ReadInt32();
+            var id = reader.ReadInt16();
             var len = 2048 * reader.ReadInt16();
-            var start = 2048 * reader.ReadInt16();
+            var start = 2048 * reader.ReadInt32();
 
-            var id2 = reader.ReadInt32();
+            var id2 = reader.ReadInt16();
             var len2 = 2048 * reader.ReadInt16();
-            var start2 = 2048 * reader.ReadInt16();
+            var start2 = 2048 * reader.ReadInt32();
 
             if (id != id2)
             {
