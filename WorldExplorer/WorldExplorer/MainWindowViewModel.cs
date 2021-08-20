@@ -149,6 +149,10 @@ namespace WorldExplorer
                 {
                     OnYakChildElementSelected((YakChildTreeViewItem)_selectedNode);
                 }
+                else if (_selectedNode is HdrDatChildTreeViewItem)
+                {
+                    OnHdrDatChildElementSelected((HdrDatChildTreeViewItem)_selectedNode);
+                }
                 OnPropertyChanged("SelectedNode");
             }
         }
@@ -363,6 +367,31 @@ namespace WorldExplorer
             _window.tabControl.SelectedIndex = 1; // Model View
             _window.ResetCamera();
             _window.SetViewportText(1, childEntry.Text + " of " + ((YakTreeViewItem)childEntry.Parent).Text, "");
+        }
+
+        private void OnHdrDatChildElementSelected(HdrDatChildTreeViewItem childEntry)
+        {
+            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData, childEntry.Value.TexOffset);
+            var log = new StringLogger();
+            _modelViewModel.Texture = SelectedNodeImage;
+            _modelViewModel.AnimData = null;
+            var model = new Model
+            {
+                meshList = VifDecoder.Decode(
+                log,
+                childEntry.CacheFile.FileData,
+                childEntry.Value.VifOffset,
+                childEntry.Value.VifLength,
+                SelectedNodeImage.PixelWidth,
+                SelectedNodeImage.PixelHeight)
+            };
+            _modelViewModel.VifModel = model;
+
+            LogText += log.ToString();
+
+            _window.tabControl.SelectedIndex = 1; // Model View
+            _window.ResetCamera();
+            _window.SetViewportText(1, childEntry.Text + " of " + ((HdrDatTreeViewItem)childEntry.Parent).Text, "");
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)

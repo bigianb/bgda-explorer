@@ -39,7 +39,7 @@ namespace WorldExplorer
             var i = 0;
             foreach (var child in _entry.children)
             {
-                Children.Add(new HdrDatChildTreeViewItem(this, _cacheFile, child, _entry, "Child " + i));
+                Children.Add(new HdrDatChildTreeViewItem(this, _cacheFile, child, _entry, "Id " + child.id));
                 ++i;
             }
         }
