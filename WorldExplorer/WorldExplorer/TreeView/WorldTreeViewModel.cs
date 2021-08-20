@@ -51,6 +51,10 @@ namespace WorldExplorer
             {
                 base.Children.Add(new YakTreeViewModel(this, _world.WorldYak));
             }
+            else if (_world.HdrDatFile != null)
+            {
+                base.Children.Add(new HdrDatTreeViewModel(this, _world.HdrDatFile));
+            }
             else
             {
                 throw new NotSupportedException("Unknown or corrupted file");

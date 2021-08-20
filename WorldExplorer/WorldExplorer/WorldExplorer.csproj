@@ -143,8 +143,11 @@
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TreeView\HdrDatChildTreeViewItem.cs" />
     <Compile Include="TreeView\YakChildTreeViewItem.cs" />
+    <Compile Include="TreeView\HdrDatTreeViewItem.cs" />
     <Compile Include="TreeView\YakTreeViewItem.cs" />
+    <Compile Include="TreeView\HdrDatTreeViewModel.cs" />
     <Compile Include="TreeView\YakTreeViewModel.cs" />
     <Compile Include="Win3D\Conversions.cs" />
     <Compile Include="World.cs" />
