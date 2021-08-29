@@ -39,10 +39,20 @@ namespace WorldExplorer.DataLoaders
         {
             return (!string.IsNullOrEmpty(path) && path.IndexOfAny(System.IO.Path.GetInvalidPathChars()) >= 0);
         }
+        
+        public static int getLEInt(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToInt32(data.Slice(offset, 4).ToArray());
+        }
 
         public static int getLEInt(byte[] data, int offset)
         {
             return BitConverter.ToInt32(data, offset);
+        }
+        
+        public static int getLEShort(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToInt16(data.Slice(offset, 2).ToArray());
         }
 
         public static short getLEShort(byte[] data, int offset)

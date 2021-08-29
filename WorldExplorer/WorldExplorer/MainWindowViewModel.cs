@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -21,6 +22,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataLoaders.Animation;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;
 
@@ -161,7 +163,7 @@ namespace WorldExplorer
 
         public MainWindow MainWindow => _window;
 
-        public string _logText;
+        private string _logText;
         public string LogText
         {
             get => _logText;
@@ -219,7 +221,7 @@ namespace WorldExplorer
                 case ".anm":
                     {
                         var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
-                        var animData = AnmDecoder.Decode(engineVersion, lmpFile.FileData, entry.StartOffset, entry.Length);
+                        var animData = AnmDecoder.Decode(engineVersion, lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length));
                         _skeletonViewModel.AnimData = animData;
                         LogText = animData.ToString();
 
@@ -315,7 +317,7 @@ namespace WorldExplorer
 
         private void OnWorldEntrySelected(WorldFileTreeViewModel worldFileModel)
         {
-            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
+            var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
             WorldFileDecoder decoder = engineVersion == EngineVersion.ReturnToArms || engineVersion == EngineVersion.JusticeLeagueHeroes 
@@ -403,7 +405,7 @@ namespace WorldExplorer
             if (animEntry != null)
             {
                 var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
-                animList.Add(AnmDecoder.Decode(engineVersion, lmpFile.FileData, animEntry.StartOffset, animEntry.Length));
+                animList.Add(AnmDecoder.Decode(engineVersion, lmpFile.FileData.AsSpan().Slice(animEntry.StartOffset, animEntry.Length)));
             }
             return animList;
         }
