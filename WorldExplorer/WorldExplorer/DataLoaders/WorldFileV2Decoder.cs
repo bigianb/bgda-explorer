@@ -62,16 +62,6 @@ namespace WorldExplorer.DataLoaders
             element.VifDataLength = vifLen * 0x10 - vifStartOffset;
             element.model = DecodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
             element.pos = new Vector3D(posx / 16.0, posy / 16.0, posz / 16.0);
-
-            //if ((flags & 0x01) == 0)
-            //{
-            //    log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
-            //    element.cosAlpha = (flags >> 16) / 32767.0;
-            //    element.sinAlpha = (a >> 16) / 32767.0; // just guessing
-            //    log.LogLine("cos alpha : " + element.cosAlpha);
-            //    log.LogLine("sin alpha : " + element.sinAlpha);
-            //    log.LogLine("alpha(cos, sin): " + Math.Acos(element.cosAlpha) * 180.0 / Math.PI + ", " + Math.Asin(element.sinAlpha) * 180.0 / Math.PI);
-            //}
             element.negYaxis = (unkFlag & 0x40) == 0x40; // Just guessing
             element.xyzRotFlags = rotFlags;
             element.usesRotFlags = true;
