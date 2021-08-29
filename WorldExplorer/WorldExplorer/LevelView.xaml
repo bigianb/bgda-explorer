@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:HelixToolkit="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
-             xmlns:local="clr-namespace:WorldExplorer"
+             xmlns:hvd="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
+             xmlns:local="clr-namespace:WorldExplorer" d:DataContext="{d:DesignInstance Type=local:LevelViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="500"  DataContext="{Binding}">
     <Grid>
@@ -16,49 +16,61 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Background="Transparent" Name="trackballSource" Margin="0,23,0,0" d:LayoutOverrides="GridBox">
-            <HelixToolkit:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0"  IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" CalculateCursorPosition="True">
-                <HelixToolkit:HelixViewport3D.DefaultCamera>
+            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0"  IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" CalculateCursorPosition="True">
+                <hvd:HelixViewport3D.DefaultCamera>
                     <PerspectiveCamera Position="-106,79,89" LookDirection="1,0,1" UpDirection="0,0,1" FieldOfView="50" NearPlaneDistance="0.001"/>
-                </HelixToolkit:HelixViewport3D.DefaultCamera>
+                </hvd:HelixViewport3D.DefaultCamera>
                 <local:SceneVisual3D Scene="{Binding Scene}" />
-            </HelixToolkit:HelixViewport3D>            
+            </hvd:HelixViewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox"/>
-        <Expander x:Name="editorExpander" Header="Properties" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
-        	<Grid Height="280" Width="248">
-        		<TextBlock x:Name="editor_NameText" Margin="8,8,0,0" TextWrapping="Wrap" Text="No Element Selected" VerticalAlignment="Top" FontWeight="Bold"/>
-        		<Grid x:Name="editor_ElementGrid" d:IsHidden="True">
-        			<TextBlock HorizontalAlignment="Left" Margin="8,27.96,0,0" TextWrapping="Wrap" Text="UsesRotFlags" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,53.92,0,0" TextWrapping="Wrap" Text="XYZRotFlags" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,80.999,0,0" TextWrapping="Wrap" Text="Cos" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,106.959,0,0" TextWrapping="Wrap" Text="Sin" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,131,0,133.04" TextWrapping="Wrap" Text="X" d:LayoutOverrides="Height"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,156.96,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,182.92,0,0" TextWrapping="Wrap" Text="Z" VerticalAlignment="Top"/>
-        			<CheckBox x:Name="editor_UseRotFlagsBox" Content="Value" VerticalAlignment="Top" Margin="87,27.96,8,0"/>
-        			<TextBox x:Name="editor_XYZRotFlagsBox" Margin="87,50.92,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_CosBox" Margin="87,77.999,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_SinBox" Margin="87,103.959,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_PosXBox" Margin="87,128,8,130.04" TextWrapping="Wrap" d:LayoutOverrides="Height"/>
-        			<TextBox x:Name="editor_PosYBox" Margin="87,153.96,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_PosZBox" Margin="87,179.92,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        		</Grid>
-        		<Grid x:Name="editor_ObjectGrid">
-        			<TextBlock HorizontalAlignment="Left" Margin="8,28.04,0,0" TextWrapping="Wrap" Text="Name" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,55.119,0,0" TextWrapping="Wrap" Text="I6" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,81.079,0,0" TextWrapping="Wrap" Text="Float 1" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,105.12,0,0" TextWrapping="Wrap" Text="Float 2" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,131.08,0,0" TextWrapping="Wrap" Text="Float 3" VerticalAlignment="Top"/>
-        			<TextBlock HorizontalAlignment="Left" Margin="8,157.04,0,0" TextWrapping="Wrap" Text="Properties" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_NameBox" Margin="87,25.04,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_I6Box" Margin="87,52.119,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_Float1Box" Margin="87,78.079,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_Float2Box" Margin="87,102.12,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_Float3Box" Margin="87,128.08,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        			<TextBox x:Name="editor_Obj_PropertiesBox" Height="64" Margin="8,0,8,36" VerticalAlignment="Bottom" TextWrapping="Wrap" AcceptsReturn="True"/>
-        		</Grid>
-        		<Button x:Name="editor_ApplyChangesButton" Content="Apply Changes" Margin="0,0,8,8" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Click="ApplyChangesClicked"/>
-        	</Grid>
-        </Expander>
+        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Expander Header="Help" Grid.Column="0" Focusable="False" IsTabStop="False" VerticalAlignment="Bottom" ExpandDirection="Up" Background="#66FFFFFF">
+                <StackPanel> 
+                    <TextBlock TextWrapping="WrapWithOverflow">L to toggle lighting</TextBlock>
+                </StackPanel>
+            </Expander>
+            <Expander x:Name="editorExpander" Grid.Column="2" Header="Properties" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
+                <Grid Height="280" Width="248">
+                    <TextBlock x:Name="editor_NameText" Margin="8,8,0,0" TextWrapping="Wrap" Text="No Element Selected" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Grid x:Name="editor_ElementGrid" d:IsHidden="True">
+                        <TextBlock HorizontalAlignment="Left" Margin="8,27.96,0,0" TextWrapping="Wrap" Text="UsesRotFlags" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,53.92,0,0" TextWrapping="Wrap" Text="XYZRotFlags" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,80.999,0,0" TextWrapping="Wrap" Text="Cos" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,106.959,0,0" TextWrapping="Wrap" Text="Sin" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,131,0,133.04" TextWrapping="Wrap" Text="X" d:LayoutOverrides="Height"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,156.96,0,0" TextWrapping="Wrap" Text="Y" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,182.92,0,0" TextWrapping="Wrap" Text="Z" VerticalAlignment="Top"/>
+                        <CheckBox x:Name="editor_UseRotFlagsBox" Content="Value" VerticalAlignment="Top" Margin="87,27.96,8,0"/>
+                        <TextBox x:Name="editor_XYZRotFlagsBox" Margin="87,50.92,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_CosBox" Margin="87,77.999,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_SinBox" Margin="87,103.959,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_PosXBox" Margin="87,128,8,130.04" TextWrapping="Wrap" d:LayoutOverrides="Height"/>
+                        <TextBox x:Name="editor_PosYBox" Margin="87,153.96,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_PosZBox" Margin="87,179.92,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                    </Grid>
+                    <Grid x:Name="editor_ObjectGrid">
+                        <TextBlock HorizontalAlignment="Left" Margin="8,28.04,0,0" TextWrapping="Wrap" Text="Name" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,55.119,0,0" TextWrapping="Wrap" Text="I6" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,81.079,0,0" TextWrapping="Wrap" Text="Float 1" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,105.12,0,0" TextWrapping="Wrap" Text="Float 2" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,131.08,0,0" TextWrapping="Wrap" Text="Float 3" VerticalAlignment="Top"/>
+                        <TextBlock HorizontalAlignment="Left" Margin="8,157.04,0,0" TextWrapping="Wrap" Text="Properties" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_NameBox" Margin="87,25.04,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_I6Box" Margin="87,52.119,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_Float1Box" Margin="87,78.079,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_Float2Box" Margin="87,102.12,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_Float3Box" Margin="87,128.08,8,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+                        <TextBox x:Name="editor_Obj_PropertiesBox" Height="64" Margin="8,0,8,36" VerticalAlignment="Bottom" TextWrapping="Wrap" AcceptsReturn="True"/>
+                    </Grid>
+                    <Button x:Name="editor_ApplyChangesButton" Content="Apply Changes" Margin="0,0,8,8" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Click="ApplyChangesClicked"/>
+                </Grid>
+            </Expander>
+        </Grid>
     </Grid>
 </UserControl>

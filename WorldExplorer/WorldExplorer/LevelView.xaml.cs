@@ -47,7 +47,8 @@ namespace WorldExplorer
             {
                 case Key.L:
                     {
-                        // TODO: Toggle lighting
+                        // Toggle lighting
+                        _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
                     }
                     break;
             }
@@ -66,18 +67,17 @@ namespace WorldExplorer
             //_lvm.PropertyChanged += Lvm_PropertyChanged;
         }
 
+        private Brush TryGettingAmbientLightColor()
+        {
+            var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
+            if (ambientLight == null) return null;
+
+            return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1], (byte)ambientLight.Floats[2]));
+        }
 
         protected virtual void OnSceneUpdated()
         {
-            var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
-            if (ambientLight != null)
-            {
-                Background = new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1], (byte)ambientLight.Floats[2]));
-            }
-            else
-            {
-                Background = Brushes.White;
-            }
+            Background = TryGettingAmbientLightColor() ?? Brushes.White;
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -101,10 +101,10 @@ namespace WorldExplorer
                 var levelViewModel = (LevelViewModel)DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
-                if (!worldNode.IsExpanded)
+                /*if (!worldNode.IsExpanded)
                 {
                     worldNode.IsExpanded = true;
-                }
+                }*/
 
                 WorldElementTreeViewModel selectedElement = null;
 

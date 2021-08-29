@@ -35,6 +35,7 @@ namespace WorldExplorer
         private string _infoText;
         private ObjectManager _objectManager;
         private LmpFile _domeLmp;
+        private bool _enableLights = true;
 
         public Rect3D WorldBounds { get; private set; } = Rect3D.Empty;
 
@@ -52,6 +53,7 @@ namespace WorldExplorer
             {
                 _worldData = value;
                 NewWorldLoaded();
+                OnPropertyChanged("WorldData");
             }
         }
 
@@ -75,6 +77,17 @@ namespace WorldExplorer
             }
         }
 
+        public bool EnableLevelSpecifiedLights
+        {
+            get => _enableLights;
+            set
+            {
+                _enableLights = value;
+                OnPropertyChanged("EnableLights");
+                RebuildScene();
+            }
+        }
+
         public ObjectManager ObjectManager => _objectManager;
 
         public LevelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
@@ -85,7 +98,7 @@ namespace WorldExplorer
         public void RebuildScene()
         {
             var scene = new List<ModelVisual3D>();
-            AddLights(scene);
+            AddLights(EnableLevelSpecifiedLights, scene);
 
             var worldBounds = Rect3D.Empty;
 
@@ -210,7 +223,7 @@ namespace WorldExplorer
                 _domeLmp = null;
                 return;
             }
-            
+
             if (domeFile.HasDummyChild)
                 domeFile.ForceLoadChildren();
 
@@ -252,23 +265,27 @@ namespace WorldExplorer
             }
         }
 
-        private List<ModelVisual3D> AddLights(List<ModelVisual3D> scene)
+        private void AddLights(bool enableLevelSpecifiedLights, List<ModelVisual3D> scene)
         {
             var ambientColor = Color.FromRgb(0x80, 0x80, 0x80);
             var directionalColor = Color.FromRgb(0x80, 0x80, 0x80);
             var directionalAngle = new Vector3D(0, -1, -1);
 
-            if (_objectManager.TryGetObjectByName("Ambient_Light", out var ambientLightObj))
+            // Attempt to find the correct values from objects
+            if (enableLevelSpecifiedLights)
             {
-                ambientColor = Color.FromRgb((byte)ambientLightObj.Floats[0], (byte)ambientLightObj.Floats[1], (byte)ambientLightObj.Floats[2]);
-            }
-            if (_objectManager.TryGetObjectByName("Directional_Light", out var dirLightColorObj))
-            {
-                directionalColor = Color.FromRgb((byte)dirLightColorObj.Floats[0], (byte)dirLightColorObj.Floats[1], (byte)dirLightColorObj.Floats[2]);
-            }
-            if (_objectManager.TryGetObjectByName("Directional_LightD", out var dirLightAngleObj))
-            {
-                directionalAngle = new Vector3D(-dirLightAngleObj.Floats[0], -dirLightAngleObj.Floats[1], -dirLightAngleObj.Floats[2]);
+                if (_objectManager.TryGetObjectByName("Ambient_Light", out var ambientLightObj))
+                {
+                    ambientColor = Color.FromRgb((byte)ambientLightObj.Floats[0], (byte)ambientLightObj.Floats[1], (byte)ambientLightObj.Floats[2]);
+                }
+                if (_objectManager.TryGetObjectByName("Directional_Light", out var dirLightColorObj))
+                {
+                    directionalColor = Color.FromRgb((byte)dirLightColorObj.Floats[0], (byte)dirLightColorObj.Floats[1], (byte)dirLightColorObj.Floats[2]);
+                }
+                if (_objectManager.TryGetObjectByName("Directional_LightD", out var dirLightAngleObj))
+                {
+                    directionalAngle = new Vector3D(-dirLightAngleObj.Floats[0], -dirLightAngleObj.Floats[1], -dirLightAngleObj.Floats[2]);
+                }
             }
 
             var ambientLight = new ModelVisual3D
@@ -281,8 +298,6 @@ namespace WorldExplorer
             };
             scene.Add(ambientLight);
             scene.Add(directionalLight);
-
-            return scene;
         }
     }
 }
