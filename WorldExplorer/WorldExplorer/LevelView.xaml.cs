@@ -14,10 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -28,7 +25,7 @@ namespace WorldExplorer
     /// <summary>
     /// Interaction logic for LevelView.xaml
     /// </summary>
-    public partial class LevelView : UserControl
+    public partial class LevelView
     {
         private LevelViewModel _lvm;
 
@@ -74,7 +71,7 @@ namespace WorldExplorer
             return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1], (byte)ambientLight.Floats[2]));
         }
 
-        protected virtual void OnSceneUpdated()
+        protected void OnSceneUpdated()
         {
             Background = TryGettingAmbientLightColor() ?? Brushes.White;
         }
@@ -155,7 +152,7 @@ namespace WorldExplorer
         ModelVisual3D GetHitTestResult(Point location)
         {
             var result = VisualTreeHelper.HitTest(viewport, location);
-            if (result != null && result.VisualHit is ModelVisual3D)
+            if (result is {VisualHit: ModelVisual3D})
             {
                 var visual = (ModelVisual3D)result.VisualHit;
                 return visual;
