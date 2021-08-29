@@ -64,12 +64,6 @@ namespace WorldExplorer
             }
 
             _lvm = lvm;
-            _lvm.PropertyChanged += Lvm_PropertyChanged;
-        }
-
-        private void Lvm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            Console.WriteLine("Changed: " + e.PropertyName);
         }
 
         private Brush TryGettingAmbientLightColor()
@@ -100,11 +94,6 @@ namespace WorldExplorer
                 var levelViewModel = (LevelViewModel)DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
-                /*if (!worldNode.IsExpanded)
-                {
-                    worldNode.IsExpanded = true;
-                }*/
-
                 WorldElementTreeViewModel selectedElement = null;
 
                 if (worldNode == null)
@@ -134,8 +123,6 @@ namespace WorldExplorer
             }
         }
 
-        // VisualObjectData _selectedObject;
-        // WorldElementTreeViewModel _selectedElement;
         private void ElementSelected(WorldElementTreeViewModel ele)
         {
             if (_lvm != null)
