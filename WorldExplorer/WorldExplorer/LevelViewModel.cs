@@ -36,14 +36,31 @@ namespace WorldExplorer
         private ObjectManager _objectManager;
         private LmpFile _domeLmp;
         private bool _enableLights = true;
+        private VisualObjectData _selectedObject;
+        private WorldElementTreeViewModel _selectedElement;
+        private WorldFileTreeViewModel _worldNode;
+        private Rect3D _worldBounds = Rect3D.Empty;
 
-        public Rect3D WorldBounds { get; private set; } = Rect3D.Empty;
+        public Rect3D WorldBounds
+        {
+            get => _worldBounds;
+            private set
+            {
+                _worldBounds = value;
+                OnPropertyChanged("WorldBounds");
+            }
+        }
 
         public event EventHandler SceneUpdated;
 
         public WorldFileTreeViewModel WorldNode
         {
-            get; set;
+            get => _worldNode;
+            set
+            {
+                _worldNode = value;
+                OnPropertyChanged("WorldNode");
+            }
         }
 
         public WorldData WorldData
@@ -83,8 +100,28 @@ namespace WorldExplorer
             set
             {
                 _enableLights = value;
-                OnPropertyChanged("EnableLights");
                 RebuildScene();
+                OnPropertyChanged("EnableLights");
+            }
+        }
+
+        public VisualObjectData SelectedObject
+        {
+            get => _selectedObject;
+            set
+            {
+                _selectedObject = value;
+                OnPropertyChanged("SelectedObject");
+            }
+        }
+
+        public WorldElementTreeViewModel SelectedElement
+        {
+            get => _selectedElement;
+            set
+            {
+                _selectedElement = value;
+                OnPropertyChanged("SelectedElement");
             }
         }
 

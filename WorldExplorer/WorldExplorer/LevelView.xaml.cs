@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,7 +65,12 @@ namespace WorldExplorer
             }
 
             _lvm = lvm;
-            //_lvm.PropertyChanged += Lvm_PropertyChanged;
+            _lvm.PropertyChanged += Lvm_PropertyChanged;
+        }
+
+        private void Lvm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            Console.WriteLine("Changed: " + e.PropertyName);
         }
 
         private Brush TryGettingAmbientLightColor()
@@ -84,12 +90,6 @@ namespace WorldExplorer
         {
             viewport.CameraController.MoveSensitivity = 30;
             base.OnRender(drawingContext);
-        }
-
-        public override void EndInit()
-        {
-            base.EndInit();
-
         }
 
         void viewport_MouseUp(object sender, MouseButtonEventArgs e)
@@ -135,34 +135,15 @@ namespace WorldExplorer
             }
         }
 
-        VisualObjectData _selectedObject;
-        WorldElementTreeViewModel _selectedElement;
+        // VisualObjectData _selectedObject;
+        // WorldElementTreeViewModel _selectedElement;
         private void ElementSelected(WorldElementTreeViewModel ele)
         {
-            if (ele == null)
+            if (_lvm != null)
             {
-                ResetValues();
-
-                editor_ElementGrid.Visibility = Visibility.Collapsed;
-                editor_ObjectGrid.Visibility = Visibility.Collapsed;
-
-                return;
+                _lvm.SelectedObject = null;
+                _lvm.SelectedElement = ele;
             }
-
-            _selectedObject = null;
-            _selectedElement = ele;
-
-            editor_NameText.Text = ele.Text;
-            editor_UseRotFlagsBox.IsChecked = ele.WorldElement.usesRotFlags;
-            editor_XYZRotFlagsBox.Text = "0x" + ele.WorldElement.xyzRotFlags.ToString("X4");
-            editor_CosBox.Text = ele.WorldElement.cosAlpha.ToString(CultureInfo.InvariantCulture);
-            editor_SinBox.Text = ele.WorldElement.sinAlpha.ToString(CultureInfo.InvariantCulture);
-            editor_PosXBox.Text = ele.WorldElement.pos.X.ToString(CultureInfo.InvariantCulture);
-            editor_PosYBox.Text = ele.WorldElement.pos.Y.ToString(CultureInfo.InvariantCulture);
-            editor_PosZBox.Text = ele.WorldElement.pos.Z.ToString(CultureInfo.InvariantCulture);
-
-            editor_ElementGrid.Visibility = Visibility.Visible;
-            editor_ObjectGrid.Visibility = Visibility.Collapsed;
 
             // Expand after values have changed
             if (!editorExpander.IsExpanded)
@@ -172,178 +153,17 @@ namespace WorldExplorer
         }
         private void ObjectSelected(VisualObjectData obj)
         {
-            if (obj == null)
+            if (_lvm != null)
             {
-                ResetValues();
-
-                editor_ElementGrid.Visibility = Visibility.Collapsed;
-                editor_ObjectGrid.Visibility = Visibility.Collapsed;
-
-                return;
+                _lvm.SelectedElement = null;
+                _lvm.SelectedObject = obj;
             }
-
-            _selectedElement = null;
-            _selectedObject = obj;
-
-            editor_NameText.Text = "Object";
-            editor_Obj_NameBox.Text = obj.ObjectData.Name;
-            editor_Obj_I6Box.Text = "0x" + obj.ObjectData.I6.ToString("X4");
-            editor_Obj_Float1Box.Text = obj.ObjectData.Floats[0].ToString(CultureInfo.InvariantCulture);
-            editor_Obj_Float2Box.Text = obj.ObjectData.Floats[1].ToString(CultureInfo.InvariantCulture);
-            editor_Obj_Float3Box.Text = obj.ObjectData.Floats[2].ToString(CultureInfo.InvariantCulture);
-            if (obj.ObjectData.Properties != null && obj.ObjectData.Properties.Count > 0)
-            {
-                editor_Obj_PropertiesBox.Text = string.Join("\n", obj.ObjectData.Properties);
-            }
-            else
-            {
-                editor_Obj_PropertiesBox.Text = null;
-            }
-
-            editor_ElementGrid.Visibility = Visibility.Collapsed;
-            editor_ObjectGrid.Visibility = Visibility.Visible;
-
+            
             // Expand after values have changed
             if (!editorExpander.IsExpanded)
             {
                 editorExpander.IsExpanded = true;
             }
-        }
-
-        private void ApplyChangesClicked(object sender, RoutedEventArgs e)
-        {
-            if (_selectedElement == null && _selectedObject == null)
-            {
-                return;
-            }
-
-            int tempIntValue;
-            double tempDoubleValue;
-            var levelViewModel = (LevelViewModel)DataContext;
-
-            if (_selectedElement != null)
-            {
-                _selectedElement.WorldElement.usesRotFlags =
-                    editor_UseRotFlagsBox.IsChecked.GetValueOrDefault(); // Uses Rot Flags
-                if (GetIntHex(editor_XYZRotFlagsBox.Text, out tempIntValue)) // XYZ Rot Flags
-                {
-                    _selectedElement.WorldElement.xyzRotFlags = tempIntValue;
-                }
-
-                if (GetDouble(editor_CosBox.Text, out tempDoubleValue)) // Cos
-                {
-                    _selectedElement.WorldElement.cosAlpha = tempDoubleValue;
-                }
-
-                if (GetDouble(editor_SinBox.Text, out tempDoubleValue)) // Sin
-                {
-                    _selectedElement.WorldElement.sinAlpha = tempDoubleValue;
-                }
-
-                if (GetDouble(editor_PosXBox.Text, out tempDoubleValue)) // X
-                {
-                    _selectedElement.WorldElement.pos.X = tempDoubleValue;
-                }
-
-                if (GetDouble(editor_PosYBox.Text, out tempDoubleValue)) // Y
-                {
-                    _selectedElement.WorldElement.pos.Y = tempDoubleValue;
-                }
-
-                if (GetDouble(editor_PosZBox.Text, out tempDoubleValue)) // Z
-                {
-                    _selectedElement.WorldElement.pos.Z = tempDoubleValue;
-                }
-
-                levelViewModel.RebuildScene();
-            }
-            else if (_selectedObject != null)
-            {
-                _selectedObject.ObjectData.Name = editor_Obj_NameBox.Text; // Name
-                if (GetIntHex(editor_Obj_I6Box.Text, out tempIntValue)) // I6
-                {
-                    _selectedObject.ObjectData.I6 = (short)tempIntValue;
-                }
-
-                if (GetDouble(editor_Obj_Float1Box.Text, out tempDoubleValue)) // Float 1
-                {
-                    _selectedObject.ObjectData.Floats[0] = (float)tempDoubleValue;
-                }
-
-                if (GetDouble(editor_Obj_Float2Box.Text, out tempDoubleValue)) // Float 2
-                {
-                    _selectedObject.ObjectData.Floats[1] = (float)tempDoubleValue;
-                }
-
-                if (GetDouble(editor_Obj_Float3Box.Text, out tempDoubleValue)) // Float 3
-                {
-                    _selectedObject.ObjectData.Floats[2] = (float)tempDoubleValue;
-                }
-
-                _selectedObject.ObjectData.Properties.Clear();
-                _selectedObject.ObjectData.Properties.AddRange(editor_Obj_PropertiesBox.Text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries));
-
-                levelViewModel.ObjectManager.RemoveObjectFromList(_selectedObject);
-
-                var newObject = levelViewModel.ObjectManager.ParseObject(_selectedObject.ObjectData);
-
-                _selectedObject = newObject;
-
-                levelViewModel.RebuildScene();
-            }
-        }
-
-        void ResetValues()
-        {
-            _selectedElement = null;
-
-            editor_NameText.Text = "No Element Selected";
-            editor_UseRotFlagsBox.IsChecked = false;
-            editor_XYZRotFlagsBox.Text =
-                editor_CosBox.Text =
-                    editor_SinBox.Text =
-                        editor_PosXBox.Text =
-                            editor_PosYBox.Text =
-                                editor_PosZBox.Text = null;
-
-            editor_Obj_NameBox.Text =
-                editor_Obj_I6Box.Text =
-                    editor_Obj_Float1Box.Text =
-                        editor_Obj_Float2Box.Text =
-                            editor_Obj_Float3Box.Text =
-                                editor_Obj_PropertiesBox.Text = null;
-        }
-
-        bool GetDouble(string text, out double value)
-        {
-            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
-            {
-                return true;
-            }
-            value = 0;
-            return false;
-        }
-        bool GetInt(string text, out int value)
-        {
-            if (int.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
-            {
-                return true;
-            }
-            value = 0;
-            return false;
-        }
-        bool GetIntHex(string text, out int value)
-        {
-            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-            {
-                text = text.Substring(2);
-            }
-            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
-            {
-                return true;
-            }
-            value = 0;
-            return false;
         }
 
         ModelVisual3D GetHitTestResult(Point location)
