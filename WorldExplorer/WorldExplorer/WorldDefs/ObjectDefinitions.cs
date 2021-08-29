@@ -355,9 +355,7 @@ namespace WorldExplorer.WorldDefs
                 var logger = new StringLogger();
                 var vifModel = VifDecoder.Decode(
                     logger,
-                    externalLmp.FileData,
-                    entry.StartOffset,
-                    entry.Length,
+                    externalLmp.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
                     tex.PixelWidth,
                     tex.PixelHeight);
 
@@ -399,9 +397,7 @@ namespace WorldExplorer.WorldDefs
                         var logger = new StringLogger();
                         var vifModel = VifDecoder.Decode(
                             logger,
-                            child.LmpFileProperty.FileData,
-                            entry.StartOffset,
-                            entry.Length,
+                            child.LmpFileProperty.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
                             tex.PixelWidth,
                             tex.PixelHeight);
 

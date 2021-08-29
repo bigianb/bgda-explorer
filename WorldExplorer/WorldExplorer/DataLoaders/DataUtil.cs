@@ -50,7 +50,7 @@ namespace WorldExplorer.DataLoaders
             return BitConverter.ToInt32(data, offset);
         }
         
-        public static int getLEShort(ReadOnlySpan<byte> data, int offset)
+        public static short getLEShort(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToInt16(data.Slice(offset, 2).ToArray());
         }
@@ -70,5 +70,9 @@ namespace WorldExplorer.DataLoaders
             return BitConverter.ToUInt16(data, offset);
         }
 
+        public static ushort getLEUShort(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToUInt16(data.Slice(offset, 2).ToArray());
+        }
     }
 }

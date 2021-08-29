@@ -196,9 +196,7 @@ namespace WorldExplorer
                     var logger = new StringLogger();
                     var chunks = VifDecoder.DecodeChunks(
                         logger,
-                        lmpFile.FileData,
-                        entry.StartOffset,
-                        entry.Length,
+                        lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
                         tex.PixelWidth,
                         tex.PixelHeight);
 
@@ -222,9 +220,11 @@ namespace WorldExplorer
                     var logger = new StringLogger();
                     var chunks = VifDecoder.ReadVerts(
                         logger,
-                        lmpFile.FileData,
-                        worldElement.WorldElement.VifDataOffset,
-                        worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength);
+                        lmpFile.FileData.AsSpan().Slice(
+                            worldElement.WorldElement.VifDataOffset, 
+                            worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength
+                        )
+                    );
 
                     VifChunkExporter.WriteChunks(dialog.FileName, chunks);
                 }

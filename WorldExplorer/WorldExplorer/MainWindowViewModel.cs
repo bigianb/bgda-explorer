@@ -200,8 +200,11 @@ namespace WorldExplorer
                         _modelViewModel.AnimData = null;
                         var model = new Model
                         {
-                            meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage?.PixelWidth ?? 0, SelectedNodeImage?.PixelHeight ?? 0)
+                            meshList = VifDecoder.Decode(
+                                log, 
+                                lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
+                                SelectedNodeImage?.PixelWidth ?? 0,
+                                SelectedNodeImage?.PixelHeight ?? 0)
                         };
                         _modelViewModel.VifModel = model;
 
@@ -358,9 +361,7 @@ namespace WorldExplorer
             {
                 meshList = VifDecoder.Decode(
                 log,
-                childEntry.YakFile.FileData,
-                childEntry.Value.VifOffset,
-                childEntry.Value.TextureOffset,
+                childEntry.YakFile.FileData.AsSpan().Slice(childEntry.Value.VifOffset, childEntry.Value.TextureOffset),
                 SelectedNodeImage.PixelWidth,
                 SelectedNodeImage.PixelHeight)
             };
@@ -375,7 +376,7 @@ namespace WorldExplorer
 
         private void OnHdrDatChildElementSelected(HdrDatChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.TexOffset, childEntry.Value.TexLength));
+            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.TexOffset));
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
@@ -383,9 +384,7 @@ namespace WorldExplorer
             {
                 meshList = VifDecoder.Decode(
                 log,
-                childEntry.CacheFile.FileData,
-                childEntry.Value.VifOffset,
-                childEntry.Value.VifLength,
+                childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.VifOffset, childEntry.Value.VifLength),
                 SelectedNodeImage.PixelWidth,
                 SelectedNodeImage.PixelHeight)
             };

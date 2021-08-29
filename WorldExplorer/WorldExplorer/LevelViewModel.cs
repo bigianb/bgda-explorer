@@ -290,8 +290,11 @@ namespace WorldExplorer
 
                 var model = new Model
                 {
-                    meshList = VifDecoder.Decode(log, _domeLmp.FileData, vifEntry.StartOffset, vifEntry.Length,
-                                                   selectedNodeImage.PixelWidth, selectedNodeImage.PixelHeight)
+                    meshList = VifDecoder.Decode(
+                        log, 
+                        _domeLmp.FileData.AsSpan().Slice(vifEntry.StartOffset, vifEntry.Length),
+                        selectedNodeImage.PixelWidth, 
+                        selectedNodeImage.PixelHeight)
                 };
 
                 var newModel = (GeometryModel3D)Conversions.CreateModel3D(model.meshList, selectedNodeImage);

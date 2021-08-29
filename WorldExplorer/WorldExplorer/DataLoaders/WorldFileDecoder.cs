@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;
@@ -106,7 +107,11 @@ namespace WorldExplorer.DataLoaders
                 {
                     meshList = new List<Mesh>(1)
                 };
-                model.meshList.Add(VifDecoder.DecodeMesh(log, data, startOffset, length, texWidth, texHeight));
+                model.meshList.Add(VifDecoder.DecodeMesh(
+                    log, 
+                    data.AsSpan().Slice(startOffset, length),
+                    texWidth, 
+                    texHeight));
                 _modelCache.Add(startOffset, model);
             }
             return model;
