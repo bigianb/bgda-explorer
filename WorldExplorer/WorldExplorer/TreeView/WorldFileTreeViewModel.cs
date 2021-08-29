@@ -41,11 +41,9 @@ namespace WorldExplorer
             }
             if (_world.worldData != null)
             {
-                var i = 0;
                 foreach (var element in _world.worldData.worldElements)
                 {
                     Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + element.ElementIndex));
-                    ++i;
                 }
             }
         }
