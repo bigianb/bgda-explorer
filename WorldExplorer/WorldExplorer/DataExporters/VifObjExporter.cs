@@ -174,13 +174,5 @@ namespace WorldExplorer.DataExporters
         {
             return d.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
         }
-        private static string FormatFlagShort(int i)
-        {
-            return "0x" + i.ToString("X4");
-        }
-        private static string FormatFlag(int i)
-        {
-            return "0x" + i.ToString("X8");
-        }
     }
 }
