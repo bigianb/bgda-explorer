@@ -1,5 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 
 namespace WorldExplorer
 {
@@ -89,7 +91,14 @@ namespace WorldExplorer
                 if (HasDummyChild)
                 {
                     Children.Remove(DummyChild);
-                    LoadChildren();
+                    try
+                    {
+                        LoadChildren();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"There was an error while trying to load the item's details.\n\nNerdy Details: {ex}", "Error Loading Item", MessageBoxButton.OK);
+                    }
                 }
             }
         }

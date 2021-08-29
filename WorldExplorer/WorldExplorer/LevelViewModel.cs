@@ -14,10 +14,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
+using WorldExplorer.Logging;
 using WorldExplorer.Win3D;
 using WorldExplorer.WorldDefs;
 
@@ -29,11 +34,17 @@ namespace WorldExplorer
         private List<ModelVisual3D> _scene;
         private string _infoText;
         private ObjectManager _objectManager;
+        private LmpFile _domeLmp;
+
+        public Rect3D WorldBounds { get; private set; } = Rect3D.Empty;
+
+        public event EventHandler SceneUpdated;
 
         public WorldFileTreeViewModel WorldNode
         {
             get; set;
         }
+
         public WorldData WorldData
         {
             get => _worldData;
@@ -43,6 +54,7 @@ namespace WorldExplorer
                 NewWorldLoaded();
             }
         }
+
         public string InfoText
         {
             get => _infoText;
@@ -52,6 +64,7 @@ namespace WorldExplorer
                 OnPropertyChanged("InfoText");
             }
         }
+
         public List<ModelVisual3D> Scene
         {
             get => _scene;
@@ -61,6 +74,7 @@ namespace WorldExplorer
                 OnPropertyChanged("Scene");
             }
         }
+
         public ObjectManager ObjectManager => _objectManager;
 
         public LevelViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
@@ -70,7 +84,10 @@ namespace WorldExplorer
 
         public void RebuildScene()
         {
-            var scene = buildLights();
+            var scene = new List<ModelVisual3D>();
+            AddLights(scene);
+
+            var worldBounds = Rect3D.Empty;
 
             foreach (var element in _worldData.worldElements)
             {
@@ -79,6 +96,8 @@ namespace WorldExplorer
                 mv3d.Content = model3D;
 
                 var modelBounds = model3D.Bounds;
+
+                worldBounds.Union(modelBounds);
 
                 var transform3DGroup = new Transform3DGroup();
 
@@ -149,14 +168,28 @@ namespace WorldExplorer
 
             ObjectManager.AddObjectsToScene(scene);
 
+            AddSkyDomeModels(scene);
+
+            WorldBounds = worldBounds;
             Scene = scene;
+        }
+
+        private void ResetState()
+        {
+            _domeLmp = null;
         }
 
         private void NewWorldLoaded()
         {
+            ResetState();
+
             LoadObjects();
+            LoadSkyDome();
             RebuildScene();
+
+            SceneUpdated?.Invoke(this, EventArgs.Empty);
         }
+
         private void LoadObjects()
         {
             if (WorldNode.LmpFileProperty.Directory.ContainsKey("objects.ob"))
@@ -167,18 +200,86 @@ namespace WorldExplorer
             }
         }
 
-        private List<ModelVisual3D> buildLights()
+        private void LoadSkyDome()
         {
-            var scene = new List<ModelVisual3D>();
+            var gobFile = WorldNode.Parent.Parent as GobTreeViewModel;
+            var domeFile = gobFile.Children.OfType<LmpTreeViewModel>()
+                .FirstOrDefault(e => e.Text.Equals("dome.lmp", System.StringComparison.OrdinalIgnoreCase));
+            if (domeFile == null)
+            {
+                _domeLmp = null;
+                return;
+            }
+            
+            if (domeFile.HasDummyChild)
+                domeFile.ForceLoadChildren();
+
+            _domeLmp = domeFile.LmpFileProperty;
+        }
+
+        private void AddSkyDomeModels(List<ModelVisual3D> scene)
+        {
+            if (_domeLmp == null)
+                return;
+
+            var vifChildren = _domeLmp.Directory.Keys
+                .Where(e => e.EndsWith(".vif", System.StringComparison.OrdinalIgnoreCase));
+
+            foreach (var vifFileName in vifChildren)
+            {
+                var vifEntry = _domeLmp.Directory[vifFileName];
+                var texFilename = Path.GetFileNameWithoutExtension(vifFileName) + ".tex";
+                var texEntry = _domeLmp.Directory[texFilename.ToLowerInvariant()];
+
+                if (texEntry == null)
+                    // Couldn't find the tex file, ignore this vif entry
+                    continue;
+
+                var selectedNodeImage = TexDecoder.Decode(_domeLmp.FileData, texEntry.StartOffset);
+                var log = new StringLogger();
+
+                var model = new Model
+                {
+                    meshList = VifDecoder.Decode(log, _domeLmp.FileData, vifEntry.StartOffset, vifEntry.Length,
+                                                   selectedNodeImage.PixelWidth, selectedNodeImage.PixelHeight)
+                };
+
+                var newModel = (GeometryModel3D)Conversions.CreateModel3D(model.meshList, selectedNodeImage);
+                scene.Add(new ModelVisual3D
+                {
+                    Content = newModel,
+                });
+            }
+        }
+
+        private List<ModelVisual3D> AddLights(List<ModelVisual3D> scene)
+        {
+            var ambientColor = Color.FromRgb(0x80, 0x80, 0x80);
+            var directionalColor = Color.FromRgb(0x80, 0x80, 0x80);
+            var directionalAngle = new Vector3D(0, -1, -1);
+
+            //if (_objectManager.TryGetObjectByName("Ambient_Light", out var ambientLightObj))
+            //{
+            //    ambientColor = Color.FromRgb((byte)ambientLightObj.Floats[0], (byte)ambientLightObj.Floats[1], (byte)ambientLightObj.Floats[2]);
+            //}
+            //if (_objectManager.TryGetObjectByName("Directional_Light", out var dirLightColorObj))
+            //{
+            //    directionalColor = Color.FromRgb((byte)dirLightColorObj.Floats[0], (byte)dirLightColorObj.Floats[1], (byte)dirLightColorObj.Floats[2]);
+            //}
+            //if (_objectManager.TryGetObjectByName("Directional_LightD", out var dirLightAngleObj))
+            //{
+            //    directionalAngle = new Vector3D(-dirLightAngleObj.Floats[0], -dirLightAngleObj.Floats[1], -dirLightAngleObj.Floats[2]);
+            //}
+
             var ambientLight = new ModelVisual3D
             {
-                Content = new AmbientLight(Color.FromRgb(0x80, 0x80, 0x80))
+                Content = new AmbientLight(ambientColor)
             };
-            scene.Add(ambientLight);
             var directionalLight = new ModelVisual3D
             {
-                Content = new DirectionalLight(Color.FromRgb(0x80, 0x80, 0x80), new Vector3D(0, -1, -1))
+                Content = new DirectionalLight(directionalColor, directionalAngle)
             };
+            scene.Add(ambientLight);
             scene.Add(directionalLight);
 
             return scene;

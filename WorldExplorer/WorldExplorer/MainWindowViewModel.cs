@@ -199,7 +199,7 @@ namespace WorldExplorer
                         var model = new Model
                         {
                             meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight)
+                                                           SelectedNodeImage?.PixelWidth ?? 0, SelectedNodeImage?.PixelHeight ?? 0)
                         };
                         _modelViewModel.VifModel = model;
 

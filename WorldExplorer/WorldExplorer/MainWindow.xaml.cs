@@ -52,7 +52,7 @@ namespace WorldExplorer
             CommandBindings.Add(binding);
 
             var lastLoadedFile = App.Settings.Get<string>("Files.LastLoadedFile", "");
-            if (!string.IsNullOrEmpty(lastLoadedFile))
+            if (!string.IsNullOrEmpty(lastLoadedFile) && File.Exists(lastLoadedFile))
             {
                 _viewModel.LoadFile(lastLoadedFile);
             }
@@ -71,9 +71,12 @@ namespace WorldExplorer
                     skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
                     break;
                 case 3:
+                    var bounds = _viewModel.TheLevelViewModel.WorldBounds;
                     // hard coded for cuttown cut scene start. 187, 752, 414
                     // player 185.4157, 1401.184, 1
-                    levelView.viewport.SetView(new Point3D(187 / 4, 752 / 4, 414 / 4), new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1), 0);
+                    //levelView.viewport.FitView(new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1));
+                    levelView.viewport.ZoomExtents(bounds, 1000);
+                    //levelView.viewport.SetView(new Point3D(187 / 4, 752 / 4, 414 / 4), new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1), 0);
                     break;
             }
         }
@@ -263,33 +266,13 @@ namespace WorldExplorer
 
             if (result.GetValueOrDefault(false))
             {
-                VifExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
+                VifObjExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
             }
         }
 
         private void Menu_Export_PosedModel_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel.TheModelViewModel.Model == null)
-            {
-                MessageBox.Show(this, "No model currently loaded.", "Error", MessageBoxButton.OK);
-                return;
-            }
-
-            var dialog = new SaveFileDialog
-            {
-                Filter = "OBJ File|*.obj"
-            };
-            var result = dialog.ShowDialog(this);
-
-            if (result.GetValueOrDefault(false))
-            {
-                VifExporter.WritePosedObj(dialog.FileName,
-                                       _viewModel.TheModelViewModel.VifModel,
-                                       _viewModel.TheModelViewModel.Texture,
-                                       _viewModel.TheModelViewModel.AnimData,
-                                       _viewModel.TheModelViewModel.CurrentFrame,
-                                       1.0);
-            }
+            _viewModel.TheModelViewModel.ShowExportForPosedModel();
         }
 
         private void MenuRecentFilesSubmenuOpened(object sender, RoutedEventArgs e)

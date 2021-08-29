@@ -44,7 +44,7 @@ namespace WorldExplorer
                 var i = 0;
                 foreach (var element in _world.worldData.worldElements)
                 {
-                    Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + i));
+                    Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + element.ElementIndex));
                     ++i;
                 }
             }
