@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace WorldExplorer
@@ -28,13 +29,15 @@ namespace WorldExplorer
 
         protected void ScenePropertyChanged(DependencyPropertyChangedEventArgs args)
         {
-            Children.Clear();
+            var target = VisualTreeHelper.GetParent(this) as ModelVisual3D;
+            if (target == null) target = this;
+            target.Children.Clear();
             var theScene = Scene;
             if (theScene != null)
             {
                 foreach (var element in theScene)
                 {
-                    Children.Add(element);
+                    target.Children.Add(element);
                 }
             }
         }

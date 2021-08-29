@@ -199,7 +199,7 @@ namespace WorldExplorer
                         var model = new Model
                         {
                             meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage.PixelWidth, SelectedNodeImage.PixelHeight)
+                                                           SelectedNodeImage?.PixelWidth ?? 0, SelectedNodeImage?.PixelHeight ?? 0)
                         };
                         _modelViewModel.VifModel = model;
 
@@ -318,7 +318,9 @@ namespace WorldExplorer
             var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
-            var decoder = new WorldFileDecoder();
+            WorldFileDecoder decoder = engineVersion == EngineVersion.ReturnToArms || engineVersion == EngineVersion.JusticeLeagueHeroes 
+                ? new WorldFileV2Decoder()
+                : new WorldFileV1Decoder();
             var log = new StringLogger();
             _world.worldData = decoder.Decode(engineVersion, _worldTreeViewModel.World().WorldTex, log, lmpFile.FileData, entry.StartOffset, entry.Length);
             worldFileModel.ReloadChildren();

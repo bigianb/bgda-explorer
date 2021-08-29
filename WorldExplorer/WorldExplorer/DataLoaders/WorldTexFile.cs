@@ -89,7 +89,7 @@ namespace WorldExplorer.DataLoaders
             var image = new WriteableBitmap(
                     width, height,
                     96, 96,
-                    PixelFormats.Bgr32,
+                    PixelFormats.Bgra32,
                     null);
             image.Lock();
 

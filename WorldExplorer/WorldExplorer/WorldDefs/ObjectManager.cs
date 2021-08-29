@@ -116,5 +116,11 @@ namespace WorldExplorer.WorldDefs
             }
             return null;
         }
+
+        public bool TryGetObjectByName(string name, out ObjectData result)
+        {
+            result = GetObjectByName(name);
+            return result != null;
+        }
     }
 }
