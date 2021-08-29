@@ -203,32 +203,27 @@ namespace WorldExplorer
 
             var dialog = new SaveFileDialog
             {
-                Filter = "OBJ File|*.obj|GLTF File|*.gltf"
+                Filter = "GLTF File|*.gltf|OBJ File|*.obj",
+                // Select gltf by default
+                FilterIndex = 1,
+                FileName = "some-model.gltf"
             };
-            // Select gltf by default
-            dialog.FilterIndex = 2;
             if (dialog.ShowDialog() != DialogResult.OK) return;
 
             var ext = Path.GetExtension(dialog.FileName).ToUpperInvariant();
-            switch (ext)
+            IVifExporter exporter = ext switch
             {
-                case ".OBJ":
-                    VifObjExporter.WritePosedObj(dialog.FileName,
-                                   VifModel,
-                                   Texture,
-                                   AnimData,
-                                   CurrentFrame,
-                                   1.0);
-                    break;
-                case ".GLTF":
-                    VifGltfExporter.WritePosedGltf(dialog.FileName,
-                                   VifModel,
-                                   Texture,
-                                   AnimData,
-                                   CurrentFrame,
-                                   1.0);
-                    break;
+                ".OBJ" => new VifObjExporter(),
+                ".GLTF" => new VifGltfExporter(),
+                _ => null
+            };
+            if (exporter == null)
+            {
+                System.Windows.MessageBox.Show("Unknown file format.", "Error", MessageBoxButton.OK);
+                return;
             }
+
+            exporter.SaveToFile(dialog.FileName, VifModel, Texture, AnimData, CurrentFrame, 1.0);
         }
     }
 }

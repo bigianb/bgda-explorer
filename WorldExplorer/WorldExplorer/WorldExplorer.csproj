@@ -5,6 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
+    <LangVersion>latest</LangVersion>
     <ProjectGuid>{75A3F7F4-8C1C-4B8E-97DF-819307823349}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -58,6 +59,9 @@
   <PropertyGroup>
     <StartupObject>WorldExplorer.App</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="HelixToolkit, Version=2.15.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
       <HintPath>..\packages\HelixToolkit.2.15.0\lib\netstandard1.1\HelixToolkit.dll</HintPath>
@@ -86,18 +90,24 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BaseViewModel.cs" />
-    <Compile Include="DataExporters\VifExporter.cs" />
+    <Compile Include="DataExporters\IVifExporter.cs" />
+    <Compile Include="DataExporters\VifChunkExporter.cs" />
+    <Compile Include="DataExporters\VifGltfExporter.cs" />
+    <Compile Include="DataExporters\VifObjExporter.cs" />
     <Compile Include="DataLoaders\BitstreamReader.cs" />
     <Compile Include="DataLoaders\CutDecoder.cs" />
     <Compile Include="DataLoaders\DialogDecoder.cs" />
     <Compile Include="DataLoaders\GSMemory.cs" />
+    <Compile Include="DataLoaders\WorldFileV2Decoder.cs" />
     <Compile Include="DataLoaders\ScrDecoder.cs" />
     <Compile Include="DataLoaders\CacheFile.cs" />
+    <Compile Include="DataLoaders\WorldFileV1Decoder.cs" />
     <Compile Include="DataLoaders\YakFile.cs" />
     <Compile Include="DataLoaders\DataReader.cs" />
     <Compile Include="DataLoaders\EngineVersion.cs" />
     <Compile Include="DataLoaders\ObDecoder.cs" />
     <Compile Include="DataModel\AnimData.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="FileTreeViewContextManager.cs" />
     <Compile Include="LevelViewModel.cs" />
     <Compile Include="LevelView.xaml.cs">
@@ -224,7 +234,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <PackageReference Include="HelixToolkit.Wpf" Version="2.15.0" />
+    <PackageReference Include="HelixToolkit.Wpf" Version="2.17.0" />
     <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0022" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

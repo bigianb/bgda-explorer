@@ -201,7 +201,7 @@ namespace WorldExplorer
                         tex.PixelWidth,
                         tex.PixelHeight);
 
-                    VifObjExporter.WriteChunks(dialog.FileName, chunks);
+                    VifChunkExporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
             else if (_menu.DataContext is WorldElementTreeViewModel)
@@ -225,7 +225,7 @@ namespace WorldExplorer
                         worldElement.WorldElement.VifDataOffset,
                         worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength);
 
-                    VifObjExporter.WriteChunks(dialog.FileName, chunks);
+                    VifChunkExporter.WriteChunks(dialog.FileName, chunks);
                 }
             }
         }

@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Background="Transparent" Name="trackballSource" Margin="0,23,0,0" d:LayoutOverrides="GridBox">
-            <HelixToolkit:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0"  IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" ShowCameraInfo="True" CalculateCursorPosition="True">
+            <HelixToolkit:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0"  IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" CalculateCursorPosition="True">
                 <HelixToolkit:HelixViewport3D.DefaultCamera>
                     <PerspectiveCamera Position="-106,79,89" LookDirection="1,0,1" UpDirection="0,0,1" FieldOfView="50" NearPlaneDistance="0.001"/>
                 </HelixToolkit:HelixViewport3D.DefaultCamera>
@@ -24,9 +24,9 @@
             </HelixToolkit:HelixViewport3D>            
         </Border>
         <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox"/>
-        <Expander x:Name="editorExpander" Header="Properties" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
+        <Expander x:Name="editorExpander" Header="Properties" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
         	<Grid Height="280" Width="248">
-        		<TextBlock x:Name="editor_NameText" HorizontalAlignment="Left" Margin="8,8,0,0" TextWrapping="Wrap" Text="No Element Selected" VerticalAlignment="Top" FontWeight="Bold"/>
+        		<TextBlock x:Name="editor_NameText" Margin="8,8,0,0" TextWrapping="Wrap" Text="No Element Selected" VerticalAlignment="Top" FontWeight="Bold"/>
         		<Grid x:Name="editor_ElementGrid" d:IsHidden="True">
         			<TextBlock HorizontalAlignment="Left" Margin="8,27.96,0,0" TextWrapping="Wrap" Text="UsesRotFlags" VerticalAlignment="Top"/>
         			<TextBlock HorizontalAlignment="Left" Margin="8,53.92,0,0" TextWrapping="Wrap" Text="XYZRotFlags" VerticalAlignment="Top"/>

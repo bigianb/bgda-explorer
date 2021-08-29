@@ -257,17 +257,28 @@ namespace WorldExplorer
                 return;
             }
 
-
             var dialog = new SaveFileDialog
             {
-                Filter = "OBJ File|*.obj"
+                Filter = "GLTF File|*.gltf|OBJ File|*.obj",
+                // Select gltf by default
+                FilterIndex = 1,
             };
-            var result = dialog.ShowDialog(this);
+            if (dialog.ShowDialog() != true) return;
 
-            if (result.GetValueOrDefault(false))
+            var ext = Path.GetExtension(dialog.FileName).ToUpperInvariant();
+            IVifExporter exporter = ext switch
             {
-                VifObjExporter.WriteObj(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture, 1);
+                ".OBJ" => new VifObjExporter(),
+                ".GLTF" => new VifGltfExporter(),
+                _ => null
+            };
+            if (exporter == null)
+            {
+                MessageBox.Show("Unknown file format.", "Error", MessageBoxButton.OK);
+                return;
             }
+
+            exporter.SaveToFile(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture);
         }
 
         private void Menu_Export_PosedModel_Click(object sender, RoutedEventArgs e)

@@ -27,6 +27,8 @@ namespace WorldExplorer.DataLoaders
 
         public int argb()
         {
+            // Note to reviewers: I have no memory of this place
+
             // in ps2 0x80 is fully transparent and 0 is opaque.
             // in java 0 is transparent and 0xFF is opaque.
 

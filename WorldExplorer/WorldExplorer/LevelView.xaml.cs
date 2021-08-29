@@ -30,6 +30,8 @@ namespace WorldExplorer
     /// </summary>
     public partial class LevelView : UserControl
     {
+        private LevelViewModel _lvm;
+
         public LevelView()
         {
             InitializeComponent();
@@ -61,7 +63,7 @@ namespace WorldExplorer
             }
 
             _lvm = lvm;
-            _lvm.PropertyChanged += Lvm_PropertyChanged;
+            //_lvm.PropertyChanged += Lvm_PropertyChanged;
         }
 
 
@@ -99,10 +101,10 @@ namespace WorldExplorer
                 var levelViewModel = (LevelViewModel)DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
-                /*if (!worldNode.IsExpanded)
+                if (!worldNode.IsExpanded)
                 {
                     worldNode.IsExpanded = true;
-                }*/
+                }
 
                 WorldElementTreeViewModel selectedElement = null;
 

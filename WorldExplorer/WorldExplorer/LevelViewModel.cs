@@ -258,18 +258,18 @@ namespace WorldExplorer
             var directionalColor = Color.FromRgb(0x80, 0x80, 0x80);
             var directionalAngle = new Vector3D(0, -1, -1);
 
-            //if (_objectManager.TryGetObjectByName("Ambient_Light", out var ambientLightObj))
-            //{
-            //    ambientColor = Color.FromRgb((byte)ambientLightObj.Floats[0], (byte)ambientLightObj.Floats[1], (byte)ambientLightObj.Floats[2]);
-            //}
-            //if (_objectManager.TryGetObjectByName("Directional_Light", out var dirLightColorObj))
-            //{
-            //    directionalColor = Color.FromRgb((byte)dirLightColorObj.Floats[0], (byte)dirLightColorObj.Floats[1], (byte)dirLightColorObj.Floats[2]);
-            //}
-            //if (_objectManager.TryGetObjectByName("Directional_LightD", out var dirLightAngleObj))
-            //{
-            //    directionalAngle = new Vector3D(-dirLightAngleObj.Floats[0], -dirLightAngleObj.Floats[1], -dirLightAngleObj.Floats[2]);
-            //}
+            if (_objectManager.TryGetObjectByName("Ambient_Light", out var ambientLightObj))
+            {
+                ambientColor = Color.FromRgb((byte)ambientLightObj.Floats[0], (byte)ambientLightObj.Floats[1], (byte)ambientLightObj.Floats[2]);
+            }
+            if (_objectManager.TryGetObjectByName("Directional_Light", out var dirLightColorObj))
+            {
+                directionalColor = Color.FromRgb((byte)dirLightColorObj.Floats[0], (byte)dirLightColorObj.Floats[1], (byte)dirLightColorObj.Floats[2]);
+            }
+            if (_objectManager.TryGetObjectByName("Directional_LightD", out var dirLightAngleObj))
+            {
+                directionalAngle = new Vector3D(-dirLightAngleObj.Floats[0], -dirLightAngleObj.Floats[1], -dirLightAngleObj.Floats[2]);
+            }
 
             var ambientLight = new ModelVisual3D
             {

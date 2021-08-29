@@ -1,24 +1,21 @@
 ﻿using SharpGLTF.Geometry;
 using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Materials;
-using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
-using SharpGLTF.Transforms;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
 using VERTEX = SharpGLTF.Geometry.VertexBuilder<SharpGLTF.Geometry.VertexTypes.VertexPosition, SharpGLTF.Geometry.VertexTypes.VertexTexture1, SharpGLTF.Geometry.VertexTypes.VertexJoints4>;
 
 namespace WorldExplorer.DataExporters
 {
-    class VifGltfExporter
+    public class VifGltfExporter : IVifExporter
     {
-        public static void WritePosedGltf(string savePath, Model model, WriteableBitmap texture, AnimData pose, int frame, double scale)
+        public void SaveToFile(string savePath, Model model, WriteableBitmap texture, AnimData pose, int frame, double scale)
         {
             var dir = Path.GetDirectoryName(savePath) ?? "";
             var name = Path.GetFileNameWithoutExtension(savePath);
@@ -47,15 +44,12 @@ namespace WorldExplorer.DataExporters
             foreach (var mesh in model.meshList)
             {
                 var prim = meshB.UsePrimitive(material1);
-                //writer.WriteLine("g Mesh_" + meshCount);
-                //writer.WriteLine("usemtl " + name);
-
                 var verts = new VERTEX[mesh.Positions.Count];
 
                 var hasVertexWeights = mesh.vertexWeights.Count > 0;
                 var vwNum = 0;
                 var vw = hasVertexWeights ? mesh.vertexWeights[vwNum] : new VertexWeight();
-                //var vnum = 0;
+                var vnum = 0;
 
                 for (var i = 0; i < mesh.Positions.Count; i++)
                 {
@@ -63,7 +57,7 @@ namespace WorldExplorer.DataExporters
                     var uv = mesh.TextureCoordinates[i];
                     var normal = mesh.Normals[i];
 
-                    if (vw.endVertex < i)
+                    if (vw.endVertex < vnum)
                     {
                         ++vwNum;
                         vw = mesh.vertexWeights[vwNum];
@@ -74,7 +68,7 @@ namespace WorldExplorer.DataExporters
                     }
 
                     var pos1 = new VertexPosition((float)(pos.X / scale), (float)(pos.Y / scale), (float)(pos.Z / scale));
-                    var tex1 = new VertexTexture1(new Vector2((float)uv.X,(float)uv.Y));
+                    var tex1 = new VertexTexture1(new Vector2((float)uv.X, (float)uv.Y));
                     var weight = new List<(int JointIndex, float Weight)>();
 
                     weight.Add((vw.bone1, vw.boneWeight1 / 255.0f));
@@ -90,7 +84,7 @@ namespace WorldExplorer.DataExporters
 
                 vwNum = 0;
                 vw = hasVertexWeights ? mesh.vertexWeights[vwNum] : new VertexWeight();
-                var vnum = 0;
+                vnum = 0;
                 foreach (var vertex in mesh.Positions)
                 {
                     var point = vertex;
@@ -148,59 +142,20 @@ namespace WorldExplorer.DataExporters
                         }
                     }
                     ++vnum;
-                    //writer.WriteLine("v {0} {1} {2}",
-                    //    FormatDouble(point.X / scale),
-                    //    FormatDouble(point.Y / scale),
-                    //    FormatDouble(point.Z / scale));
                 }
-                //writer.WriteLine("");
-
-                foreach (var uv in mesh.TextureCoordinates)
-                {
-                    //writer.WriteLine("vt {0} {1}",
-                    //    FormatDouble(uv.X),
-                    //    FormatDouble(1 - uv.Y)); // Flip uv's vertically
-                }
-                //writer.WriteLine("");
-
-                foreach (var vec in mesh.Normals)
-                {
-                    // TODO: If the mesh is posed, the normals needs modifying too.
-                    //writer.WriteLine("vn {0} {1} {2}",
-                    //    FormatDouble(vec.X),
-                    //    FormatDouble(vec.Y),
-                    //    FormatDouble(vec.Z));
-                }
-                //writer.WriteLine("");
 
                 for (var i = 0; i < mesh.TriangleIndices.Count - 3; i += 6)
                 {
-                    prim.AddTriangle(verts[mesh.TriangleIndices[i]], verts[mesh.TriangleIndices[i +1]], verts[mesh.TriangleIndices[i +2]]);
-                    //writer.WriteLine("f {0}/{1}/{2} {3}/{4}/{5} {6}/{7}/{8}",
-                    //    mesh.TriangleIndices[i] + 1 + vStart,
-                    //    mesh.TriangleIndices[i] + 1 + vStart,
-                    //    mesh.TriangleIndices[i] + 1 + vStart,
-
-                    //    mesh.TriangleIndices[i + 1] + 1 + vStart,
-                    //    mesh.TriangleIndices[i + 1] + 1 + vStart,
-                    //    mesh.TriangleIndices[i + 1] + 1 + vStart,
-
-                    //    mesh.TriangleIndices[i + 2] + 1 + vStart,
-                    //    mesh.TriangleIndices[i + 2] + 1 + vStart,
-                    //    mesh.TriangleIndices[i + 2] + 1 + vStart);
+                    prim.AddTriangle(verts[mesh.TriangleIndices[i]], verts[mesh.TriangleIndices[i + 1]], verts[mesh.TriangleIndices[i + 2]]);
                 }
-                //writer.WriteLine("");
-
                 vStart += mesh.Positions.Count;
                 meshCount++;
             }
 
             // create a scene
-
             var modelRoot = ModelRoot.CreateModel();
             var scene = modelRoot.UseScene("Default");
 
-            
             var skelet = scene.CreateNode("Skeleton");
             var joint0 = skelet.CreateNode("Joint 0").WithLocalTranslation(new Vector3(0, 0, 0));
             var joint1 = joint0.CreateNode("Joint 1").WithLocalTranslation(new Vector3(0, 40, 0));//.WithRotationAnimation("Base Track", keyframes);
@@ -210,9 +165,6 @@ namespace WorldExplorer.DataExporters
             snode.Skin = modelRoot.CreateSkin();
             snode.Skin.BindJoints(joint0, joint1, joint2);
             snode.WithMesh(modelRoot.CreateMesh(meshB));
-
-
-            //scene.AddRigidMesh(meshB, Matrix4x4.Identity);
 
             // save the model in different formats
             modelRoot.SaveGLTF(Path.Combine(dir, name + ".gltf"));
