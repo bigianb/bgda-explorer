@@ -71,12 +71,9 @@ namespace WorldExplorer
                     skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
                     break;
                 case 3:
+                    // Attempt to get the whole world in view
                     var bounds = _viewModel.TheLevelViewModel.WorldBounds;
-                    // hard coded for cuttown cut scene start. 187, 752, 414
-                    // player 185.4157, 1401.184, 1
-                    //levelView.viewport.FitView(new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1));
                     levelView.viewport.ZoomExtents(bounds, 1000);
-                    //levelView.viewport.SetView(new Point3D(187 / 4, 752 / 4, 414 / 4), new Vector3D(-2 / 4, 752 / 4, -400 / 4), new Vector3D(0, 0, 1), 0);
                     break;
             }
         }
