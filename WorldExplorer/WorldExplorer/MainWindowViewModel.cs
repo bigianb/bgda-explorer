@@ -185,7 +185,7 @@ namespace WorldExplorer
             {
                 case ".tex":
                     {
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length));
 
                         _window.tabControl.SelectedIndex = 0; // Texture View
                     }
@@ -194,7 +194,7 @@ namespace WorldExplorer
                     {
                         var texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
@@ -350,7 +350,7 @@ namespace WorldExplorer
 
         private void OnYakChildElementSelected(YakChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData, childEntry.Value.TextureOffset + childEntry.Value.VifOffset);
+            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData.AsSpan().Slice(childEntry.Value.TextureOffset + childEntry.Value.VifOffset));
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
@@ -375,7 +375,7 @@ namespace WorldExplorer
 
         private void OnHdrDatChildElementSelected(HdrDatChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData, childEntry.Value.TexOffset);
+            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.TexOffset, childEntry.Value.TexLength));
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;

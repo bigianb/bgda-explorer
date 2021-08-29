@@ -350,7 +350,7 @@ namespace WorldExplorer.WorldDefs
                     return CreateBox(5, Color.FromRgb(255, 0, 0));
                 }
 
-                var tex = TexDecoder.Decode(externalLmp.FileData, texEntry.StartOffset);
+                var tex = TexDecoder.Decode(externalLmp.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
 
                 var logger = new StringLogger();
                 var vifModel = VifDecoder.Decode(
@@ -394,7 +394,7 @@ namespace WorldExplorer.WorldDefs
                             return CreateBox(5, Color.FromRgb(255, 0, 0));
                         }
 
-                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData, texEntry.StartOffset);
+                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
 
                         var logger = new StringLogger();
                         var vifModel = VifDecoder.Decode(

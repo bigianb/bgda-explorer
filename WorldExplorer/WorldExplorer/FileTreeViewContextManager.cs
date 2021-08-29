@@ -1,4 +1,5 @@
 ﻿
+using System;
 using Microsoft.Win32;
 using System.IO;
 using System.Text;
@@ -176,7 +177,7 @@ namespace WorldExplorer
                 var entry = lmpFile.Directory[lmpEntry.Text];
                 var texEntry = lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex"];
 
-                var tex = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
+                var tex = TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
 
                 if ((Path.GetExtension(lmpEntry.Text) ?? "").ToLower() != ".vif")
                 {

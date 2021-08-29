@@ -14,6 +14,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
+
 namespace WorldExplorer.DataLoaders
 {
     public class PalEntry
@@ -52,6 +54,25 @@ namespace WorldExplorer.DataLoaders
             return argb;
         }
 
+        public static PalEntry[] readPalette(ReadOnlySpan<byte> fileData, int palw, int palh)
+        {
+            var numEntries = palw * palh;
+            var palette = new PalEntry[numEntries];
+            for (var i = 0; i < numEntries; ++i)
+            {
+                var pe = new PalEntry
+                {
+                    r = fileData[i * 4],
+                    g = fileData[i * 4 + 1],
+                    b = fileData[i * 4 + 2],
+                    a = fileData[i * 4 + 3]
+                };
+
+                palette[i] = pe;
+            }
+            return palette;
+        }
+        
         public static PalEntry[] readPalette(byte[] fileData, int startOffset, int palw, int palh)
         {
             var numEntries = palw * palh;

@@ -285,7 +285,7 @@ namespace WorldExplorer
                     // Couldn't find the tex file, ignore this vif entry
                     continue;
 
-                var selectedNodeImage = TexDecoder.Decode(_domeLmp.FileData, texEntry.StartOffset);
+                var selectedNodeImage = TexDecoder.Decode(_domeLmp.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
                 var log = new StringLogger();
 
                 var model = new Model
