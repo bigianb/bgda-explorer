@@ -16,8 +16,12 @@
 
 using HelixToolkit.Wpf;
 using System;
+using System.IO;
+using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
+using WorldExplorer.DataExporters;
 using WorldExplorer.DataModel;
 using WorldExplorer.Win3D;
 
@@ -187,6 +191,39 @@ namespace WorldExplorer
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, 0);
             oCam.UpDirection = new Vector3D(0, 0, 1);
+        }
+
+        public void ShowExportForPosedModel()
+        {
+            if (Model == null)
+            {
+                System.Windows.MessageBox.Show("No model currently loaded.", "Error", MessageBoxButton.OK);
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "GLTF File|*.gltf|OBJ File|*.obj",
+                // Select gltf by default
+                FilterIndex = 1,
+                FileName = "some-model.gltf"
+            };
+            if (dialog.ShowDialog() != DialogResult.OK) return;
+
+            var ext = Path.GetExtension(dialog.FileName).ToUpperInvariant();
+            IVifExporter exporter = ext switch
+            {
+                ".OBJ" => new VifObjExporter(),
+                ".GLTF" => new VifGltfExporter(),
+                _ => null
+            };
+            if (exporter == null)
+            {
+                System.Windows.MessageBox.Show("Unknown file format.", "Error", MessageBoxButton.OK);
+                return;
+            }
+
+            exporter.SaveToFile(dialog.FileName, VifModel, Texture, AnimData, CurrentFrame, 1.0);
         }
     }
 }

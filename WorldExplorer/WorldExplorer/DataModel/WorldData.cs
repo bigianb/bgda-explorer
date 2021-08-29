@@ -27,6 +27,7 @@ namespace WorldExplorer.DataModel
 
     public class WorldElement
     {
+        public int ElementIndex { get; set; }
         public Rect3D boundingBox;
         public Model model;
         public WriteableBitmap Texture;

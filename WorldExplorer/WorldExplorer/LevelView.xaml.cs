@@ -30,14 +30,54 @@ namespace WorldExplorer
     /// </summary>
     public partial class LevelView : UserControl
     {
+        private LevelViewModel _lvm;
+
         public LevelView()
         {
             InitializeComponent();
-
-            viewport.MouseUp += new MouseButtonEventHandler(viewport_MouseUp);
-
-
+            DataContextChanged += LevelView_DataContextChanged;
+            viewport.MouseUp += viewport_MouseUp;
+            viewport.KeyDown += Viewport_KeyDown;
             ElementSelected(null);
+        }
+
+        private void Viewport_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.L:
+                    {
+                        // Toggle lighting
+                        _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
+                    }
+                    break;
+            }
+        }
+
+        private void LevelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(DataContext is LevelViewModel lvm))
+            {
+                // Cleared level view
+                _lvm = null;
+                return;
+            }
+
+            _lvm = lvm;
+            //_lvm.PropertyChanged += Lvm_PropertyChanged;
+        }
+
+        private Brush TryGettingAmbientLightColor()
+        {
+            var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
+            if (ambientLight == null) return null;
+
+            return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1], (byte)ambientLight.Floats[2]));
+        }
+
+        protected virtual void OnSceneUpdated()
+        {
+            Background = TryGettingAmbientLightColor() ?? Brushes.White;
         }
 
         protected override void OnRender(DrawingContext drawingContext)

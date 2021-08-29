@@ -26,7 +26,7 @@ namespace WorldExplorer.Win3D
 {
     public class Conversions
     {
-        public static Model3D CreateModel3D(List<Mesh> meshGroups, BitmapSource texture, AnimData pose, int frame)
+        public static Model3D CreateModel3D(List<Mesh> meshGroups, BitmapSource texture, AnimData pose = null, int frame = -1)
         {
             var model = new GeometryModel3D();
             var mesh3D = new MeshGeometry3D();
@@ -131,42 +131,48 @@ namespace WorldExplorer.Win3D
             mesh3D.Normals = normals;
             model.Geometry = mesh3D;
             var dm = new DiffuseMaterial();
-            if (texture != null && texture.Width > 0 && texture.Height > 0)
+            if (texture == null || texture.Width <= 0 || texture.Height <= 0)
+            {
+                dm.Brush = NewMissingTextureBrush();
+            }
+            else
             {
                 var ib = new ImageBrush(texture)
                 {
                     ViewportUnits = BrushMappingMode.Absolute
                 };
                 // May be needed at a later point
-                //ib.TileMode = TileMode.Tile;
+                ib.TileMode = TileMode.Tile;
                 dm.Brush = ib;
-            }
-            else
-            {
-                var dg = new DrawingGroup();
-                // Background
-                dg.Children.Add(new GeometryDrawing()
-                {
-                    Brush = new SolidColorBrush(Colors.Black),
-                    Geometry = new RectangleGeometry(new Rect(0, 0, 2, 2))
-                });
-
-                // Tiles
-                dg.Children.Add(new GeometryDrawing()
-                {
-                    Brush = new SolidColorBrush(Colors.Violet),
-                    Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
-                });
-                dg.Children.Add(new GeometryDrawing()
-                {
-                    Brush = new SolidColorBrush(Colors.Violet),
-                    Geometry = new RectangleGeometry(new Rect(1, 1, 1, 1))
-                });
-
-                dm.Brush = new DrawingBrush(dg) { TileMode = TileMode.Tile, Transform = new ScaleTransform(0.1, 0.1) };
             }
             model.Material = dm;
             return model;
+        }
+
+        private static Brush NewMissingTextureBrush()
+        {
+            var dm = new DiffuseMaterial();
+            var dg = new DrawingGroup();
+            // Background
+            dg.Children.Add(new GeometryDrawing()
+            {
+                Brush = new SolidColorBrush(Colors.Black),
+                Geometry = new RectangleGeometry(new Rect(0, 0, 2, 2))
+            });
+
+            // Tiles
+            dg.Children.Add(new GeometryDrawing()
+            {
+                Brush = new SolidColorBrush(Colors.Violet),
+                Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
+            });
+            dg.Children.Add(new GeometryDrawing()
+            {
+                Brush = new SolidColorBrush(Colors.Violet),
+                Geometry = new RectangleGeometry(new Rect(1, 1, 1, 1))
+            });
+
+            return new DrawingBrush(dg) { TileMode = TileMode.Tile, Transform = new ScaleTransform(0.1, 0.1) };
         }
     }
 }

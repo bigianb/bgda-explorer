@@ -16,6 +16,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace WorldExplorer
 {
@@ -24,11 +25,27 @@ namespace WorldExplorer
     /// </summary>
     public partial class ModelView : UserControl
     {
+        private ModelViewModel ViewModel => (ModelViewModel)DataContext;
         public ModelView()
         {
             InitializeComponent();
 
-            DataContextChanged += new DependencyPropertyChangedEventHandler(ModelView_DataContextChanged);
+            viewport.KeyDown += Viewport_KeyDown;
+
+            DataContextChanged += ModelView_DataContextChanged;
+        }
+
+        private void Viewport_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case Key.G:
+                    if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+                    {
+                        ViewModel.ShowExportForPosedModel();
+                    }
+                    break;
+            }
         }
 
         void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

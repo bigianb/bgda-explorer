@@ -23,16 +23,29 @@ namespace WorldExplorer.DataLoaders
         public byte b;
         public byte a;
 
+        const int TransparentThreshold = 0x80;
+
         public int argb()
         {
+            // Note to reviewers: I have no memory of this place
+
             // in ps2 0x80 is fully transparent and 0 is opaque.
             // in java 0 is transparent and 0xFF is opaque.
 
-            var java_a = (byte)(256 - (byte)(a * 2));
+            var convertedAlpha = (byte)(256 - (byte)(a * 2));
+
+            var java_a = a == 0 ? 255 :
+                (byte)(256 - (byte)(a * 2));
+
+            //if (convertedAlpha < TransparentThreshold)
+            {
+                convertedAlpha = (byte)(255 - a);
+            }
+
 
             //java_a = (byte)0xFF;
 
-            var argb = (java_a << 24) |
+            var argb = (convertedAlpha << 24) |
                     ((r << 16) & 0xFF0000) |
                     ((g << 8) & 0xFF00) |
                     (b & 0xFF);

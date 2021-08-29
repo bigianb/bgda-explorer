@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using WorldExplorer.DataLoaders;
@@ -55,13 +57,46 @@ namespace WorldExplorer.WorldDefs
             AddDef("Ethon", ParseEthonObject);
             AddDef("ShopKeep", ParseShopKeepObject);
             AddDef("Lecher", ParseLecherObject);
+
+            // == RTA Objects
+            // Characters
+            AddDef("NPC", ParseObjectWithLumpProp("name"));
+            AddDef("bflya", ParseToMappedLmp("BFLYA.LMP", "BFLYA.vif", "BFLYA.tex"));
+            AddDef("bflyb", ParseToMappedLmp("BFLYB.LMP", "BFLYB.vif", "BFLYB.tex"));
+            AddDef("Kobold", ParseToMappedLmp("KOBOLD.LMP", "kobold.vif", "kobold.tex"));
+            AddDef("Bullfrog", ParseToMappedLmp("BULLFROG.LMP", "bullfrog.vif", "bullfrog.tex"));
+            AddDef("Rat", ParseToMappedLmp("RAT.LMP", "rat.vif", "rat.tex"));
+            AddDef("Seagull", ParseToMappedLmp("SEAGULL.LMP", "seagull.vif", "seagull.tex"));
+            AddDef("fgoblin", ParseToMappedLmp("FGOBLIN.LMP", "firegoblin.vif", "firegoblin.tex"));
+            AddDef("Samurai", ParseToMappedLmp("SAMURAI.LMP", "Samurai.vif", "Samurai.tex"));
+            AddDef("Player1", ParseToMappedLmp("SELECT.LMP", "im_bodyv1.vif", "im_bodyv1.tex"));
+
+            // Objects
+            AddDef("Savepoint", ParseToMappedLmp("SAVEPNT.LMP", "savepoint.vif", "savepoint.tex"));
+            AddDef("Portal", ParseObjectWithLumpProp("lump"));
+            AddDef("orkbox", ParseObjectWithLumpProp("lumpname"));
+            AddDef("lavakeg", ParseObjectWithLumpProp("lumpname"));
+            AddDef("gearbox", ParseObjectWithLumpProp("lumpname"));
+            AddDef("PowderKeg", ParseToMappedLmp("POWDERK.LMP", "powderkeg.vif", "powderkeg.tex"));
+            AddDef("Barrel", ParseToMappedLmp("BARREL.LMP", "barrel.vif", "barrel.tex"));
+            AddDef("Wingedv", ParseToMappedLmp("BARREL.LMP", "barrel.vif", "barrel.tex"));
         }
 
         public VisualObjectData Parse(VisualObjectData obj)
         {
             if (_objectDefinitions.TryGetValue(obj.ObjectData.Name, out var del))
             {
-                return del(obj);
+                try
+                {
+                    return del(obj);
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine("Error parsing object definition\r\n" + ex);
+                    obj.Model = new ModelVisual3D();
+                    obj.Model.Children.Add(CreateBox(5, Color.FromRgb(255, 0, 0)));
+                    return obj;
+                }
             }
 
             // Didn't match anything
@@ -167,7 +202,8 @@ namespace WorldExplorer.WorldDefs
             }
             box.Height = tempValue / 4;
 
-            box.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
+            box.BackMaterial = box.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
+            
 
             obj.Model = box;
             return obj;
@@ -187,7 +223,7 @@ namespace WorldExplorer.WorldDefs
             sphere.Radius = tempRadius;
             obj.Offset.Z += tempRadius / 2;
 
-            sphere.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
+            sphere.BackMaterial = sphere.Material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(128, 255, 171, 0)));
 
             obj.Model = sphere;
             return obj;
@@ -257,6 +293,33 @@ namespace WorldExplorer.WorldDefs
             return obj;
         }
 
+        ParseObjectDelegate ParseObjectWithLumpProp(string propName)
+        {
+            return new ParseObjectDelegate((obj) =>
+            {
+                var props = obj.ObjectData.Properties.Select(e => e.Split('=')).ToDictionary(e => e[0], e => e.Length > 1 ? e[1] : e[0]);
+                if (props.TryGetValue(propName, out var lump) && !string.IsNullOrEmpty(lump))
+                {
+                    lump = lump.Trim().TrimQuotes();
+                    obj.Model = new ModelVisual3D();
+                    obj.Model.Children.Add(LoadModelFromExternalLmp(lump + ".lmp", lump + ".vif", lump + ".tex"));
+                }
+                else
+                    obj.Model.Children.Add(CreateBox(5, Color.FromRgb(255, 0, 0)));
+                return obj;
+            });
+        }
+
+        ParseObjectDelegate ParseToMappedLmp(string lmpFile, string vifFile, string texFile)
+        {
+            return new ParseObjectDelegate((obj) =>
+            {
+                obj.Model = new ModelVisual3D();
+                obj.Model.Children.Add(LoadModelFromExternalLmp(lmpFile, vifFile, texFile));
+                return obj;
+            });
+        }
+
         #endregion
 
         // Utility Methods
@@ -268,6 +331,49 @@ namespace WorldExplorer.WorldDefs
         {
             return Color.FromRgb((byte)floats[0], (byte)floats[1], (byte)floats[2]);
         }
+
+        private Visual3D LoadModelFromExternalLmp(string lmpName, string file, string textureFile)
+        {
+            var lmpPath = Path.Combine(_manager.LevelViewModel.MainViewModel.World.DataPath, lmpName.ToUpperInvariant());
+
+            if (File.Exists(lmpPath)) {
+                // TODO: We can cache this to reduce memory usage
+                var data = File.ReadAllBytes(lmpPath);
+                var externalLmp = new LmpFile(_manager.LevelViewModel.MainViewModel.World.EngineVersion, lmpName, data, 0, data.Length);
+                externalLmp.ReadDirectory();
+
+                var entry = externalLmp.FindFile(file);
+                var texEntry = externalLmp.FindFile(textureFile);
+
+                if (entry == null || texEntry == null)
+                {
+                    return CreateBox(5, Color.FromRgb(255, 0, 0));
+                }
+
+                var tex = TexDecoder.Decode(externalLmp.FileData, texEntry.StartOffset);
+
+                var logger = new StringLogger();
+                var vifModel = VifDecoder.Decode(
+                    logger,
+                    externalLmp.FileData,
+                    entry.StartOffset,
+                    entry.Length,
+                    tex.PixelWidth,
+                    tex.PixelHeight);
+
+                var model = new ModelVisual3D
+                {
+                    Content = Conversions.CreateModel3D(vifModel, tex, null, -1),
+                    Transform = new ScaleTransform3D(1.0 / 4, 1.0 / 4, 1.0 / 4)
+                };
+                return model;
+            }
+
+            
+
+            return CreateBox(5, Color.FromRgb(255, 0, 0));
+        }
+
         private Visual3D LoadModelFromOtherLmp(string lmpName, string file, string textureFile)
         {
             var par = _manager.LevelViewModel.WorldNode.Parent.Parent;

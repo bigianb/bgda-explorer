@@ -3,7 +3,7 @@ using System.Text;
 
 namespace WorldExplorer.DataLoaders
 {
-    class DataReader
+    public class DataReader
     {
         readonly byte[] _data;
         readonly int _baseOffset;
