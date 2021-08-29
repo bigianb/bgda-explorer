@@ -262,6 +262,7 @@ namespace WorldExplorer
                 Filter = "GLTF File|*.gltf|OBJ File|*.obj",
                 // Select gltf by default
                 FilterIndex = 1,
+                FileName = "some-model.gltf",
             };
             if (dialog.ShowDialog() != true) return;
 
