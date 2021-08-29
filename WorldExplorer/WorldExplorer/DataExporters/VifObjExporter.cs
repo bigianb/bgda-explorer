@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataLoaders;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer.DataExporters
