@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
@@ -21,6 +22,36 @@ namespace WorldExplorer.DataLoaders
     public class GIFTag
     {
         public const int Size = 0x10;
+        
+        public void parse(ReadOnlySpan<byte> data, int idx)
+        {
+            var low32 = DataUtil.getLEInt(data, idx);
+            nloop = low32 & 0x7FFF;
+            eop = (low32 & 0x8000) == 0x8000;
+
+            var next32 = DataUtil.getLEInt(data, idx + 4);
+
+            // bit 32 is bit 0 of next 32
+            pre = ((next32 >> (46 - 32)) & 1) == 1;
+            // prim 11 bits 47 - 57
+            prim = ((next32 >> (47 - 32)) & 0x3FF);
+            flg = ((next32 >> (58 - 32)) & 0x3);
+            nreg = ((next32 >> (60 - 32)) & 0xf);
+
+            if (0 == nreg)
+            {
+                nreg = 16;
+            }
+            var regs64 = DataUtil.getLEInt(data, idx + 8);
+            var regs96 = DataUtil.getLEInt(data, idx + 12);
+
+            regs = new int[nreg];
+            for (var reg = 0; reg < nreg; ++reg)
+            {
+                var rgs = reg > 7 ? regs96 : regs64;
+                regs[reg] = (rgs >> ((reg & 7) * 4)) & 0x0f;
+            }
+        }
 
         public void parse(byte[] data, int idx)
         {

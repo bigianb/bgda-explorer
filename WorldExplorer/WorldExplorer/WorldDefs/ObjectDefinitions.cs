@@ -350,14 +350,12 @@ namespace WorldExplorer.WorldDefs
                     return CreateBox(5, Color.FromRgb(255, 0, 0));
                 }
 
-                var tex = TexDecoder.Decode(externalLmp.FileData, texEntry.StartOffset);
+                var tex = TexDecoder.Decode(externalLmp.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
 
                 var logger = new StringLogger();
                 var vifModel = VifDecoder.Decode(
                     logger,
-                    externalLmp.FileData,
-                    entry.StartOffset,
-                    entry.Length,
+                    externalLmp.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
                     tex.PixelWidth,
                     tex.PixelHeight);
 
@@ -394,14 +392,12 @@ namespace WorldExplorer.WorldDefs
                             return CreateBox(5, Color.FromRgb(255, 0, 0));
                         }
 
-                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData, texEntry.StartOffset);
+                        var tex = TexDecoder.Decode(child.LmpFileProperty.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
 
                         var logger = new StringLogger();
                         var vifModel = VifDecoder.Decode(
                             logger,
-                            child.LmpFileProperty.FileData,
-                            entry.StartOffset,
-                            entry.Length,
+                            child.LmpFileProperty.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
                             tex.PixelWidth,
                             tex.PixelHeight);
 

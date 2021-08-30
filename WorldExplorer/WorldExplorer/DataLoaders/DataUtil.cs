@@ -39,10 +39,20 @@ namespace WorldExplorer.DataLoaders
         {
             return (!string.IsNullOrEmpty(path) && path.IndexOfAny(System.IO.Path.GetInvalidPathChars()) >= 0);
         }
+        
+        public static int getLEInt(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToInt32(data.Slice(offset, 4).ToArray());
+        }
 
         public static int getLEInt(byte[] data, int offset)
         {
             return BitConverter.ToInt32(data, offset);
+        }
+        
+        public static short getLEShort(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToInt16(data.Slice(offset, 2).ToArray());
         }
 
         public static short getLEShort(byte[] data, int offset)
@@ -60,5 +70,9 @@ namespace WorldExplorer.DataLoaders
             return BitConverter.ToUInt16(data, offset);
         }
 
+        public static ushort getLEUShort(ReadOnlySpan<byte> data, int offset)
+        {
+            return BitConverter.ToUInt16(data.Slice(offset, 2).ToArray());
+        }
     }
 }

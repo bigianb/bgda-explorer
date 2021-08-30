@@ -29,22 +29,22 @@ namespace WorldExplorer.DataLoaders
         private const int PSMCT32 = 0x00;
         private const int PSMT4 = 0x14;
 
-        public static WriteableBitmap Decode(byte[] data, int startOffset)
+        public static WriteableBitmap Decode(ReadOnlySpan<byte> data)
         {
             var gsMem = new GSMemory();
 
-            var length = DataUtil.getLEShort(data, startOffset + 6) * 16;
+            var length = DataUtil.getLEShort(data, 6) * 16;
 
-            int finalw = BitConverter.ToInt16(data, startOffset);
-            int finalh = BitConverter.ToInt16(data, startOffset + 2);
-            var offsetToGIF = DataUtil.getLEInt(data, startOffset + 16);
+            int finalw = BitConverter.ToInt16(data[..2].ToArray());
+            int finalh = BitConverter.ToInt16(data.Slice(2, 2).ToArray());
+            var offsetToGIF = DataUtil.getLEInt(data, 16);
 
             var sourcew = finalw;
             var sourceh = finalh;
             PalEntry[] pixels = null;
             byte[] bytes = null;
 
-            var curIdx = offsetToGIF + startOffset;
+            var curIdx = offsetToGIF;
             var endIndex = curIdx + length;
 
             var gifTag = new GIFTag();
@@ -63,7 +63,7 @@ namespace WorldExplorer.DataLoaders
                 gifTag2.parse(data, curIdx);
 
                 // 8 bit palletised
-                var palette = PalEntry.readPalette(data, curIdx + GIFTag.Size, palw, palh);
+                var palette = PalEntry.readPalette(data.Slice(curIdx + GIFTag.Size), palw, palh);
 
                 palette = PalEntry.unswizzlePalette(palette);
 
@@ -122,7 +122,7 @@ namespace WorldExplorer.DataLoaders
                         // source is PSMT4. Dest can be PSMT4 or PSMCT32
                         if (dpsm == PSMCT32)
                         {
-                            var imageData = data;
+                            var imageData = data.ToArray();
                             var imageDataIdx = curIdx;
                             // check for multiple IMAGE entries.
                             var nextTagInd = bytesToTransfer + curIdx;
@@ -190,12 +190,12 @@ namespace WorldExplorer.DataLoaders
             else if (gifTag.nloop == 3)
             {
                 var gifTag2 = new GIFTag();
-                gifTag2.parse(data, startOffset + 0xC0);
+                gifTag2.parse(data, 0xC0);
 
                 if (gifTag2.flg == 2)
                 {
                     // image mode
-                    pixels = readPixels32(data, startOffset + 0xD0, finalw, finalh);
+                    pixels = readPixels32(data.Slice(0xD0), finalw, finalh);
                 }
             }
             WriteableBitmap image = null;
@@ -262,7 +262,7 @@ namespace WorldExplorer.DataLoaders
             return pixels;
         }
 
-        private static int findADEntry(byte[] fileData, int dataStartIdx, int nloop, int registerId)
+        private static int findADEntry(ReadOnlySpan<byte> fileData, int dataStartIdx, int nloop, int registerId)
         {
             var retval = 0;
             for (var i = 0; i < nloop; ++i)
@@ -277,7 +277,7 @@ namespace WorldExplorer.DataLoaders
             return retval;
         }
 
-        private static byte[] transferPSMT4(byte[] pixels, byte[] fileData, int startOffset, int startx, int starty,
+        private static byte[] transferPSMT4(byte[] pixels, ReadOnlySpan<byte> fileData, int startOffset, int startx, int starty,
                                  int rrw, int rrh, int destWBytes, int destHBytes)
         {
             if (pixels == null)
@@ -304,6 +304,28 @@ namespace WorldExplorer.DataLoaders
                     ++nybble;
                 }
             }
+            return pixels;
+        }
+        
+        private static PalEntry[] readPixels32(ReadOnlySpan<byte> fileData, int w, int h)
+        {
+            var numPixels = w * h;
+            var pixels = new PalEntry[numPixels];
+            var destIdx = 0;
+            var endOffset = numPixels * 4;
+            for (var idx = 0; idx < endOffset;)
+            {
+                var pe = new PalEntry
+                {
+                    r = fileData[idx++],
+                    g = fileData[idx++],
+                    b = fileData[idx++],
+                    a = fileData[idx++]
+                };
+
+                pixels[destIdx++] = pe;
+            }
+
             return pixels;
         }
 

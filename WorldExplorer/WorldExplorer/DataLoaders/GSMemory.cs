@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace WorldExplorer.DataLoaders
 {
     class GSMemory
@@ -21,7 +23,7 @@ namespace WorldExplorer.DataLoaders
     };
 
         // writes to the memory when destination format is set to PSMCT32
-        public void writeTexPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh, byte[] data, int dataIndex)
+        public void writeTexPSMCT32(int dbp, int dbw, int dsax, int dsay, int rrw, int rrh, ReadOnlySpan<byte> data, int dataIndex)
         {
             var startBlockPos = dbp * 64;
             for (var y = dsay; y < dsay + rrh; y++)
