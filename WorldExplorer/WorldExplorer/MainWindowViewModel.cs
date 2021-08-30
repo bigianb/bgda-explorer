@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -21,6 +22,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataLoaders.Animation;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;
 
@@ -161,7 +163,7 @@ namespace WorldExplorer
 
         public MainWindow MainWindow => _window;
 
-        public string _logText;
+        private string _logText;
         public string LogText
         {
             get => _logText;
@@ -183,7 +185,7 @@ namespace WorldExplorer
             {
                 case ".tex":
                     {
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, entry.StartOffset);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length));
 
                         _window.tabControl.SelectedIndex = 0; // Texture View
                     }
@@ -192,14 +194,17 @@ namespace WorldExplorer
                     {
                         var texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
                         var texEntry = lmpFile.Directory[texFilename];
-                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData, texEntry.StartOffset);
+                        SelectedNodeImage = TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
                         var log = new StringLogger();
                         _modelViewModel.Texture = SelectedNodeImage;
                         _modelViewModel.AnimData = null;
                         var model = new Model
                         {
-                            meshList = VifDecoder.Decode(log, lmpFile.FileData, entry.StartOffset, entry.Length,
-                                                           SelectedNodeImage?.PixelWidth ?? 0, SelectedNodeImage?.PixelHeight ?? 0)
+                            meshList = VifDecoder.Decode(
+                                log, 
+                                lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
+                                SelectedNodeImage?.PixelWidth ?? 0,
+                                SelectedNodeImage?.PixelHeight ?? 0)
                         };
                         _modelViewModel.VifModel = model;
 
@@ -219,7 +224,7 @@ namespace WorldExplorer
                 case ".anm":
                     {
                         var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
-                        var animData = AnmDecoder.Decode(engineVersion, lmpFile.FileData, entry.StartOffset, entry.Length);
+                        var animData = AnmDecoder.Decode(engineVersion, lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length));
                         _skeletonViewModel.AnimData = animData;
                         LogText = animData.ToString();
 
@@ -315,7 +320,7 @@ namespace WorldExplorer
 
         private void OnWorldEntrySelected(WorldFileTreeViewModel worldFileModel)
         {
-            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
+            var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
             var entry = lmpFile.Directory[worldFileModel.Text];
             WorldFileDecoder decoder = engineVersion == EngineVersion.ReturnToArms || engineVersion == EngineVersion.JusticeLeagueHeroes 
@@ -348,7 +353,7 @@ namespace WorldExplorer
 
         private void OnYakChildElementSelected(YakChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData, childEntry.Value.TextureOffset + childEntry.Value.VifOffset);
+            SelectedNodeImage = TexDecoder.Decode(childEntry.YakFile.FileData.AsSpan().Slice(childEntry.Value.TextureOffset + childEntry.Value.VifOffset));
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
@@ -356,9 +361,7 @@ namespace WorldExplorer
             {
                 meshList = VifDecoder.Decode(
                 log,
-                childEntry.YakFile.FileData,
-                childEntry.Value.VifOffset,
-                childEntry.Value.TextureOffset,
+                childEntry.YakFile.FileData.AsSpan().Slice(childEntry.Value.VifOffset, childEntry.Value.TextureOffset),
                 SelectedNodeImage.PixelWidth,
                 SelectedNodeImage.PixelHeight)
             };
@@ -373,7 +376,7 @@ namespace WorldExplorer
 
         private void OnHdrDatChildElementSelected(HdrDatChildTreeViewItem childEntry)
         {
-            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData, childEntry.Value.TexOffset);
+            SelectedNodeImage = TexDecoder.Decode(childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.TexOffset));
             var log = new StringLogger();
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
@@ -381,9 +384,7 @@ namespace WorldExplorer
             {
                 meshList = VifDecoder.Decode(
                 log,
-                childEntry.CacheFile.FileData,
-                childEntry.Value.VifOffset,
-                childEntry.Value.VifLength,
+                childEntry.CacheFile.FileData.AsSpan().Slice(childEntry.Value.VifOffset, childEntry.Value.VifLength),
                 SelectedNodeImage.PixelWidth,
                 SelectedNodeImage.PixelHeight)
             };
@@ -403,7 +404,7 @@ namespace WorldExplorer
             if (animEntry != null)
             {
                 var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
-                animList.Add(AnmDecoder.Decode(engineVersion, lmpFile.FileData, animEntry.StartOffset, animEntry.Length));
+                animList.Add(AnmDecoder.Decode(engineVersion, lmpFile.FileData.AsSpan().Slice(animEntry.StartOffset, animEntry.Length)));
             }
             return animList;
         }
