@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -205,10 +206,7 @@ namespace WorldExplorer.DataLoaders
                     var xpos = xblock * 16 + x;
                     var ypos = yblock * 16 + y;
                     var p = pBackBuffer + ypos * image.BackBufferStride + xpos * 4;
-                    unsafe
-                    {
-                        *((int*)p) = pixel.argb();
-                    }
+                    Marshal.WriteInt32(p, pixel.argb());
                 }
             }
         }

@@ -13,7 +13,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -54,7 +56,6 @@ namespace WorldExplorer.DataLoaders
             // we can safely make some assumptions about their structure.
             if (gifTag.nloop == 4)
             {
-
                 int palw = DataUtil.getLEShort(data, curIdx + 0x30);
                 int palh = DataUtil.getLEShort(data, curIdx + 0x34);
 
@@ -91,12 +92,14 @@ namespace WorldExplorer.DataLoaders
                             rrw = DataUtil.getLEShort(data, trxregOffset);
                             rrh = DataUtil.getLEShort(data, trxregOffset + 4);
                         }
+
                         var trxposOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXPOS);
                         if (trxposOffset != 0)
                         {
                             startx = DataUtil.getLEShort(data, trxposOffset + 0x04) & 0x07FF;
                             starty = DataUtil.getLEShort(data, trxposOffset + 0x06) & 0x07FF;
                         }
+
                         var bitbltOffset = findADEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, BITBLTBUF);
                         if (bitbltOffset != 0)
                         {
@@ -114,7 +117,8 @@ namespace WorldExplorer.DataLoaders
 
                         gifTag3.parse(data, curIdx);
                     }
-                    curIdx += GIFTag.Size;     // image gif tag
+
+                    curIdx += GIFTag.Size; // image gif tag
                     var bytesToTransfer = gifTag3.nloop * 16;
 
                     if (palette.Length == 16)
@@ -141,11 +145,13 @@ namespace WorldExplorer.DataLoaders
                                     {
                                         imageData[i] = data[j];
                                     }
+
                                     j = nextTagInd + GIFTag.Size;
                                     for (var i = bytesToTransfer; i < bytesToTransfer + bytesToTransfer2; ++i)
                                     {
                                         imageData[i] = data[j];
                                     }
+
                                     bytesToTransfer += imageTag2.Length;
                                 }
                             }
@@ -155,12 +161,12 @@ namespace WorldExplorer.DataLoaders
                             destWBytes = (finalw + 0x3f) & ~0x3f;
                             bytes = gsMem.readTexPSMT4(dbp, destWBytes / 0x40, startx, starty, destWBytes, destHBytes);
                             bytes = expand4bit(bytes);
-
                         }
                         else
                         {
                             // dest and source are the same and so image isn't swizzled
-                            bytes = transferPSMT4(bytes, data, curIdx, startx, starty, rrw, rrh, destWBytes, destHBytes);
+                            bytes = transferPSMT4(bytes, data, curIdx, startx, starty, rrw, rrh, destWBytes,
+                                destHBytes);
                         }
                     }
                     else
@@ -168,14 +174,17 @@ namespace WorldExplorer.DataLoaders
                         // source is PSMT8. Dest is always PSMCT32.
                         gsMem.writeTexPSMCT32(dbp, dbw, startx, starty, rrw, rrh, data, curIdx);
                     }
+
                     curIdx += bytesToTransfer;
                 }
+
                 if (palette.Length == 256)
                 {
                     destWBytes = (finalw + 0x3f) & ~0x3f;
                     dbw = destWBytes / 0x40;
                     bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
                 }
+
                 // THIS IS A HACK
                 if (palette.Length == 1024)
                 {
@@ -183,6 +192,7 @@ namespace WorldExplorer.DataLoaders
                     dbw = destWBytes / 0x40;
                     bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalh);
                 }
+
                 pixels = applyPalette(palette, bytes);
                 sourcew = destWBytes;
                 sourceh = destHBytes;
@@ -198,6 +208,7 @@ namespace WorldExplorer.DataLoaders
                     pixels = readPixels32(data.Slice(0xD0), finalw, finalh);
                 }
             }
+
             WriteableBitmap image = null;
             if (finalw != 0)
             {
@@ -209,32 +220,31 @@ namespace WorldExplorer.DataLoaders
                 image.Lock();
                 if (pixels != null)
                 {
-                    unsafe
+                    var pBackBuffer = image.BackBuffer;
+                    for (var y = 0; y < sourceh && y < finalh; ++y)
                     {
-                        var pBackBuffer = image.BackBuffer;
-                        for (var y = 0; y < sourceh && y < finalh; ++y)
+                        for (var x = 0; x < sourcew && x < finalw; ++x)
                         {
-                            for (var x = 0; x < sourcew && x < finalw; ++x)
+                            var pixel = pixels[y * sourcew + x];
+                            if (pixel != null)
                             {
-                                var pixel = pixels[y * sourcew + x];
-                                if (pixel != null)
+                                if (x < finalw && y < finalh)
                                 {
-                                    if (x < finalw && y < finalh)
-                                    {
-                                        var p = pBackBuffer + y * image.BackBufferStride + x * 4;
-                                        *((int*)p) = pixel.argb();
-                                    }
+                                    var p = pBackBuffer + y * image.BackBufferStride + x * 4;
+                                    Marshal.WriteInt32(p, pixel.argb());
                                 }
                             }
                         }
                     }
                 }
+
                 // Specify the area of the bitmap that changed.
                 image.AddDirtyRect(new Int32Rect(0, 0, finalw, finalh));
 
                 // Release the back buffer and make it available for display.
                 image.Unlock();
             }
+
             return image;
         }
 
@@ -246,9 +256,10 @@ namespace WorldExplorer.DataLoaders
             var j = 0;
             foreach (int val in bytes)
             {
-                outbytes[j++] = (byte)(val & 0x0f);
-                outbytes[j++] = (byte)((val >> 4) & 0x0f);
+                outbytes[j++] = (byte) (val & 0x0f);
+                outbytes[j++] = (byte) ((val >> 4) & 0x0f);
             }
+
             return outbytes;
         }
 
@@ -259,6 +270,7 @@ namespace WorldExplorer.DataLoaders
             {
                 pixels[i] = palette[bytes[i] & 0xFF];
             }
+
             return pixels;
         }
 
@@ -274,11 +286,13 @@ namespace WorldExplorer.DataLoaders
                     break;
                 }
             }
+
             return retval;
         }
 
-        private static byte[] transferPSMT4(byte[] pixels, ReadOnlySpan<byte> fileData, int startOffset, int startx, int starty,
-                                 int rrw, int rrh, int destWBytes, int destHBytes)
+        private static byte[] transferPSMT4(byte[] pixels, ReadOnlySpan<byte> fileData, int startOffset, int startx,
+            int starty,
+            int rrw, int rrh, int destWBytes, int destHBytes)
         {
             if (pixels == null)
             {
@@ -295,18 +309,20 @@ namespace WorldExplorer.DataLoaders
                     if (nybble > 1)
                     {
                         var twoPix = fileData[idx++];
-                        nybbles[0] = (byte)((twoPix) & 0x0f);
-                        nybbles[1] = (byte)((twoPix >> 4) & 0x0f);
+                        nybbles[0] = (byte) ((twoPix) & 0x0f);
+                        nybbles[1] = (byte) ((twoPix >> 4) & 0x0f);
                         nybble = 0;
                     }
+
                     var destIdx = (y + starty) * destWBytes + (x + startx);
                     pixels[destIdx] = nybbles[nybble];
                     ++nybble;
                 }
             }
+
             return pixels;
         }
-        
+
         private static PalEntry[] readPixels32(ReadOnlySpan<byte> fileData, int w, int h)
         {
             var numPixels = w * h;
@@ -350,6 +366,5 @@ namespace WorldExplorer.DataLoaders
 
             return pixels;
         }
-
     }
 }
