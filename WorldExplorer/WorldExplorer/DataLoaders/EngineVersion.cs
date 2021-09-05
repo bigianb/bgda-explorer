@@ -1,5 +1,4 @@
-﻿
-namespace WorldExplorer.DataLoaders
+﻿namespace WorldExplorer.DataLoaders
 {
     public enum EngineVersion
     {

@@ -6,14 +6,16 @@ namespace WorldExplorer.DataLoaders
 {
     public class WorldFileV2Decoder : WorldFileDecoder
     {
-        protected override WorldElement ReadWorldElement(EngineVersion engineVersion, WorldTexFile texFile, ILogger log, byte[] data, int startOffset, WorldData worldData, DataReader reader, int elementArrayStart, int texX0, int texY0, int elementIdx)
+        protected override WorldElement? ReadWorldElement(EngineVersion engineVersion, WorldTexFile? texFile, ILogger log,
+            byte[] data, int startOffset, WorldData worldData, DataReader reader, int elementArrayStart, int texX0,
+            int texY0, int elementIdx)
         {
-            var element = new WorldElement()
+            WorldElement element = new()
             {
-                ElementIndex = elementIdx,
+                ElementIndex = elementIdx
             };
 
-            reader.SetOffset(elementArrayStart + elementIdx * 0x3C);
+            reader.SetOffset(elementArrayStart + (elementIdx * 0x3C));
 
             var vifDataOffset = reader.ReadInt32();
             var vifLen = reader.ReadInt32();
@@ -33,7 +35,10 @@ namespace WorldExplorer.DataLoaders
             var unknown2 = reader.ReadInt16(); // Doesn't seem to do anything
 
             // Don't include things without textures
-            if (texCellxy == 0) return null;
+            if (texCellxy == 0)
+            {
+                return null;
+            }
 
             element.boundingBox = new Rect3D(x1, y1, z1, x2 - x1, y2 - y1, z2 - z1);
             var texX = texCellxy / 100;
@@ -44,7 +49,7 @@ namespace WorldExplorer.DataLoaders
                 element.Texture = texFile.GetBitmapRTA(texY, texX, textureNum);
             }
 
-            var vifLogger = new StringLogger();
+            StringLogger vifLogger = new();
             var texWidth = 100;
             var texHeight = 100;
 
@@ -57,8 +62,9 @@ namespace WorldExplorer.DataLoaders
             var nregs = data[startOffset + vifDataOffset + 0x10];
             var vifStartOffset = (nregs + 2) * 0x10;
             element.VifDataOffset = startOffset + vifDataOffset + vifStartOffset;
-            element.VifDataLength = vifLen * 0x10 - vifStartOffset;
-            element.model = DecodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
+            element.VifDataLength = (vifLen * 0x10) - vifStartOffset;
+            element.model = DecodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset,
+                (vifLen * 0x10) - vifStartOffset, texWidth, texHeight);
             element.pos = new Vector3D(posx / 16.0, posy / 16.0, posz / 16.0);
             element.negYaxis = (unkFlag & 0x40) == 0x40; // Just guessing
             element.xyzRotFlags = rotFlags;
@@ -66,7 +72,7 @@ namespace WorldExplorer.DataLoaders
 
             log.LogLine("-----------");
             log.LogLine("vifdata: " + vifDataOffset + ", " + vifLen);
-            log.LogLine("Bounding Box: " + element.boundingBox.ToString());
+            log.LogLine("Bounding Box: " + element.boundingBox);
             log.LogLine("Texture Num: " + textureNum);
             log.LogLine("unkFlag: " + unkFlag);
             log.LogLine("Raw Position : " + posx + ", " + posy + ", " + posz);

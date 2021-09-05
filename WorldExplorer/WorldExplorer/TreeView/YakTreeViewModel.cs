@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Collections.Generic;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -23,18 +24,17 @@ namespace WorldExplorer
     /// </summary>
     public class YakTreeViewModel : TreeViewItemViewModel
     {
+        private readonly YakFile _yakFile;
+        private TreeViewItemViewModel _parent;
+
+        public string Text { get; }
+
         public YakTreeViewModel(TreeViewItemViewModel parent, YakFile yakFile) : base(parent, true)
         {
             _parent = parent;
             _yakFile = yakFile;
-            _name = yakFile.Name;
+            Text = yakFile.Name;
         }
-
-        private TreeViewItemViewModel _parent;
-        private YakFile _yakFile;
-        private string _name;
-
-        public string Text => _name;
 
         protected override void LoadChildren()
         {

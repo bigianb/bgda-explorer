@@ -16,7 +16,7 @@
 
 namespace WorldExplorer.DataLoaders
 {
-    class HexUtil
+    internal class HexUtil
     {
         public static string formatHexUShort(int num)
         {

@@ -5,6 +5,7 @@ namespace WorldExplorer.DataExporters
 {
     public interface IVifExporter
     {
-        void SaveToFile(string savePath, Model model, WriteableBitmap texture, AnimData pose = null, int frame = 1, double scale = 1.0);
+        void SaveToFile(string savePath, Model model, WriteableBitmap? texture, AnimData? pose = null, int frame = 1,
+            double scale = 1.0);
     }
 }

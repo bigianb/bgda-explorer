@@ -7,11 +7,13 @@ namespace WorldExplorer.DataLoaders
 {
     public class WorldFileV1Decoder : WorldFileDecoder
     {
-        protected override WorldElement ReadWorldElement(EngineVersion engineVersion, WorldTexFile texFile, ILogger log, byte[] data, int startOffset, WorldData worldData, DataReader reader, int elementArrayStart, int texX0, int texY0, int elementIdx)
+        protected override WorldElement ReadWorldElement(EngineVersion engineVersion, WorldTexFile? texFile, ILogger log,
+            byte[] data, int startOffset, WorldData worldData, DataReader reader, int elementArrayStart, int texX0,
+            int texY0, int elementIdx)
         {
-            var element = new WorldElement();
+            WorldElement element = new();
 
-            reader.SetOffset(elementArrayStart + elementIdx * 0x38);
+            reader.SetOffset(elementArrayStart + (elementIdx * 0x38));
 
             var vifDataOffset = reader.ReadInt32();
 
@@ -27,16 +29,16 @@ namespace WorldExplorer.DataLoaders
             element.boundingBox = new Rect3D(x1, y1, z1, x2 - x1, y2 - y1, z2 - z1);
 
             var textureNum = reader.ReadInt32() / 0x40;
-            int texCellxy = reader.ReadInt16();
-            var y = texCellxy / 100;
-            var x = texCellxy % 100;
+            int texCellXy = reader.ReadInt16();
+            var y = texCellXy / 100;
+            var x = texCellXy % 100;
 
-            if (textureNum != 0)
+            if (textureNum != 0 && texFile != null)
             {
                 element.Texture = texFile.GetBitmap(worldData.textureChunkOffsets[y, x], textureNum);
             }
 
-            var vifLogger = new StringLogger();
+            StringLogger vifLogger = new();
             var texWidth = 100;
             var texHeight = 100;
             if (element.Texture != null)
@@ -48,8 +50,9 @@ namespace WorldExplorer.DataLoaders
             var nregs = data[startOffset + vifDataOffset + 0x10];
             var vifStartOffset = (nregs + 2) * 0x10;
             element.VifDataOffset = startOffset + vifDataOffset + vifStartOffset;
-            element.VifDataLength = vifLen * 0x10 - vifStartOffset;
-            element.model = DecodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset, vifLen * 0x10 - vifStartOffset, texWidth, texHeight);
+            element.VifDataLength = (vifLen * 0x10) - vifStartOffset;
+            element.model = DecodeModel(engineVersion, vifLogger, data, startOffset + vifDataOffset + vifStartOffset,
+                (vifLen * 0x10) - vifStartOffset, texWidth, texHeight);
 
             int posx = reader.ReadInt16();
             int posy = reader.ReadInt16();
@@ -64,13 +67,15 @@ namespace WorldExplorer.DataLoaders
             {
                 log.LogLine("Tex2=" + tex2);
             }
+
             log.LogLine("vifdata: " + vifDataOffset + ", " + vifLen);
-            log.LogLine("Bounding Box: " + element.boundingBox.ToString());
+            log.LogLine("Bounding Box: " + element.boundingBox);
             log.LogLine("Texture Num: " + textureNum);
             if (element.Texture != null)
             {
                 log.LogLine("Found in texture chunk: " + x + ", " + y);
             }
+
             log.LogLine("Position : " + posx + ", " + posy + ", " + posz);
 
             if ((flags & 0x01) == 0)
@@ -81,11 +86,12 @@ namespace WorldExplorer.DataLoaders
                 log.LogLine("Flags   : " + HexUtil.formatHexUShort(flags & 0xFFFF));
                 log.LogLine("cos alpha : " + element.cosAlpha);
                 log.LogLine("sin alpha : " + element.sinAlpha);
-                log.LogLine("alpha(cos, sin): " + Math.Acos(element.cosAlpha) * 180.0 / Math.PI + ", " + Math.Asin(element.sinAlpha) * 180.0 / Math.PI);
+                log.LogLine("alpha(cos, sin): " + (Math.Acos(element.cosAlpha) * 180.0 / Math.PI) + ", " +
+                            (Math.Asin(element.sinAlpha) * 180.0 / Math.PI));
             }
             else
             {
-                reader.ReadInt16();     // not necessary but makes the code more obvious.
+                reader.ReadInt16(); // not necessary but makes the code more obvious.
                 element.xyzRotFlags = (flags >> 16) & 7;
                 element.usesRotFlags = true;
                 log.LogLine("Flags   : " + HexUtil.formatHex(flags));

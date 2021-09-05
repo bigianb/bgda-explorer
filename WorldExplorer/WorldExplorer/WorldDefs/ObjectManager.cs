@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Media.Media3D;
 using WorldExplorer.DataLoaders;
 
@@ -6,16 +7,15 @@ namespace WorldExplorer.WorldDefs
 {
     public class ObjectManager
     {
-        readonly LevelViewModel _levelViewModel;
-        readonly List<VisualObjectData> _visualObjects = new List<VisualObjectData>();
-        readonly List<ObjectData> _objects = new List<ObjectData>();
-        readonly ObjectDefinitions _defs;
+        private readonly ObjectDefinitions _defs;
+        private readonly List<ObjectData> _objects = new();
+        private readonly List<VisualObjectData> _visualObjects = new();
 
-        public LevelViewModel LevelViewModel => _levelViewModel;
+        public LevelViewModel LevelViewModel { get; }
 
         public ObjectManager(LevelViewModel levelViewModel)
         {
-            _levelViewModel = levelViewModel;
+            LevelViewModel = levelViewModel;
             _defs = new ObjectDefinitions(this);
         }
 
@@ -48,26 +48,22 @@ namespace WorldExplorer.WorldDefs
             }
         }
 
-        public VisualObjectData ParseObject(ObjectData obj)
+        public VisualObjectData? ParseObject(ObjectData obj)
         {
-            var vod = new VisualObjectData
+            var vod = _defs.Parse(new()
             {
                 ObjectData = obj,
                 Offset = new Vector3D(obj.Floats[0] / 4, obj.Floats[1] / 4, obj.Floats[2] / 4),
                 zRotation = 22.5 * (obj.I6 >> 12)
-            };
-
-            vod = _defs.Parse(vod);
-
+            });
             if (vod != null)
             {
                 _visualObjects.Add(vod);
             }
-
             return vod;
         }
 
-        public VisualObjectData HitTest(ModelVisual3D hitResult)
+        public VisualObjectData? HitTest(ModelVisual3D hitResult)
         {
             foreach (var vod in _visualObjects)
             {
@@ -76,10 +72,11 @@ namespace WorldExplorer.WorldDefs
                     return vod;
                 }
             }
+
             return null;
         }
 
-        private bool HitTestModel(ModelVisual3D obj, ModelVisual3D hitResult)
+        private static bool HitTestModel(ModelVisual3D obj, ModelVisual3D hitResult)
         {
             if (obj == hitResult)
             {
@@ -93,9 +90,9 @@ namespace WorldExplorer.WorldDefs
                     return true;
                 }
 
-                if (child is ModelVisual3D)
+                if (child is ModelVisual3D visual3D)
                 {
-                    if (HitTestModel((ModelVisual3D)child, hitResult))
+                    if (HitTestModel(visual3D, hitResult))
                     {
                         return true;
                     }
@@ -105,7 +102,7 @@ namespace WorldExplorer.WorldDefs
             return false;
         }
 
-        public ObjectData GetObjectByName(string name)
+        public ObjectData? GetObjectByName(string name)
         {
             foreach (var obj in _objects)
             {
@@ -114,10 +111,11 @@ namespace WorldExplorer.WorldDefs
                     return obj;
                 }
             }
+
             return null;
         }
 
-        public bool TryGetObjectByName(string name, out ObjectData result)
+        public bool TryGetObjectByName(string name, [NotNullWhen(true)] out ObjectData? result)
         {
             result = GetObjectByName(name);
             return result != null;

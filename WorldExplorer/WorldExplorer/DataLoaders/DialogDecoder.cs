@@ -6,31 +6,33 @@ namespace WorldExplorer.DataLoaders
     {
         public static List<DialogData> Decode(byte[] data, int startOffset, int length)
         {
-            var reader = new DataReader(data, startOffset, length);
+            DataReader reader = new(data, startOffset, length);
             var numEntries = length / 0x44;
-            var objects = new List<DialogData>(numEntries);
+            List<DialogData> objects = new(numEntries);
 
             for (var entry = 0; entry < numEntries; ++entry)
             {
-                var dataObj = new DialogData();
                 var entryOffset = entry * 0x44;
-                dataObj.Name = GetString(reader, entryOffset);
+                var name = GetString(reader, entryOffset);
                 reader.SetOffset(entryOffset + 0x40);
-                dataObj.StartOffsetInVAFile = reader.ReadInt32();
+                var startOffsetInVAFile = reader.ReadInt32();
+                int dialogLength;
 
                 if (entry != numEntries - 1)
                 {
                     reader.SetOffset(entryOffset + 0x84);
                     var nextStart = reader.ReadInt32();
-                    dataObj.Length = nextStart - dataObj.StartOffsetInVAFile;
+                    dialogLength = nextStart - startOffsetInVAFile;
                 }
                 else
                 {
                     // Means to the end of the VA file
-                    dataObj.Length = 0;
+                    dialogLength = 0;
                 }
-                objects.Add(dataObj);
+
+                objects.Add(new DialogData(name, startOffsetInVAFile, dialogLength));
             }
+
             return objects;
         }
 
@@ -49,5 +51,12 @@ namespace WorldExplorer.DataLoaders
         public string Name;
         public int StartOffsetInVAFile;
         public int Length;
+
+        public DialogData(string name, int startOffsetInVaFile, int length)
+        {
+            Length = length;
+            Name = name;
+            StartOffsetInVAFile = startOffsetInVaFile;
+        }
     }
 }

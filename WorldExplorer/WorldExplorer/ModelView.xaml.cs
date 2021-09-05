@@ -15,7 +15,6 @@
 */
 
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace WorldExplorer
@@ -23,16 +22,15 @@ namespace WorldExplorer
     /// <summary>
     /// Interaction logic for ModelView.xaml
     /// </summary>
-    public partial class ModelView : UserControl
+    public partial class ModelView
     {
         private ModelViewModel ViewModel => (ModelViewModel)DataContext;
+
         public ModelView()
         {
             InitializeComponent();
 
             viewport.KeyDown += Viewport_KeyDown;
-
-            DataContextChanged += ModelView_DataContextChanged;
         }
 
         private void Viewport_KeyDown(object sender, KeyEventArgs e)
@@ -44,26 +42,18 @@ namespace WorldExplorer
                     {
                         ViewModel.ShowExportForPosedModel();
                     }
+
                     break;
-            }
-        }
-
-        void ModelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var model = DataContext as ModelViewModel;
-
-            if (model == null)
-            {
-                return;
             }
         }
 
         private void normalsBox_IsCheckedChanged(object sender, RoutedEventArgs e)
         {
-            var model = DataContext as ModelViewModel;
-
-            // Force Update
-            model.VifModel = model.VifModel;
+            if (DataContext is ModelViewModel vm)
+            {
+                // Force Update
+                vm.VifModel = vm.VifModel;
+            }
         }
     }
 }

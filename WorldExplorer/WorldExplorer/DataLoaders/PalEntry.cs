@@ -20,12 +20,11 @@ namespace WorldExplorer.DataLoaders
 {
     public class PalEntry
     {
-        public byte r;
-        public byte g;
-        public byte b;
+        private const int TransparentThreshold = 0x80;
         public byte a;
-
-        const int TransparentThreshold = 0x80;
+        public byte b;
+        public byte g;
+        public byte r;
 
         public int argb()
         {
@@ -36,8 +35,7 @@ namespace WorldExplorer.DataLoaders
 
             var convertedAlpha = (byte)(256 - (byte)(a * 2));
 
-            var java_a = a == 0 ? 255 :
-                (byte)(256 - (byte)(a * 2));
+            var java_a = a == 0 ? 255 : (byte)(256 - (byte)(a * 2));
 
             //if (convertedAlpha < TransparentThreshold)
             {
@@ -48,9 +46,9 @@ namespace WorldExplorer.DataLoaders
             //java_a = (byte)0xFF;
 
             var argb = (convertedAlpha << 24) |
-                    ((r << 16) & 0xFF0000) |
-                    ((g << 8) & 0xFF00) |
-                    (b & 0xFF);
+                       ((r << 16) & 0xFF0000) |
+                       ((g << 8) & 0xFF00) |
+                       (b & 0xFF);
             return argb;
         }
 
@@ -60,35 +58,37 @@ namespace WorldExplorer.DataLoaders
             var palette = new PalEntry[numEntries];
             for (var i = 0; i < numEntries; ++i)
             {
-                var pe = new PalEntry
+                PalEntry pe = new()
                 {
                     r = fileData[i * 4],
-                    g = fileData[i * 4 + 1],
-                    b = fileData[i * 4 + 2],
-                    a = fileData[i * 4 + 3]
+                    g = fileData[(i * 4) + 1],
+                    b = fileData[(i * 4) + 2],
+                    a = fileData[(i * 4) + 3]
                 };
 
                 palette[i] = pe;
             }
+
             return palette;
         }
-        
+
         public static PalEntry[] readPalette(byte[] fileData, int startOffset, int palw, int palh)
         {
             var numEntries = palw * palh;
             var palette = new PalEntry[numEntries];
             for (var i = 0; i < numEntries; ++i)
             {
-                var pe = new PalEntry
+                PalEntry pe = new()
                 {
-                    r = fileData[startOffset + i * 4],
-                    g = fileData[startOffset + i * 4 + 1],
-                    b = fileData[startOffset + i * 4 + 2],
-                    a = fileData[startOffset + i * 4 + 3]
+                    r = fileData[startOffset + (i * 4)],
+                    g = fileData[startOffset + (i * 4) + 1],
+                    b = fileData[startOffset + (i * 4) + 2],
+                    a = fileData[startOffset + (i * 4) + 3]
                 };
 
                 palette[i] = pe;
             }
+
             return palette;
         }
 
@@ -106,12 +106,11 @@ namespace WorldExplorer.DataLoaders
                     copy(unswizzled, i + 8, palette, j + 16, 8);
                     copy(unswizzled, i + 24, palette, j + 24, 8);
                 }
+
                 return unswizzled;
             }
-            else
-            {
-                return palette;
-            }
+
+            return palette;
         }
 
         private static void copy(PalEntry[] unswizzled, int i, PalEntry[] swizzled, int j, int num)

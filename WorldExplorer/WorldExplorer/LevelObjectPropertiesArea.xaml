@@ -3,26 +3,26 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:WorldExplorer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignWidth="280"
     d:DesignHeight="500"
     mc:Ignorable="d">
     <UserControl.Resources>
         <Style x:Key="FormStack" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Vertical"/>
-            <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Grid.IsSharedSizeScope" Value="True" />
         </Style>
         <Style x:Key="FormRow" TargetType="Grid">
-            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Margin" Value="0,4" />
         </Style>
         <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,0,8,0"/>
-            <Setter Property="Grid.Column" Value="0"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Grid.Column" Value="0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
     </UserControl.Resources>
-    <StackPanel Margin="8,8,8,8" CanVerticallyScroll="True" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="8,8,8,8" CanVerticallyScroll="True" ScrollViewer.CanContentScroll="True"
+                ScrollViewer.VerticalScrollBarVisibility="Auto">
         <TextBlock
             x:Name="editor_NameText"
             FontWeight="Bold"
@@ -31,106 +31,106 @@
         <StackPanel x:Name="editor_ElementGrid" Style="{DynamicResource FormStack}" d:IsHidden="True">
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="UsesRotFlags" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="UsesRotFlags" />
                 <CheckBox
-                        x:Name="editor_UseRotFlagsBox"
-                        Grid.Column="1"
-                        VerticalAlignment="Top"
-                        Content="Value" />
+                    x:Name="editor_UseRotFlagsBox"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Content="Value" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="XYZRotFlags" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="XYZRotFlags" />
                 <TextBox
-                        x:Name="editor_XYZRotFlagsBox"
-                        Grid.Column="1"
-                        VerticalAlignment="Top"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_XYZRotFlagsBox"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    TextWrapping="Wrap" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="Cos" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="Cos" />
                 <TextBox
-                        x:Name="editor_CosBox"
-                        Grid.Column="1"
-                        VerticalAlignment="Top"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_CosBox"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    TextWrapping="Wrap" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="Sin" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="Sin" />
                 <TextBox
-                        x:Name="editor_SinBox"
-                        Grid.Column="1"
-                        VerticalAlignment="Top"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_SinBox"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    TextWrapping="Wrap" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="X" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="X" />
                 <TextBox
-                        x:Name="editor_PosXBox"
-                        Grid.Column="1"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_PosXBox"
+                    Grid.Column="1"
+                    TextWrapping="Wrap" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="Y" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="Y" />
                 <TextBox
-                        x:Name="editor_PosYBox"
-                        Grid.Column="1"
-                        VerticalAlignment="Top"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_PosYBox"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    TextWrapping="Wrap" />
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                        Style="{DynamicResource FieldLabel}"
-                        Text="Z" />
+                    Style="{DynamicResource FieldLabel}"
+                    Text="Z" />
                 <TextBox
-                        x:Name="editor_PosZBox"
-                        Grid.Column="1"
-                        TextWrapping="Wrap" />
+                    x:Name="editor_PosZBox"
+                    Grid.Column="1"
+                    TextWrapping="Wrap" />
             </Grid>
         </StackPanel>
         <StackPanel x:Name="editor_ObjectGrid" Style="{DynamicResource FormStack}">
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"
@@ -142,8 +142,8 @@
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"
@@ -155,8 +155,8 @@
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"
@@ -168,12 +168,12 @@
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"
-                    Text="Float 2"/>
+                    Text="Float 2" />
                 <TextBox
                     x:Name="editor_Obj_Float2Box"
                     Grid.Column="1"
@@ -181,8 +181,8 @@
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"
@@ -194,8 +194,8 @@
             </Grid>
             <Grid Style="{DynamicResource FormRow}">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Style="{DynamicResource FieldLabel}"

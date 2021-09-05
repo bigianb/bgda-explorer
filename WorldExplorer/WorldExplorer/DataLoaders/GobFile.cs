@@ -22,19 +22,23 @@ namespace WorldExplorer.DataLoaders
 {
     public class GobFile
     {
+        private readonly EngineVersion _engineVersion;
+        private string _filepath;
+
+        public Dictionary<string, LmpFile> Directory = new();
+
+        public byte[] FileData;
+
+        public string Filename;
+
         public GobFile(EngineVersion engineVersion, string filepath)
         {
             _engineVersion = engineVersion;
             _filepath = filepath;
             FileData = File.ReadAllBytes(filepath);
             ReadDirectory();
-            Filename = System.IO.Path.GetFileName(filepath);
+            Filename = Path.GetFileName(filepath);
         }
-
-        private readonly EngineVersion _engineVersion;
-        private string _filepath;
-
-        public string Filename;
 
         public void ReadDirectory()
         {
@@ -49,9 +53,5 @@ namespace WorldExplorer.DataLoaders
                 s = DataUtil.GetString(FileData, index);
             }
         }
-
-        public byte[] FileData;
-
-        public Dictionary<string, LmpFile> Directory = new Dictionary<string, LmpFile>();
     }
 }

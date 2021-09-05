@@ -1,5 +1,4 @@
-﻿
-using System.Text;
+﻿using System.Text;
 
 namespace WorldExplorer.Logging
 {
@@ -10,7 +9,7 @@ namespace WorldExplorer.Logging
 
     public class StringLogger : ILogger
     {
-        private StringBuilder _sb = new StringBuilder();
+        private readonly StringBuilder _sb = new();
 
         public void LogLine(string line)
         {

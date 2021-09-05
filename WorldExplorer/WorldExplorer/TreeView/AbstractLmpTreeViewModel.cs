@@ -20,14 +20,6 @@ namespace WorldExplorer
 {
     public abstract class AbstractLmpTreeViewModel : TreeViewItemViewModel
     {
-        public AbstractLmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
-            : base(parent, true)
-        {
-            _lmpFile = lmpFile;
-            _name = entryName;
-            _world = world;
-        }
-
         protected LmpFile _lmpFile;
         protected string _name;
         protected World _world;
@@ -35,5 +27,13 @@ namespace WorldExplorer
         public LmpFile LmpFileProperty => _lmpFile;
 
         public string Text => _name;
+
+        public AbstractLmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+            : base(parent, true)
+        {
+            _lmpFile = lmpFile;
+            _name = entryName;
+            _world = world;
+        }
     }
 }

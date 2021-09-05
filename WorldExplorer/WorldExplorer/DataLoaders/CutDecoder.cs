@@ -5,7 +5,6 @@ namespace WorldExplorer.DataLoaders
 {
     public static class CutDecoder
     {
-
         public static CutScene Decode(byte[] data, int startOffset, int length)
         {
             if (length == 0)
@@ -13,9 +12,9 @@ namespace WorldExplorer.DataLoaders
                 return new CutScene();
             }
 
-            var reader = new DataReader(data, startOffset, length);
+            DataReader reader = new(data, startOffset, length);
 
-            var scene = new CutScene
+            CutScene scene = new()
             {
                 flags = reader.ReadInt32(),
                 keyframeOffset = reader.ReadInt32(),
@@ -34,9 +33,9 @@ namespace WorldExplorer.DataLoaders
 
             for (var c = 0; c < scene.numCharacters; ++c)
             {
-                var character = new CutScene.Character();
+                CutScene.Character character = new();
 
-                var charOffset = scene.characterBlockOffset + c * 0x2C;
+                var charOffset = scene.characterBlockOffset + (c * 0x2C);
                 reader.SetOffset(charOffset);
                 character.extra0 = reader.ReadInt32();
                 character.extra4 = reader.ReadInt32();
@@ -46,13 +45,13 @@ namespace WorldExplorer.DataLoaders
                 character.y = reader.ReadFloat();
                 character.z = reader.ReadFloat();
                 character.s28 = reader.ReadInt16();
-                scene.cast.Add(character);
+                scene.Cast.Add(character);
             }
 
             for (var kf = 0; kf < scene.numKeyframes; ++kf)
             {
-                var keyframe = new CutScene.Keyframe();
-                var kfOffset = scene.keyframeOffset + kf * 0x14;
+                CutScene.Keyframe keyframe = new();
+                var kfOffset = scene.keyframeOffset + (kf * 0x14);
                 reader.SetOffset(kfOffset);
                 keyframe.time = reader.ReadFloat();
                 keyframe.actor = reader.ReadInt16();
@@ -77,64 +76,36 @@ namespace WorldExplorer.DataLoaders
 
         public class CutScene
         {
-            public string parseWarnings = "";
+            public readonly List<Character> Cast = new();
 
             public int flags, keyframeOffset, numKeyframes, characterBlockOffset, numCharacters;
+
+            public List<Keyframe> keyframes = new();
+            public string parseWarnings = "";
             public int scale;
 
             public string subtitles, string48, string74;
 
-            public class Character
-            {
-                public string name;
-                public float x, y, z;
-                public int extra0, extra4;
-                public short s28;
-
-                public string Disassemble()
-                {
-                    var rot = (s28 >> 12) * 22.5;
-
-                    var sb = new StringBuilder();
-                    sb.AppendFormat("name: {0}, pos: {1}, {2}, {3}, rot: {4}, extra0: 0x{5:x4}, extra4: 0x{6:x4}, s28: 0x{7:x4}",
-                        name, x, y, z, rot, extra0, extra4, s28);
-                    return sb.ToString();
-                }
-            }
-
-            public List<Character> cast = new List<Character>();
-
-            public class Keyframe
-            {
-                public float time;
-                public int actor, action;
-                public int i8, ic, i10;
-                public float f8, fc, f10;
-            }
-
-            public List<Keyframe> keyframes = new List<Keyframe>();
-
-            public string getActorName(int actorNum)
+            private string GetActorName(int actorNum)
             {
                 if (actorNum == -100)
                 {
                     return "camera";
                 }
-                else if (actorNum == -99)
+
+                if (actorNum == -99)
                 {
                     return "sound";
                 }
-                else
-                {
-                    return cast[actorNum].name;
-                }
+
+                return Cast[actorNum].name;
             }
 
-            public string DisassembleKeyframe(Keyframe keyframe)
+            private string DisassembleKeyframe(Keyframe keyframe)
             {
-                var actorName = getActorName(keyframe.actor);
+                var actorName = GetActorName(keyframe.actor);
 
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
                 sb.AppendFormat("time: {0}, {1} ", keyframe.time, actorName);
                 var understood = false;
                 switch (keyframe.actor)
@@ -152,11 +123,11 @@ namespace WorldExplorer.DataLoaders
                                 understood = true;
                                 break;
                             case 2:
-                                {
-                                    var adjustedAngle = (keyframe.i8 + 0x3fd3) & 0xFFFF;    // +89 degrees
-                                    sb.AppendFormat(" rotate x, {0} deg", adjustedAngle * 360.0 / 65535.0);
-                                    understood = true;
-                                }
+                            {
+                                var adjustedAngle = (keyframe.i8 + 0x3fd3) & 0xFFFF; // +89 degrees
+                                sb.AppendFormat(" rotate x, {0} deg", adjustedAngle * 360.0 / 65535.0);
+                                understood = true;
+                            }
                                 break;
                             case 5:
                                 sb.AppendFormat(" delta: {0}, 0x{1:x}, {2}", keyframe.f8, keyframe.ic, keyframe.f10);
@@ -167,6 +138,7 @@ namespace WorldExplorer.DataLoaders
                                 understood = true;
                                 break;
                         }
+
                         break;
                     case -99:
                         switch (keyframe.action)
@@ -176,36 +148,43 @@ namespace WorldExplorer.DataLoaders
                                 understood = true;
                                 break;
                         }
+
                         break;
                     default:
                         switch (keyframe.action)
                         {
                             case 0:
-                                sb.AppendFormat(" set target pos: {0}, {1}, {2}", keyframe.i8, keyframe.ic, keyframe.i10);
+                                sb.AppendFormat(" set target pos: {0}, {1}, {2}", keyframe.i8, keyframe.ic,
+                                    keyframe.i10);
                                 understood = true;
                                 break;
                             case 2:
-                                sb.AppendFormat(" play anim: {0:x4}, {1:x4}, {2:x4}", keyframe.i8, keyframe.ic, keyframe.i10);
+                                sb.AppendFormat(" play anim: {0:x4}, {1:x4}, {2:x4}", keyframe.i8, keyframe.ic,
+                                    keyframe.i10);
                                 understood = true;
                                 break;
                         }
+
                         break;
                 }
+
                 if (!understood)
                 {
                     sb.AppendFormat("action: {0}, data: {1:x4} {2:x4} {3:x4}",
                         keyframe.action, keyframe.i8, keyframe.ic, keyframe.i10);
                 }
+
                 return sb.ToString();
             }
 
             public string Disassemble()
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
                 if (!string.IsNullOrEmpty(parseWarnings))
                 {
                     sb.Append("Warnings:\n").Append(parseWarnings).Append("\n");
                 }
+
                 sb.AppendFormat("Flags:                0x{0:x4}\n", flags);
                 sb.AppendFormat("keyframeOffset:       0x{0:x4}\n", keyframeOffset);
                 sb.AppendFormat("numKeyframes:         0x{0}\n", numKeyframes);
@@ -217,7 +196,7 @@ namespace WorldExplorer.DataLoaders
                 sb.AppendFormat("string74:  {0}\n", string74);
 
                 sb.Append("\nCast\n~~~~\n");
-                foreach (var c in cast)
+                foreach (var c in Cast)
                 {
                     sb.Append(c.Disassemble()).Append('\n');
                 }
@@ -230,7 +209,33 @@ namespace WorldExplorer.DataLoaders
 
                 return sb.ToString();
             }
+
+            public class Character
+            {
+                public int extra0, extra4;
+                public string name;
+                public short s28;
+                public float x, y, z;
+
+                public string Disassemble()
+                {
+                    var rot = (s28 >> 12) * 22.5;
+
+                    StringBuilder sb = new();
+                    sb.AppendFormat(
+                        "name: {0}, pos: {1}, {2}, {3}, rot: {4}, extra0: 0x{5:x4}, extra4: 0x{6:x4}, s28: 0x{7:x4}",
+                        name, x, y, z, rot, extra0, extra4, s28);
+                    return sb.ToString();
+                }
+            }
+
+            public class Keyframe
+            {
+                public int actor, action;
+                public float f8, fc, f10;
+                public int i8, ic, i10;
+                public float time;
+            }
         }
     }
 }
-

@@ -20,80 +20,72 @@ namespace WorldExplorer.DataLoaders
 {
     public class YakFile
     {
-        public YakFile(EngineVersion engineVersion, string name, byte[] data)
-        {
-            _engineVersion = engineVersion;
-            Name = name;
-            FileData = data;
-        }
+        public EngineVersion EngineVersion { get; }
 
-        private readonly EngineVersion _engineVersion;
-
-        /// <summary>
-        /// The .yak file name.
-        /// </summary>
-        public string Name;
+        public readonly List<YakEntry> Entries = new();
 
         /// <summary>
         /// The raw data of the .yak file.
         /// </summary>
-        public byte[] FileData;
+        public readonly byte[] FileData;
 
-        public class Child
+        /// <summary>
+        /// The .yak file name.
+        /// </summary>
+        public readonly string Name;
+
+        public YakFile(EngineVersion engineVersion, string name, byte[] data)
         {
-            public int TextureOffset;
-            public int VifOffset;
-            public int VifLength;
+            EngineVersion = engineVersion;
+            Name = name;
+            FileData = data;
         }
-
-        public class Entry
-        {
-            public Child[] children = new Child[4];
-        }
-
-        public List<Entry> Entries = new List<Entry>();
 
         public void ReadEntries()
         {
             Entries.Clear();
-            var reader = new DataReader(FileData);
-            Entry entry;
-            while ((entry = readEntry(reader)) != null)
+            DataReader reader = new(FileData);
+            YakEntry? entry;
+            while ((entry = ReadEntry(reader)) != null)
             {
                 Entries.Add(entry);
             }
         }
 
-        Entry readEntry(DataReader reader)
+        private static YakEntry? ReadEntry(DataReader reader)
         {
-            var child1 = readChild(reader);
-            if (child1 == null)
-            {
-                return null;
-            }
-            var entry = new Entry();
-            entry.children[0] = child1;
-            entry.children[1] = readChild(reader);
-            entry.children[2] = readChild(reader);
-            entry.children[3] = readChild(reader);
-            return entry;
+            var child1 = ReadChild(reader);
+            return child1 == null 
+                ? null 
+                : new YakEntry(new [] {child1, ReadChild(reader), ReadChild(reader), ReadChild(reader)});
         }
 
-        Child readChild(DataReader reader)
+        private static YakEntryChild? ReadChild(DataReader reader)
         {
             var t = reader.ReadInt32();
             if (t == 0)
             {
                 return null;
             }
-            var child = new Child
-            {
-                TextureOffset = t,
-                VifOffset = reader.ReadInt32(),
-                VifLength = reader.ReadInt32()
-            };
-            return child;
+
+            return new() {TextureOffset = t, VifOffset = reader.ReadInt32(), VifLength = reader.ReadInt32()};
         }
 
+        public class YakEntryChild
+        {
+            public int TextureOffset;
+            public int VifLength;
+            public int VifOffset;
+        }
+
+        public class YakEntry
+        {
+            public readonly YakEntryChild?[] Children;
+
+            public YakEntry(YakEntryChild?[] children)
+            {
+                Children = children;
+            }
+        }
     }
 }

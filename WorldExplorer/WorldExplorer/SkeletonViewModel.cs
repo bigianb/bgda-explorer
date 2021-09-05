@@ -22,10 +22,20 @@ namespace WorldExplorer
 {
     public class SkeletonViewModel : BaseViewModel
     {
+        private AnimData? _animData;
 
-        private AnimData _animData;
+        private Camera _camera = new OrthographicCamera
+        {
+            Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1)
+        };
 
-        public AnimData AnimData
+        private Transform3D _cameraTransform = Transform3D.Identity;
+
+        private int _currentFrame;
+
+        private Model3D? _model;
+
+        public AnimData? AnimData
         {
             get => _animData;
             set
@@ -38,25 +48,11 @@ namespace WorldExplorer
             }
         }
 
-        public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
-        {
-
-        }
-
-        private void UpdateModel()
-        {
-            Model = SkeletonProcessor.GetSkeletonModel(_animData, CurrentFrame);
-        }
-
         public int MaximumFrame
         {
             get => _animData == null ? 0 : _animData.NumFrames - 1;
-            set
-            {
-            }
+            // set { }
         }
-
-        private int _currentFrame = 0;
 
         public int CurrentFrame
         {
@@ -69,9 +65,7 @@ namespace WorldExplorer
             }
         }
 
-        private Model3D _model;
-
-        public Model3D Model
+        public Model3D? Model
         {
             get => _model;
             set
@@ -81,8 +75,6 @@ namespace WorldExplorer
                 OnPropertyChanged("Model");
             }
         }
-
-        private Transform3D _cameraTransform;
 
         public Transform3D CameraTransform
         {
@@ -95,8 +87,6 @@ namespace WorldExplorer
             }
         }
 
-        private Camera _camera = new OrthographicCamera { Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1) };
-
         public Camera Camera
         {
             get => _camera;
@@ -107,25 +97,37 @@ namespace WorldExplorer
             }
         }
 
-        private void UpdateCamera(Model3D model)
+        public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
+        {
+        }
+
+        private void UpdateModel()
+        {
+            Model = SkeletonProcessor.GetSkeletonModel(_animData, CurrentFrame);
+        }
+
+        private void UpdateCamera(Model3D? model)
         {
             if (model == null)
             {
                 return;
             }
+
             var oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Bounds;
             //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
-            var centroid = new Point3D(0, 0, 0);
-            var radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
+            Point3D centroid = new(0, 0, 0);
+            var radius =
+                Math.Sqrt((bounds.SizeX * bounds.SizeX) + (bounds.SizeY * bounds.SizeY) +
+                          (bounds.SizeZ * bounds.SizeZ)) /
+                2.0;
             var cameraDistance = radius * 2.0;
 
-            var camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
+            Point3D camPos = new(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, -1);
-
         }
     }
 }

@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Collections.Generic;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -23,18 +24,18 @@ namespace WorldExplorer
     /// </summary>
     public class HdrDatTreeViewModel : TreeViewItemViewModel
     {
+        private readonly CacheFile _cacheFile;
+
+        private TreeViewItemViewModel _parent;
+
+        public string Text { get; }
+
         public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(parent, true)
         {
             _parent = parent;
             _cacheFile = cacheFile;
-            _name = cacheFile.Name;
+            Text = cacheFile.Name;
         }
-
-        private TreeViewItemViewModel _parent;
-        private CacheFile _cacheFile;
-        private string _name;
-
-        public string Text => _name;
 
         protected override void LoadChildren()
         {

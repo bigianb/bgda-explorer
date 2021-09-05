@@ -1,5 +1,4 @@
-﻿
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace WorldExplorer
 {
@@ -8,19 +7,16 @@ namespace WorldExplorer
         /// <summary>
         /// The MainWindowViewModel that contains a lot of the information about the application.
         /// </summary>
-        public MainWindowViewModel MainViewModel
-        {
-            get; set;
-        }
+        public MainWindowViewModel MainViewModel { get; set; }
 
-        public BaseViewModel(MainWindowViewModel mainViewModel)
+        protected BaseViewModel(MainWindowViewModel mainViewModel)
         {
             MainViewModel = mainViewModel;
         }
 
         #region INotifyPropertyChanged Members
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {

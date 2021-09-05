@@ -11,43 +11,26 @@ namespace WorldExplorer
     /// </summary>
     public partial class LevelObjectPropertiesArea : UserControl
     {
-        public WorldElementTreeViewModel SelectedElement
-        {
-            get { return (WorldElementTreeViewModel)GetValue(SelectedElementProperty); }
-            set { SetValue(SelectedElementProperty, value); }
-        }
-
         // Using a DependencyProperty as the backing store for SelectedElement.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedElementProperty =
-            DependencyProperty.Register("SelectedElement", typeof(WorldElementTreeViewModel), typeof(LevelObjectPropertiesArea), new PropertyMetadata(null, SelectedElementChanged));
-
-        public VisualObjectData SelectedObject
-        {
-            get { return (VisualObjectData)GetValue(SelectedObjectProperty); }
-            set { SetValue(SelectedObjectProperty, value); }
-        }
+            DependencyProperty.Register("SelectedElement", typeof(WorldElementTreeViewModel),
+                typeof(LevelObjectPropertiesArea), new PropertyMetadata(null, SelectedElementChanged));
 
         // Using a DependencyProperty as the backing store for SelectedObject.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SelectedObjectProperty =
-            DependencyProperty.Register("SelectedObject", typeof(VisualObjectData), typeof(LevelObjectPropertiesArea), new PropertyMetadata(null, SelectedObjectChanged));
+            DependencyProperty.Register("SelectedObject", typeof(VisualObjectData), typeof(LevelObjectPropertiesArea),
+                new PropertyMetadata(null, SelectedObjectChanged));
 
-        public event EventHandler ChangesApplied;
-
-        private static void SelectedElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public WorldElementTreeViewModel? SelectedElement
         {
-            if (!(d is LevelObjectPropertiesArea control))
-                return;
-
-            control.ElementSelected(e.NewValue as WorldElementTreeViewModel);
+            get => (WorldElementTreeViewModel?)GetValue(SelectedElementProperty);
+            set => SetValue(SelectedElementProperty, value);
         }
 
-        private static void SelectedObjectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public VisualObjectData? SelectedObject
         {
-
-            if (!(d is LevelObjectPropertiesArea control))
-                return;
-
-            control.ObjectSelected(e.NewValue as VisualObjectData);
+            get => (VisualObjectData?)GetValue(SelectedObjectProperty);
+            set => SetValue(SelectedObjectProperty, value);
         }
 
         public LevelObjectPropertiesArea()
@@ -56,7 +39,29 @@ namespace WorldExplorer
             ElementSelected(null);
         }
 
-        void ResetValues()
+        public event EventHandler? ChangesApplied;
+
+        private static void SelectedElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(d is LevelObjectPropertiesArea control))
+            {
+                return;
+            }
+
+            control.ElementSelected(e.NewValue as WorldElementTreeViewModel);
+        }
+
+        private static void SelectedObjectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(d is LevelObjectPropertiesArea control))
+            {
+                return;
+            }
+
+            control.ObjectSelected(e.NewValue as VisualObjectData);
+        }
+
+        private void ResetValues()
         {
             SelectedElement = null;
             SelectedObject = null;
@@ -149,7 +154,8 @@ namespace WorldExplorer
                 }
 
                 SelectedObject.ObjectData.Properties.Clear();
-                SelectedObject.ObjectData.Properties.AddRange(editor_Obj_PropertiesBox.Text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries));
+                SelectedObject.ObjectData.Properties.AddRange(
+                    editor_Obj_PropertiesBox.Text.Split(new[] {'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries));
 
                 levelViewModel.ObjectManager.RemoveObjectFromList(SelectedObject);
 
@@ -159,10 +165,11 @@ namespace WorldExplorer
 
                 levelViewModel.RebuildScene();
             }
+
             ChangesApplied?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ElementSelected(WorldElementTreeViewModel ele)
+        private void ElementSelected(WorldElementTreeViewModel? ele)
         {
             if (ele == null)
             {
@@ -186,7 +193,8 @@ namespace WorldExplorer
             editor_ElementGrid.Visibility = Visibility.Visible;
             editor_ObjectGrid.Visibility = Visibility.Collapsed;
         }
-        private void ObjectSelected(VisualObjectData obj)
+
+        private void ObjectSelected(VisualObjectData? obj)
         {
             if (obj == null)
             {
@@ -217,34 +225,40 @@ namespace WorldExplorer
             editor_ObjectGrid.Visibility = Visibility.Visible;
         }
 
-        bool GetDouble(string text, out double value)
+        private bool GetDouble(string text, out double value)
         {
             if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
             {
                 return true;
             }
+
             value = 0;
             return false;
         }
-        bool GetInt(string text, out int value)
+
+        private bool GetInt(string text, out int value)
         {
             if (int.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
             {
                 return true;
             }
+
             value = 0;
             return false;
         }
-        bool GetIntHex(string text, out int value)
+
+        private bool GetIntHex(string text, out int value)
         {
             if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
                 text = text.Substring(2);
             }
+
             if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
             {
                 return true;
             }
+
             value = 0;
             return false;
         }

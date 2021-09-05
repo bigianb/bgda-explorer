@@ -14,8 +14,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using HelixToolkit.Wpf;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -32,8 +34,9 @@ namespace WorldExplorer
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainWindowViewModel _viewModel;
-        FileTreeViewContextManager _fileTreeMenu;
+        private FileTreeViewContextManager _fileTreeMenu;
+
+        public MainWindowViewModel ViewModel { get; }
 
         public MainWindow()
         {
@@ -43,40 +46,40 @@ namespace WorldExplorer
             App.LoadSettings();
 
             _fileTreeMenu = new FileTreeViewContextManager(this, treeView);
-            _viewModel = new MainWindowViewModel(this, App.Settings.Get<string>("Files.DataPath", ""));
-            DataContext = _viewModel;
+            ViewModel = new MainWindowViewModel(this, App.Settings.Get("Files.DataPath", "") ?? "");
+            DataContext = ViewModel;
 
-            var binding = new CommandBinding(ApplicationCommands.Properties);
+            CommandBinding binding = new(ApplicationCommands.Properties);
             binding.Executed += Properties_Executed;
             binding.CanExecute += Properties_CanExecute;
             CommandBindings.Add(binding);
 
-            var lastLoadedFile = App.Settings.Get<string>("Files.LastLoadedFile", "");
+            var lastLoadedFile = App.Settings.Get("Files.LastLoadedFile", "");
             if (!string.IsNullOrEmpty(lastLoadedFile) && File.Exists(lastLoadedFile))
             {
-                _viewModel.LoadFile(lastLoadedFile);
+                ViewModel.LoadFile(lastLoadedFile);
             }
         }
-
-        public MainWindowViewModel ViewModel => _viewModel;
 
         public void ResetCamera()
         {
             switch (tabControl.SelectedIndex)
             {
                 case 1:
-                    modelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    modelView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1));
                     break;
                 case 2:
-                    skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 0);
+                    skeletonView.viewport.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0),
+                        new Vector3D(0, 0, 1));
                     break;
                 case 3:
                     // Attempt to get the whole world in view
-                    var bounds = _viewModel.TheLevelViewModel.WorldBounds;
+                    var bounds = ViewModel.TheLevelViewModel.WorldBounds;
                     levelView.viewport.ZoomExtents(bounds, 1000);
                     break;
             }
         }
+
         public void SetViewportText(int index, string title, string subTitle)
         {
             switch (index)
@@ -122,7 +125,7 @@ namespace WorldExplorer
 
         private void SetupViewports()
         {
-            var viewports = new[] { modelView.viewport, skeletonView.viewport, levelView.viewport };
+            HelixViewport3D[] viewports = {modelView.viewport, skeletonView.viewport, levelView.viewport};
 
             foreach (var viewport in viewports)
             {
@@ -132,22 +135,24 @@ namespace WorldExplorer
                 viewport.PanGesture = new MouseGesture(MouseAction.MiddleClick);
 
                 viewport.PreviewMouseDown += (sender, e) =>
+                {
+                    if (e.ChangedButton == MouseButton.Middle && e.ClickCount > 1)
                     {
-                        if (e.ChangedButton == MouseButton.Middle && e.ClickCount > 1)
-                        {
-                            var view = (HelixToolkit.Wpf.HelixViewport3D)sender;
-                            view.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 1000);
-                            e.Handled = true;
-                        }
-                    };
+                        var view = (HelixViewport3D)sender;
+                        view.SetView(new Point3D(0, -100, 0), new Vector3D(0, 100, 0), new Vector3D(0, 0, 1), 1000);
+                        e.Handled = true;
+                    }
+                };
             }
         }
 
         public void OpenFile(string file)
         {
-            _viewModel.LoadFile(file);
+            ViewModel.LoadFile(file);
 
-            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var recentFiles =
+                (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] {','},
+                    StringSplitOptions.RemoveEmptyEntries);
             var list = recentFiles.ToList();
 
             // Remove 1 from the end and anything else just in case
@@ -161,6 +166,7 @@ namespace WorldExplorer
             {
                 list.Remove(file);
             }
+
             list.Insert(0, file);
 
             App.Settings["Files.RecentFiles"] = string.Join(",", list);
@@ -177,31 +183,25 @@ namespace WorldExplorer
         {
             e.CanExecute = true;
         }
+
         private void Properties_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var window = new SettingsWindow
-            {
-                Owner = this,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
+            SettingsWindow window = new() {Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner};
             if (window.ShowDialog() == true)
-            {
                 // User pressed save, so we should re-init things.
-                _viewModel.SettingsChanged();
+            {
+                ViewModel.SettingsChanged();
             }
         }
 
         private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            _viewModel.SelectedNode = e.NewValue;
+            ViewModel.SelectedNode = e.NewValue;
         }
 
         private void MenuOpenFileClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
-            {
-                Multiselect = false
-            };
+            OpenFileDialog dialog = new() {Multiselect = false};
 
             var result = dialog.ShowDialog();
             if (result.GetValueOrDefault(false))
@@ -209,6 +209,7 @@ namespace WorldExplorer
                 OpenFile(dialog.FileName);
             }
         }
+
         private void MenuExitClick(object sender, RoutedEventArgs e)
         {
             Close();
@@ -216,24 +217,21 @@ namespace WorldExplorer
 
         private void Menu_Export_Texture_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel.SelectedNodeImage == null)
+            if (ViewModel.SelectedNodeImage == null)
             {
                 MessageBox.Show(this, "No texture currently loaded.", "Error", MessageBoxButton.OK);
                 return;
             }
 
-            var dialog = new SaveFileDialog
-            {
-                Filter = "PNG Image|*.png"
-            };
+            SaveFileDialog dialog = new() {Filter = "PNG Image|*.png"};
             var result = dialog.ShowDialog(this);
 
             if (result.GetValueOrDefault(false))
             {
-                using (var stream = new FileStream(dialog.FileName, FileMode.Create))
+                using (FileStream stream = new(dialog.FileName, FileMode.Create))
                 {
-                    var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(_viewModel.SelectedNodeImage));
+                    PngBitmapEncoder encoder = new();
+                    encoder.Frames.Add(BitmapFrame.Create(ViewModel.SelectedNodeImage));
                     encoder.Save(stream);
 
                     stream.Flush();
@@ -241,30 +239,35 @@ namespace WorldExplorer
                 }
             }
         }
+
         private void Menu_Export_Model_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel.TheModelViewModel.VifModel == null)
+            if (ViewModel.TheModelViewModel.VifModel == null)
             {
                 MessageBox.Show(this, "No model currently loaded.", "Error", MessageBoxButton.OK);
                 return;
             }
-            if (_viewModel.TheModelViewModel.Texture == null)
+
+            if (ViewModel.TheModelViewModel.Texture == null)
             {
                 MessageBox.Show(this, "Model does not have a texture.", "Error", MessageBoxButton.OK);
                 return;
             }
 
-            var dialog = new SaveFileDialog
+            SaveFileDialog dialog = new()
             {
                 Filter = "GLTF File|*.gltf|OBJ File|*.obj",
                 // Select gltf by default
                 FilterIndex = 1,
-                FileName = "some-model.gltf",
+                FileName = "some-model.gltf"
             };
-            if (dialog.ShowDialog() != true) return;
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
 
             var ext = Path.GetExtension(dialog.FileName).ToUpperInvariant();
-            IVifExporter exporter = ext switch
+            IVifExporter? exporter = ext switch
             {
                 ".OBJ" => new VifObjExporter(),
                 ".GLTF" => new VifGltfExporter(),
@@ -276,41 +279,40 @@ namespace WorldExplorer
                 return;
             }
 
-            exporter.SaveToFile(dialog.FileName, _viewModel.TheModelViewModel.VifModel, _viewModel.TheModelViewModel.Texture);
+            exporter.SaveToFile(dialog.FileName, ViewModel.TheModelViewModel.VifModel,
+                ViewModel.TheModelViewModel.Texture);
         }
 
         private void Menu_Export_PosedModel_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.TheModelViewModel.ShowExportForPosedModel();
+            ViewModel.TheModelViewModel.ShowExportForPosedModel();
         }
 
         private void MenuRecentFilesSubmenuOpened(object sender, RoutedEventArgs e)
         {
             MenuRecentFiles.Items.Clear();
 
-            var recentFiles = (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var recentFiles =
+                (App.Settings.Get("Files.RecentFiles", "") ?? "").Split(new[] {','},
+                    StringSplitOptions.RemoveEmptyEntries);
 
             if (recentFiles.Length > 0)
             {
                 foreach (var file in recentFiles)
                 {
-                    var menu = new MenuItem
+                    MenuItem menu = new() {Header = file, Tag = file};
+                    menu.Click += delegate(object o, RoutedEventArgs args)
                     {
-                        Header = file,
-                        Tag = file
+                        var menuItem = (MenuItem)o;
+                        OpenFile((string)menuItem.Tag);
                     };
-                    menu.Click += delegate (object o, RoutedEventArgs args)
-                        {
-                            var menuItem = (MenuItem)o;
-                            OpenFile((string)menuItem.Tag);
-                        };
 
                     MenuRecentFiles.Items.Add(menu);
                 }
             }
             else
             {
-                var menu = new MenuItem { Header = "No Recent Files", IsEnabled = false };
+                MenuItem menu = new() {Header = "No Recent Files", IsEnabled = false};
                 MenuRecentFiles.Items.Add(menu);
             }
         }

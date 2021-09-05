@@ -21,13 +21,11 @@ namespace WorldExplorer
     /// </summary>
     public class TextTreeViewModel : TreeViewItemViewModel
     {
+        public string Text { get; }
+
         public TextTreeViewModel(World world, TreeViewItemViewModel parent, string text) : base(parent, false)
         {
-            _text = text;
+            Text = text;
         }
-
-        private string _text;
-
-        public string Text => _text;
     }
 }

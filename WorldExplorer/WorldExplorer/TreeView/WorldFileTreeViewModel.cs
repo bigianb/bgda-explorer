@@ -15,6 +15,7 @@
 */
 
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -33,15 +34,16 @@ namespace WorldExplorer
 
         protected override void LoadChildren()
         {
-            if (_world.worldData == null)
+            if (_world.WorldData == null)
             {
                 // Force loading the tree item
                 IsSelected = true;
                 return; // Return to prevent adding elements twice
             }
-            if (_world.worldData != null)
+
+            if (_world.WorldData != null)
             {
-                foreach (var element in _world.worldData.worldElements)
+                foreach (var element in _world.WorldData.worldElements)
                 {
                     Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + element.ElementIndex));
                 }
