@@ -182,9 +182,9 @@ namespace WorldExplorer
         private void OnLmpEntrySelected(LmpEntryTreeViewModel lmpEntry)
         {
             var lmpFile = lmpEntry.LmpFileProperty;
-            var entry = lmpFile.Directory[lmpEntry.Text];
+            var entry = lmpFile.Directory[lmpEntry.Label];
 
-            var ext = (Path.GetExtension(lmpEntry.Text) ?? "").ToLower();
+            var ext = (Path.GetExtension(lmpEntry.Label) ?? "").ToLower();
 
             switch (ext)
             {
@@ -198,7 +198,7 @@ namespace WorldExplorer
                     break;
                 case ".vif":
                 {
-                    var texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex";
+                    var texFilename = Path.GetFileNameWithoutExtension(lmpEntry.Label) + ".tex";
                     var texEntry = lmpFile.Directory[texFilename];
                     SelectedNodeImage =
                         TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
@@ -222,7 +222,7 @@ namespace WorldExplorer
 
                     MainWindow.tabControl.SelectedIndex = 1; // Model View
                     MainWindow.ResetCamera();
-                    MainWindow.SetViewportText(1, lmpEntry.Text, "");
+                    MainWindow.SetViewportText(1, lmpEntry.Label, "");
                 }
                     break;
                 case ".anm":
@@ -262,7 +262,7 @@ namespace WorldExplorer
                     }
                 }
 
-                    MainWindow.SetViewportText(2, lmpEntry.Text, ""); // Set Skeleton View Text
+                    MainWindow.SetViewportText(2, lmpEntry.Label, ""); // Set Skeleton View Text
 
                     break;
                 case ".ob":
@@ -327,7 +327,7 @@ namespace WorldExplorer
         {
             var engineVersion = App.Settings.Get("Core.EngineVersion", EngineVersion.DarkAlliance);
             var lmpFile = worldFileModel.LmpFileProperty;
-            var entry = lmpFile.Directory[worldFileModel.Text];
+            var entry = lmpFile.Directory[worldFileModel.Label];
             WorldFileDecoder decoder =
                 engineVersion == EngineVersion.ReturnToArms || engineVersion == EngineVersion.JusticeLeagueHeroes
                     ? new WorldFileV2Decoder()
@@ -345,7 +345,7 @@ namespace WorldExplorer
 
             MainWindow.tabControl.SelectedIndex = 3; // Level View
             MainWindow.ResetCamera();
-            MainWindow.SetViewportText(3, worldFileModel.Text, ""); // Set Level View Text
+            MainWindow.SetViewportText(3, worldFileModel.Label, ""); // Set Level View Text
         }
 
         private void OnWorldElementSelected(WorldElementTreeViewModel worldElementModel)
@@ -380,7 +380,7 @@ namespace WorldExplorer
 
             MainWindow.tabControl.SelectedIndex = 1; // Model View
             MainWindow.ResetCamera();
-            MainWindow.SetViewportText(1, childEntry.Text + " of " + (childEntry.Parent as YakTreeViewItem)?.Text, "");
+            MainWindow.SetViewportText(1, childEntry.Label + " of " + (childEntry.Parent as YakTreeViewItem)?.Label, "");
         }
 
         private void OnHdrDatChildElementSelected(HdrDatChildTreeViewItem childEntry)
@@ -402,7 +402,7 @@ namespace WorldExplorer
 
             MainWindow.tabControl.SelectedIndex = 1; // Model View
             MainWindow.ResetCamera();
-            MainWindow.SetViewportText(1, childEntry.Text + " of " + (childEntry.Parent as HdrDatTreeViewItem)?.Text, "");
+            MainWindow.SetViewportText(1, childEntry.Label + " of " + (childEntry.Parent as HdrDatTreeViewItem)?.Label, "");
         }
 
         private List<AnimData> LoadFirstAnim(LmpFile lmpFile)

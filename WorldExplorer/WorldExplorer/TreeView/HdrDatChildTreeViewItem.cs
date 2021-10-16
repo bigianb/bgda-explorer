@@ -26,16 +26,13 @@ namespace WorldExplorer
 
         public CacheFile CacheFile { get; }
 
-        public string Text { get; }
-
         public HdrDatChildTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Child value,
             CacheFile.Entry entry, string name)
-            : base(parent, false)
+            : base(name, parent, false)
         {
             CacheFile = cacheFile;
             Value = value;
             ParentEntry = entry;
-            Text = name;
         }
     }
 }

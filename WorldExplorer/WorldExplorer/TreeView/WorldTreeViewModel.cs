@@ -22,10 +22,8 @@ namespace WorldExplorer.TreeView
     {
         private readonly World _world;
 
-        public string WorldName => _world.Name;
-
         public WorldTreeViewModel(World world)
-            : base(null, true)
+            : base(world.Name, null, true)
         {
             _world = world;
         }

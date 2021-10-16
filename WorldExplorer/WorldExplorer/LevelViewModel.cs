@@ -266,7 +266,7 @@ namespace WorldExplorer
         {
             var gobFile = WorldNode?.Parent?.Parent as GobTreeViewModel;
             var domeFile = gobFile?.Children.OfType<LmpTreeViewModel>()
-                .FirstOrDefault(e => e.Text.Equals("dome.lmp", StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(e => e.Label.Equals("dome.lmp", StringComparison.OrdinalIgnoreCase));
             if (domeFile == null)
             {
                 _domeLmp = null;

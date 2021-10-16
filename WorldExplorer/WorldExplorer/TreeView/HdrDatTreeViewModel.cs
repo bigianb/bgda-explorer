@@ -27,13 +27,10 @@ namespace WorldExplorer
 
         private TreeViewItemViewModel _parent;
 
-        public string Text { get; }
-
-        public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(parent, true)
+        public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(cacheFile.Name, parent, true)
         {
             _parent = parent;
             _cacheFile = cacheFile;
-            Text = cacheFile.Name;
         }
 
         protected override void LoadChildren()

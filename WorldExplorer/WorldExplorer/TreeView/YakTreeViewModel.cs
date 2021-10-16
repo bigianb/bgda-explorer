@@ -24,15 +24,10 @@ namespace WorldExplorer
     public class YakTreeViewModel : TreeViewItemViewModel
     {
         private readonly YakFile _yakFile;
-        private TreeViewItemViewModel _parent;
 
-        public string Text { get; }
-
-        public YakTreeViewModel(TreeViewItemViewModel parent, YakFile yakFile) : base(parent, true)
+        public YakTreeViewModel(TreeViewItemViewModel parent, YakFile yakFile) : base(yakFile.Name, parent, true)
         {
-            _parent = parent;
             _yakFile = yakFile;
-            Text = yakFile.Name;
         }
 
         protected override void LoadChildren()

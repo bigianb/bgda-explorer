@@ -174,7 +174,7 @@ namespace WorldExplorer.WorldDefs
             {
                 foreach (var child in gob.Children.OfType<LmpTreeViewModel>())
                 {
-                    if (string.Compare(child.Text, lmpName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                    if (string.Compare(child.Label, lmpName, StringComparison.InvariantCultureIgnoreCase) != 0)
                     {
                         continue;
                     }

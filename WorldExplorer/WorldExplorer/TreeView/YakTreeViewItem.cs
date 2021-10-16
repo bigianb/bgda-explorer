@@ -24,14 +24,11 @@ namespace WorldExplorer
 
         private readonly YakFile _yakFile;
 
-        public string Text { get; }
-
         public YakTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.YakEntry entry, string name)
-            : base(parent, true)
+            : base(name, parent, true)
         {
             _yakFile = yakFile;
             _entry = entry;
-            Text = name;
         }
 
         protected override void LoadChildren()

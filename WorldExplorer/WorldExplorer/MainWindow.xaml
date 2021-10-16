@@ -60,13 +60,13 @@
                     <HierarchicalDataTemplate DataType="{x:Type treeView:WorldTreeViewModel}"
                                               ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding WorldName}" />
+                            <TextBlock Text="{Binding Label}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}"
                                               ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Text}" />
+                            <TextBlock Text="{Binding Label}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>

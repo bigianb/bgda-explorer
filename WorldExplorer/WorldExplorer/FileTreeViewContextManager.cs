@@ -62,7 +62,7 @@ namespace WorldExplorer
                 // files in .lmp files
                 case LmpEntryTreeViewModel lmpEntryItem:
                 {
-                    if (Path.GetExtension(lmpEntryItem.Text).ToUpperInvariant() == ".VIF")
+                    if (Path.GetExtension(lmpEntryItem.Label).ToUpperInvariant() == ".VIF")
                     {
                         _saveParsedVifData.Visibility = Visibility.Visible;
                     }
@@ -126,7 +126,7 @@ namespace WorldExplorer
                 {
                     var lmpFile = lmpItem.LmpFileProperty;
                     
-                    PromptToSaveData(lmpItem.Text, (saveFilePath) =>
+                    PromptToSaveData(lmpItem.Label, (saveFilePath) =>
                     {
                         using FileStream stream = new(saveFilePath, FileMode.Create);
                         stream.Write(lmpFile.FileData, 0, lmpFile.FileData.Length);
@@ -135,10 +135,10 @@ namespace WorldExplorer
                     break;
                 }
                 case LmpEntryTreeViewModel lmpEntry:
-                    SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Text);
+                    SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Label);
                     break;
                 case WorldFileTreeViewModel tvm:
-                    SaveLmpEntryData(tvm.LmpFileProperty, tvm.Text);
+                    SaveLmpEntryData(tvm.LmpFileProperty, tvm.Label);
                     break;
                 case WorldElementTreeViewModel:
                     MessageBox.Show(
@@ -167,19 +167,19 @@ namespace WorldExplorer
                 case LmpEntryTreeViewModel lmpEntry:
                 {
                     var lmpFile = lmpEntry.LmpFileProperty;
-                    var entry = lmpFile.Directory[lmpEntry.Text];
+                    var entry = lmpFile.Directory[lmpEntry.Label];
 
-                    if (Path.GetExtension(lmpEntry.Text).ToLower() != ".vif")
+                    if (Path.GetExtension(lmpEntry.Label).ToLower() != ".vif")
                     {
                         MessageBox.Show("Not a .vif file!", "Error");
                         return;
                     }
                     
-                    var fileName = lmpEntry.Text + ".txt";
+                    var fileName = lmpEntry.Label + ".txt";
                     PromptToSaveVifData(fileName, () =>
                     {
                         var texEntry =
-                            lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex"];
+                            lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Label) + ".tex"];
                         var texData = lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length);
                         var tex = TexDecoder.Decode(texData);
                         var vifData = lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length);

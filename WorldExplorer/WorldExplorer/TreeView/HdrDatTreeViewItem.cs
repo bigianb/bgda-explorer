@@ -23,14 +23,11 @@ namespace WorldExplorer
         private readonly CacheFile _cacheFile;
         private readonly CacheFile.Entry _entry;
 
-        public string Text { get; }
-
         public HdrDatTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Entry entry, string name)
-            : base(parent, true)
+            : base(name, parent, true)
         {
             _cacheFile = cacheFile;
             _entry = entry;
-            Text = name;
         }
 
         protected override void LoadChildren()

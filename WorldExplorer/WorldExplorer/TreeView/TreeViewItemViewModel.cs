@@ -15,6 +15,7 @@ namespace WorldExplorer
 
         private static readonly TreeViewItemViewModel DummyChild = new();
 
+        private string _label;
         private bool _isExpanded;
         private bool _isSelected;
 
@@ -22,8 +23,9 @@ namespace WorldExplorer
 
         #region Constructors
 
-        protected TreeViewItemViewModel(TreeViewItemViewModel? parent, bool lazyLoadChildren)
+        protected TreeViewItemViewModel(string label, TreeViewItemViewModel? parent, bool lazyLoadChildren)
         {
+            _label = label;
             Parent = parent;
 
             Children = new ObservableCollection<TreeViewItemViewModel>();
@@ -37,6 +39,7 @@ namespace WorldExplorer
         // This is used to create the DummyChild instance.
         private TreeViewItemViewModel()
         {
+            _label = "Dummy Child";
             Children = new ObservableCollection<TreeViewItemViewModel>();
         }
 
@@ -104,6 +107,26 @@ namespace WorldExplorer
         }
 
         #endregion // IsExpanded
+        
+        #region Label
+
+        /// <summary>
+        /// Gets/sets the text shown next to this item in the tree view.
+        /// </summary>
+        public string Label
+        {
+            get => _label;
+            set
+            {
+                if (value != _label)
+                {
+                    _label = value;
+                    OnPropertyChanged("Label");
+                }
+            }
+        }
+
+        #endregion // Label
 
         #region IsSelected
 

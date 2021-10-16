@@ -23,15 +23,12 @@ namespace WorldExplorer
         public WorldData WorldData { get; }
         public WorldElement WorldElement { get; }
 
-        public string Label { get; }
-
         public WorldElementTreeViewModel(WorldElement worldElement, string label, TreeViewItemViewModel? parent,
             WorldData worldData)
-            : base(parent, true)
+            : base(label, parent, true)
         {
             WorldData = worldData;
             WorldElement = worldElement;
-            Label = label;
         }
         
         protected override void LoadChildren()

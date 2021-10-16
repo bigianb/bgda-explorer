@@ -23,10 +23,8 @@ namespace WorldExplorer
     {
         private readonly World _world;
 
-        public string Text => _world.WorldGob?.Name ?? "[ERROR: NO GOB FILE]";
-
         public GobTreeViewModel(World world, TreeViewItemViewModel parent)
-            : base(parent, true)
+            : base(world.WorldGob?.Name ?? "[ERROR: NO GOB FILE]", parent, true)
         {
             _world = world;
         }

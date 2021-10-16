@@ -26,16 +26,13 @@ namespace WorldExplorer
 
         public YakFile YakFile { get; }
 
-        public string Text { get; }
-
         public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.YakEntryChild? value,
             YakFile.YakEntry entry, string name)
-            : base(parent, false)
+            : base(name, parent, false)
         {
             YakFile = yakFile;
             Value = value;
             ParentEntry = entry;
-            Text = name;
         }
     }
 }
