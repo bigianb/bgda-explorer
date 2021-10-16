@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataLoaders.World;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer

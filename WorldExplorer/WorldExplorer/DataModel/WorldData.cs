@@ -15,39 +15,27 @@
 */
 
 using System.Collections.Generic;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 
 namespace WorldExplorer.DataModel
 {
     public class WorldData
     {
-        public int[,] textureChunkOffsets;
-        public List<WorldElement> worldElements;
-    }
+        public int[,]? TextureChunkOffsets { get; set; }
 
-    public class WorldElement
-    {
-        public Rect3D boundingBox;
+        public List<WorldElement> WorldElements { get; } = new();
 
-        public double cosAlpha;
-
-        public Model model;
-
-        // Whether we should flip the y axis (when not using rot flags)
-        public bool negYaxis;
-
-        // The position before rotation
-        public Vector3D pos;
-        public double sinAlpha;
-        public WriteableBitmap? Texture;
-
-        public bool usesRotFlags;
-        public int VifDataLength;
-
-        // Store info to access again
-        public int VifDataOffset;
-        public int xyzRotFlags;
-        public int ElementIndex { get; set; }
+        public Model? GetElementModel(WorldElement element)
+        {
+            // if (element.DataInfo == null) return null;
+            //
+            // element.Model = GetElementModel(
+            //     NullLogger.Instance, 
+            //     element.DataInfo.AbsoluteVifDataOffset,
+            //     data.AsSpan(element.DataInfo.AbsoluteVifDataOffset, element.DataInfo.VifDataLength),
+            //     texWidth,
+            //     texHeight
+            // );
+            return element.Model;
+        }
     }
 }

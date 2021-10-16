@@ -21,4 +21,23 @@ namespace WorldExplorer.Logging
             return _sb.ToString();
         }
     }
+
+    public class NullLogger : ILogger
+    {
+        private static NullLogger? _instance;
+
+        public static NullLogger Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = new NullLogger();
+                return _instance;
+            }
+        }
+        public void LogLine(string line)
+        {
+            // Do nothing
+        }
+    }
 }

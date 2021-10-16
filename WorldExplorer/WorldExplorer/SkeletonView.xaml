@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:hvd="http://helix-toolkit.org/wpf"
+             xmlns:local="clr-namespace:WorldExplorer"
              mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance local:SkeletonViewModel}"
              d:DesignHeight="300" d:DesignWidth="300" DataContext="{Binding}">
     <Grid>
         <Grid.ColumnDefinitions>

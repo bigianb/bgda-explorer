@@ -17,7 +17,6 @@
 using HelixToolkit.Wpf;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -75,7 +74,8 @@ namespace WorldExplorer
                 case 3:
                     // Attempt to get the whole world in view
                     var bounds = ViewModel.TheLevelViewModel.WorldBounds;
-                    levelView.viewport.ZoomExtents(bounds, 1000);
+                    if (!bounds.IsEmpty)
+                        levelView.viewport.ZoomExtents(bounds, 1000);
                     break;
             }
         }

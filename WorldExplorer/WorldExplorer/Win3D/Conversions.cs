@@ -27,7 +27,7 @@ namespace WorldExplorer.Win3D
 {
     public static class Conversions
     {
-        public static Model3D CreateModel3D(List<Mesh> meshGroups, BitmapSource? texture, AnimData? pose = null,
+        public static Model3D CreateModel3D(IReadOnlyCollection<Mesh> meshGroups, BitmapSource? texture, AnimData? pose = null,
             int frame = -1)
         {
             GeometryModel3D model = new();

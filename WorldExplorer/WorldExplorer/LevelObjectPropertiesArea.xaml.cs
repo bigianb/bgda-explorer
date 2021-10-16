@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Media3D;
 using WorldExplorer.WorldDefs;
 
 namespace WorldExplorer
@@ -96,37 +97,39 @@ namespace WorldExplorer
 
             if (SelectedElement != null)
             {
-                SelectedElement.WorldElement.usesRotFlags =
+                SelectedElement.WorldElement.UsesRotFlags =
                     editor_UseRotFlagsBox.IsChecked.GetValueOrDefault(); // Uses Rot Flags
                 if (GetIntHex(editor_XYZRotFlagsBox.Text, out tempIntValue)) // XYZ Rot Flags
                 {
-                    SelectedElement.WorldElement.xyzRotFlags = tempIntValue;
+                    SelectedElement.WorldElement.XyzRotFlags = tempIntValue;
                 }
 
                 if (GetDouble(editor_CosBox.Text, out tempDoubleValue)) // Cos
                 {
-                    SelectedElement.WorldElement.cosAlpha = tempDoubleValue;
+                    SelectedElement.WorldElement.CosAlpha = tempDoubleValue;
                 }
 
                 if (GetDouble(editor_SinBox.Text, out tempDoubleValue)) // Sin
                 {
-                    SelectedElement.WorldElement.sinAlpha = tempDoubleValue;
+                    SelectedElement.WorldElement.SinAlpha = tempDoubleValue;
                 }
 
-                if (GetDouble(editor_PosXBox.Text, out tempDoubleValue)) // X
+                if (!GetDouble(editor_PosXBox.Text, out var posX)) // X
                 {
-                    SelectedElement.WorldElement.pos.X = tempDoubleValue;
+                    posX = SelectedElement.WorldElement.Position.X;
                 }
 
-                if (GetDouble(editor_PosYBox.Text, out tempDoubleValue)) // Y
+                if (GetDouble(editor_PosYBox.Text, out var posY)) // Y
                 {
-                    SelectedElement.WorldElement.pos.Y = tempDoubleValue;
+                    posY = SelectedElement.WorldElement.Position.Y;
                 }
 
-                if (GetDouble(editor_PosZBox.Text, out tempDoubleValue)) // Z
+                if (GetDouble(editor_PosZBox.Text, out var posZ)) // Z
                 {
-                    SelectedElement.WorldElement.pos.Z = tempDoubleValue;
+                    posZ = SelectedElement.WorldElement.Position.Z;
                 }
+
+                SelectedElement.WorldElement.Position = new Vector3D(posX, posY, posZ);
 
                 levelViewModel.RebuildScene();
             }
@@ -181,14 +184,14 @@ namespace WorldExplorer
                 return;
             }
 
-            editor_NameText.Text = ele.Text;
-            editor_UseRotFlagsBox.IsChecked = ele.WorldElement.usesRotFlags;
-            editor_XYZRotFlagsBox.Text = "0x" + ele.WorldElement.xyzRotFlags.ToString("X4");
-            editor_CosBox.Text = ele.WorldElement.cosAlpha.ToString(CultureInfo.InvariantCulture);
-            editor_SinBox.Text = ele.WorldElement.sinAlpha.ToString(CultureInfo.InvariantCulture);
-            editor_PosXBox.Text = ele.WorldElement.pos.X.ToString(CultureInfo.InvariantCulture);
-            editor_PosYBox.Text = ele.WorldElement.pos.Y.ToString(CultureInfo.InvariantCulture);
-            editor_PosZBox.Text = ele.WorldElement.pos.Z.ToString(CultureInfo.InvariantCulture);
+            editor_NameText.Text = ele.Label;
+            editor_UseRotFlagsBox.IsChecked = ele.WorldElement.UsesRotFlags;
+            editor_XYZRotFlagsBox.Text = "0x" + ele.WorldElement.XyzRotFlags.ToString("X4");
+            editor_CosBox.Text = ele.WorldElement.CosAlpha.ToString(CultureInfo.InvariantCulture);
+            editor_SinBox.Text = ele.WorldElement.SinAlpha.ToString(CultureInfo.InvariantCulture);
+            editor_PosXBox.Text = ele.WorldElement.Position.X.ToString(CultureInfo.InvariantCulture);
+            editor_PosYBox.Text = ele.WorldElement.Position.Y.ToString(CultureInfo.InvariantCulture);
+            editor_PosZBox.Text = ele.WorldElement.Position.Z.ToString(CultureInfo.InvariantCulture);
 
             editor_ElementGrid.Visibility = Visibility.Visible;
             editor_ObjectGrid.Visibility = Visibility.Collapsed;

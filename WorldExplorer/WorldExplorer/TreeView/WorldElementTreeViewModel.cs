@@ -20,17 +20,20 @@ namespace WorldExplorer
 {
     public class WorldElementTreeViewModel : TreeViewItemViewModel
     {
+        public WorldData WorldData { get; }
         public WorldElement WorldElement { get; }
 
-        public string Text { get; }
+        public string Label { get; }
 
-        public WorldElementTreeViewModel(WorldElement worldElement, TreeViewItemViewModel? parent, string name)
+        public WorldElementTreeViewModel(WorldElement worldElement, string label, TreeViewItemViewModel? parent,
+            WorldData worldData)
             : base(parent, true)
         {
+            WorldData = worldData;
             WorldElement = worldElement;
-            Text = name;
+            Label = label;
         }
-
+        
         protected override void LoadChildren()
         {
         }

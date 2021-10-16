@@ -15,7 +15,6 @@
 */
 
 using WorldExplorer.DataLoaders;
-using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
@@ -43,9 +42,9 @@ namespace WorldExplorer
 
             if (_world.WorldData != null)
             {
-                foreach (var element in _world.WorldData.worldElements)
+                foreach (var element in _world.WorldData.WorldElements)
                 {
-                    Children.Add(new WorldElementTreeViewModel(element, Parent, "Element " + element.ElementIndex));
+                    Children.Add(new WorldElementTreeViewModel(element, "Element " + element.ElementIndex, Parent, _world.WorldData));
                 }
             }
         }

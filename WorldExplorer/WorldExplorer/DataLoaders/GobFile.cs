@@ -17,41 +17,57 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using WorldExplorer.DataModel;
 
 namespace WorldExplorer.DataLoaders
 {
     public class GobFile
     {
-        private readonly EngineVersion _engineVersion;
-        private string _filepath;
-
-        public Dictionary<string, LmpFile> Directory = new();
-
-        public byte[] FileData;
-
-        public string Filename;
+        public EngineVersion EngineVersion { get; }
+        public readonly Dictionary<string, LmpFile> Directory = new();
+        public string Name { get; set; }
+        
+        private readonly byte[] _fileData;
 
         public GobFile(EngineVersion engineVersion, string filepath)
         {
-            _engineVersion = engineVersion;
-            _filepath = filepath;
-            FileData = File.ReadAllBytes(filepath);
-            ReadDirectory();
-            Filename = Path.GetFileName(filepath);
+            EngineVersion = engineVersion;
+            Name = Path.GetFileName(filepath);
+            _fileData = File.ReadAllBytes(filepath);
+            ParseFileData();
         }
-
-        public void ReadDirectory()
+        
+        public GobFile(EngineVersion engineVersion, string fileName, byte[] fileData)
         {
+            EngineVersion = engineVersion;
+            Name = fileName;
+            _fileData = fileData;
+            ParseFileData();
+        }
+        
+        private void ParseFileData()
+        {
+            var gobFile = ParseGobFile(EngineVersion, _fileData);
+            foreach (var (name, entry) in gobFile.Entries)
+            {
+                Directory[name] = new LmpFile(EngineVersion, name, _fileData, entry.Offset, entry.Length);
+            }
+        }
+        
+        private static GobFileData ParseGobFile(EngineVersion engineVersion, ReadOnlySpan<byte> data)
+        {
+            var gobFile = new GobFileData {Entries = new Dictionary<string, GobFileEntry>()};
             var index = 0;
-            var s = DataUtil.GetString(FileData, index);
+            var s = DataUtil.GetString(data, index);
             while (s.Length > 0)
             {
-                var lmpOffset = BitConverter.ToInt32(FileData, index + 0x20);
-                var lmpLen = BitConverter.ToInt32(FileData, index + 0x24);
-                Directory[s] = new LmpFile(_engineVersion, s, FileData, lmpOffset, lmpLen);
+                var lmpOffset = BitConverter.ToInt32(data.Slice(index + 0x20));
+                var lmpLen = BitConverter.ToInt32(data.Slice(index + 0x24));
+                gobFile.Entries[s] = new GobFileEntry(lmpOffset, lmpLen);
                 index += 0x28;
-                s = DataUtil.GetString(FileData, index);
+                s = DataUtil.GetString(data, index);
             }
+            return gobFile;
         }
     }
 }

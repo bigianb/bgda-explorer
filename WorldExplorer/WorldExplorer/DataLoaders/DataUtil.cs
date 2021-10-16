@@ -36,6 +36,22 @@ namespace WorldExplorer.DataLoaders
 
             return sb.ToString();
         }
+        
+        public static string GetString(ReadOnlySpan<byte> data, int offset = 0)
+        {
+            if (data.Length == 0)
+                throw new EndOfStreamException();
+
+            StringBuilder sb = new();
+            for (var i = offset; i < data.Length; i++)
+            {
+                var character = data[i];
+                if (character == 0) break;
+                sb.Append((char)character);
+            }
+            
+            return sb.ToString();
+        }
 
         public static bool FilePathHasInvalidChars(string path)
         {

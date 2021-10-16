@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using WorldExplorer.DataExporters;
 using WorldExplorer.DataLoaders;
+using WorldExplorer.DataLoaders.World;
 using WorldExplorer.Logging;
 
 namespace WorldExplorer
@@ -50,7 +52,7 @@ namespace WorldExplorer
             var dataContext = child.DataContext;
             _menu.DataContext = null;
 
-            // Set default menu item visibilty
+            // Set default menu item visibility
             _saveRawData.Visibility = Visibility.Visible;
             _saveParsedVifData.Visibility = Visibility.Collapsed;
             _logTexData.Visibility = Visibility.Collapsed;
@@ -60,7 +62,7 @@ namespace WorldExplorer
                 // files in .lmp files
                 case LmpEntryTreeViewModel lmpEntryItem:
                 {
-                    if ((Path.GetExtension(lmpEntryItem.Text) ?? "").ToLower() == ".vif")
+                    if (Path.GetExtension(lmpEntryItem.Text).ToUpperInvariant() == ".VIF")
                     {
                         _saveParsedVifData.Visibility = Visibility.Visible;
                     }
@@ -103,7 +105,7 @@ namespace WorldExplorer
         }
 
         // Static Methods
-        private static TreeViewItem? GetTreeViewItemFromPoint(System.Windows.Controls.TreeView treeView, Point point)
+        private static TreeViewItem? GetTreeViewItemFromPoint(UIElement treeView, Point point)
         {
             var obj = treeView.InputHitTest(point) as DependencyObject;
             while (obj != null && obj is not TreeViewItem)
@@ -118,129 +120,111 @@ namespace WorldExplorer
 
         private void SaveRawDataClicked(object sender, RoutedEventArgs e)
         {
-            if (_menu.DataContext == null)
+            switch (_menu.DataContext)
             {
-                return;
-            }
-
-            if (_menu.DataContext is LmpTreeViewModel)
-            {
-                var lmpItem = (LmpTreeViewModel)_menu.DataContext;
-                var lmpFile = lmpItem.LmpFileProperty;
-
-                SaveFileDialog dialog = new() {FileName = lmpItem.Text};
-
-                var result = dialog.ShowDialog();
-                if (result.GetValueOrDefault(false))
+                case LmpTreeViewModel lmpItem:
                 {
-                    using (FileStream stream = new(dialog.FileName, FileMode.Create))
+                    var lmpFile = lmpItem.LmpFileProperty;
+                    
+                    PromptToSaveData(lmpItem.Text, (saveFilePath) =>
                     {
+                        using FileStream stream = new(saveFilePath, FileMode.Create);
                         stream.Write(lmpFile.FileData, 0, lmpFile.FileData.Length);
-
                         stream.Flush();
-                    }
+                    });
+                    break;
                 }
-            }
-            else if (_menu.DataContext is LmpEntryTreeViewModel)
-            {
-                var lmpEntry = (LmpEntryTreeViewModel)_menu.DataContext;
-                SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Text);
-            }
-            else if (_menu.DataContext is WorldFileTreeViewModel)
-            {
-                var tvm = (WorldFileTreeViewModel)_menu.DataContext;
-                SaveLmpEntryData(tvm.LmpFileProperty, tvm.Text);
-            }
-            else if (_menu.DataContext is WorldElementTreeViewModel)
-            {
-                MessageBox.Show(
-                    "Saving raw world element data is not supported due to the scattered layout of the data.",
-                    "Error");
+                case LmpEntryTreeViewModel lmpEntry:
+                    SaveLmpEntryData(lmpEntry.LmpFileProperty, lmpEntry.Text);
+                    break;
+                case WorldFileTreeViewModel tvm:
+                    SaveLmpEntryData(tvm.LmpFileProperty, tvm.Text);
+                    break;
+                case WorldElementTreeViewModel:
+                    MessageBox.Show(
+                        "Saving raw world element data is not supported due to the scattered layout of the data.",
+                        "Error");
+                    break;
             }
         }
 
         private void SaveLmpEntryData(LmpFile lmpFile, string entryName)
         {
             var entry = lmpFile.Directory[entryName];
-
-            SaveFileDialog dialog = new() {FileName = entryName};
-
-            var result = dialog.ShowDialog();
-            if (result.GetValueOrDefault(false))
+            
+            PromptToSaveData(entryName, (saveFilePath) =>
             {
-                using (FileStream stream = new(dialog.FileName, FileMode.Create))
-                {
-                    stream.Write(lmpFile.FileData, entry.StartOffset, entry.Length);
-
-                    stream.Flush();
-                }
-            }
+                using FileStream stream = new(saveFilePath, FileMode.Create);
+                stream.Write(lmpFile.FileData, entry.StartOffset, entry.Length);
+                stream.Flush();
+            });
         }
 
         private void SaveParsedDataClicked(object sender, RoutedEventArgs e)
         {
-            if (_menu.DataContext == null)
+            switch (_menu.DataContext)
             {
-                return;
-            }
-
-            if (_menu.DataContext is LmpEntryTreeViewModel)
-            {
-                var lmpEntry = (LmpEntryTreeViewModel)_menu.DataContext;
-                var lmpFile = lmpEntry.LmpFileProperty;
-
-                var entry = lmpFile.Directory[lmpEntry.Text];
-                var texEntry =
-                    lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex"];
-
-                var tex =
-                    TexDecoder.Decode(lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length));
-
-                if ((Path.GetExtension(lmpEntry.Text) ?? "").ToLower() != ".vif")
+                case LmpEntryTreeViewModel lmpEntry:
                 {
-                    MessageBox.Show("Not a .vif file!", "Error");
-                    return;
+                    var lmpFile = lmpEntry.LmpFileProperty;
+                    var entry = lmpFile.Directory[lmpEntry.Text];
+
+                    if (Path.GetExtension(lmpEntry.Text).ToLower() != ".vif")
+                    {
+                        MessageBox.Show("Not a .vif file!", "Error");
+                        return;
+                    }
+                    
+                    var fileName = lmpEntry.Text + ".txt";
+                    PromptToSaveVifData(fileName, () =>
+                    {
+                        var texEntry =
+                            lmpFile.Directory[Path.GetFileNameWithoutExtension(lmpEntry.Text) + ".tex"];
+                        var texData = lmpFile.FileData.AsSpan().Slice(texEntry.StartOffset, texEntry.Length);
+                        var tex = TexDecoder.Decode(texData);
+                        var vifData = lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length);
+                        return VifDecoder.DecodeChunks(
+                            NullLogger.Instance,
+                            vifData,
+                            tex?.PixelWidth ?? 0,
+                            tex?.PixelHeight ?? 0);
+                    });
+                    break;
                 }
-
-                SaveFileDialog dialog = new() {FileName = lmpEntry.Text + ".txt"};
-
-                var result = dialog.ShowDialog();
-                if (result.GetValueOrDefault(false))
+                case WorldElementTreeViewModel itemModel:
                 {
-                    StringLogger logger = new();
-                    var chunks = VifDecoder.DecodeChunks(
-                        logger,
-                        lmpFile.FileData.AsSpan().Slice(entry.StartOffset, entry.Length),
-                        tex?.PixelWidth ?? 0,
-                        tex?.PixelHeight ?? 0);
+                    var lmpFile = (itemModel.Parent as LmpTreeViewModel)?.LmpFileProperty;
+                    var element = itemModel.WorldElement;
+                    if (lmpFile == null || element.DataInfo == null) return;
 
-                    VifChunkExporter.WriteChunks(dialog.FileName, chunks);
-                }
-            }
-            else if (_menu.DataContext is WorldElementTreeViewModel worldElement)
-            {
-                var lmpEntry = worldElement.Parent as LmpTreeViewModel;
-                var lmpFile = lmpEntry?.LmpFileProperty;
-
-                if (lmpFile == null) return;
-
-                SaveFileDialog dialog = new() {FileName = worldElement.Text + ".txt"};
-
-                var result = dialog.ShowDialog();
-                if (result.GetValueOrDefault(false))
-                {
-                    StringLogger logger = new();
-                    var chunks = VifDecoder.ReadVerts(
-                        logger,
-                        lmpFile.FileData.AsSpan().Slice(
-                            worldElement.WorldElement.VifDataOffset,
-                            worldElement.WorldElement.VifDataOffset + worldElement.WorldElement.VifDataLength
-                        )
-                    );
-
-                    VifChunkExporter.WriteChunks(dialog.FileName, chunks);
+                    var fileName = itemModel.Label + ".txt";
+                    PromptToSaveVifData(fileName, () =>
+                    {
+                        // TODO: Ensure this works after making VifDataOffset relative to the world file's start offset
+                        var vifData = lmpFile.FileData.AsSpan().Slice(
+                            element.DataInfo.VifDataOffset,
+                            element.DataInfo.VifDataOffset + element.DataInfo.VifDataLength
+                        );
+                        return VifDecoder.ReadVerts(NullLogger.Instance, vifData);
+                    });
+                    break;
                 }
             }
+        }
+        
+        private void PromptToSaveData(string fileName, Action<string> saveFunc)
+        {
+            SaveFileDialog dialog = new() { FileName = fileName };
+            if (dialog.ShowDialog() != true) return;
+            saveFunc(dialog.FileName);
+        }
+        
+        private void PromptToSaveVifData(string fileName, Func<List<VifDecoder.Chunk>> chunkFunc)
+        {
+            PromptToSaveData(fileName, (saveFilePath) =>
+            {
+                VifChunkExporter.WriteChunks(saveFilePath, chunkFunc());
+            });
         }
 
         private void LogTexDataClicked(object sender, RoutedEventArgs e)

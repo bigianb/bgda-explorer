@@ -5,9 +5,9 @@ namespace WorldExplorer.DataModel
     public class Model
     {
         // collection of meshes
-        public readonly List<Mesh> MeshList;
+        public readonly IReadOnlyCollection<Mesh> MeshList;
 
-        public Model(List<Mesh> meshList)
+        public Model(IReadOnlyCollection<Mesh> meshList)
         {
             MeshList = meshList;
         }

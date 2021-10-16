@@ -30,10 +30,7 @@ namespace WorldExplorer.TreeView
             _world = world;
         }
 
-        public World World()
-        {
-            return _world;
-        }
+        public World World => _world;
 
         protected override void LoadChildren()
         {

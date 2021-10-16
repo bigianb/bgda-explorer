@@ -23,6 +23,7 @@ using System.Text;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
 using WorldExplorer.DataLoaders.Animation;
+using WorldExplorer.DataLoaders.World;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;
 using WorldExplorer.TreeView;
@@ -334,9 +335,8 @@ namespace WorldExplorer
             StringLogger log = new();
             
             if (World == null) return;
-            
-            World.WorldData = decoder.Decode(engineVersion, _worldTreeViewModel?.World().WorldTex, log, lmpFile.FileData,
-                entry.StartOffset, entry.Length);
+
+            World.WorldData = decoder.Decode(lmpFile.FileData.AsSpan(entry.StartOffset, entry.Length), _worldTreeViewModel?.World.WorldTex);
             worldFileModel.ReloadChildren();
             _levelViewModel.WorldNode = worldFileModel;
             _levelViewModel.WorldData = World.WorldData;
@@ -353,11 +353,11 @@ namespace WorldExplorer
             SelectedNodeImage = worldElementModel.WorldElement.Texture;
             _modelViewModel.Texture = SelectedNodeImage;
             _modelViewModel.AnimData = null;
-            _modelViewModel.VifModel = worldElementModel.WorldElement.model;
+            _modelViewModel.VifModel = worldElementModel.WorldElement.Model;
 
             MainWindow.tabControl.SelectedIndex = 1; // Model View
             MainWindow.ResetCamera();
-            MainWindow.SetViewportText(1, worldElementModel.Text, ""); // Set Model View Text           
+            MainWindow.SetViewportText(1, worldElementModel.Label, ""); // Set Model View Text           
         }
 
         private void OnYakChildElementSelected(YakChildTreeViewItem childEntry)

@@ -112,6 +112,9 @@ namespace WorldExplorer
             }
         }
 
+        /// <summary>
+        /// Gets or sets the currently selected world element.
+        /// </summary>
         public WorldElementTreeViewModel? SelectedElement
         {
             get => _selectedElement;
@@ -140,10 +143,12 @@ namespace WorldExplorer
 
             if (_worldData != null)
             {
-                foreach (var element in _worldData.worldElements)
+                foreach (var element in _worldData.WorldElements)
                 {
+                    var elementModel = _worldData.GetElementModel(element);
+                    if (elementModel == null) continue;
                     ModelVisual3D mv3d = new();
-                    var model3D = Conversions.CreateModel3D(element.model.MeshList, element.Texture, null, 0);
+                    var model3D = Conversions.CreateModel3D(elementModel.MeshList, element.Texture, null, 0);
                     mv3d.Content = model3D;
 
                     var modelBounds = model3D.Bounds;
@@ -152,11 +157,11 @@ namespace WorldExplorer
 
                     Transform3DGroup transform3DGroup = new();
 
-                    transform3DGroup.Children.Add(new TranslateTransform3D(element.pos));
+                    transform3DGroup.Children.Add(new TranslateTransform3D(element.Position));
                     var mtx = Matrix3D.Identity;
-                    if (element.usesRotFlags)
+                    if (element.UsesRotFlags)
                     {
-                        if ((element.xyzRotFlags & 4) == 4)
+                        if ((element.XyzRotFlags & 4) == 4)
                         {
                             // Flip x, y
                             mtx.M11 = 0;
@@ -166,19 +171,19 @@ namespace WorldExplorer
                             mtx.M22 = 0;
                         }
 
-                        if ((element.xyzRotFlags & 2) == 2)
+                        if ((element.XyzRotFlags & 2) == 2)
                         {
                             mtx.M11 = -mtx.M11;
                             mtx.M21 = -mtx.M21;
                         }
 
-                        if ((element.xyzRotFlags & 1) == 1)
+                        if ((element.XyzRotFlags & 1) == 1)
                         {
                             mtx.M12 = -mtx.M12;
                             mtx.M22 = -mtx.M22;
                         }
 
-                        if (element.xyzRotFlags == 2)
+                        if (element.XyzRotFlags == 2)
                         {
                             mtx.M11 = -mtx.M11;
                             mtx.M12 = -mtx.M12;
@@ -186,7 +191,7 @@ namespace WorldExplorer
                             mtx.M22 = -mtx.M22;
                         }
 
-                        if (element.xyzRotFlags == 1)
+                        if (element.XyzRotFlags == 1)
                         {
                             mtx.M12 = -mtx.M12;
                             mtx.M22 = -mtx.M22;
@@ -197,11 +202,11 @@ namespace WorldExplorer
                     else
                     {
                         // Change handedness by reversing angle (sign on sin)
-                        mtx.M11 = element.cosAlpha;
-                        mtx.M21 = -element.sinAlpha;
-                        mtx.M12 = element.sinAlpha;
-                        mtx.M22 = element.cosAlpha;
-                        if (element.negYaxis)
+                        mtx.M11 = element.CosAlpha;
+                        mtx.M21 = -element.SinAlpha;
+                        mtx.M12 = element.SinAlpha;
+                        mtx.M22 = element.CosAlpha;
+                        if (element.NegYaxis)
                         {
                             // Should this be col1 due to handed change?
                             mtx.M12 = -mtx.M12;

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WorldExplorer"
         xmlns:treeView="clr-namespace:WorldExplorer.TreeView"
-        Title="MainWindow" Height="582" Width="848" DataContext="{Binding}">
+        Title="World Explorer" Height="582" Width="848" DataContext="{Binding}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
