@@ -5,6 +5,10 @@ namespace WorldExplorer.DataModel
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct WorldFileHeader
     {
+        /// <summary>
+        /// The size in bytes of the struct.
+        /// </summary>
+        public const int Size = 100;
         public int NumberOfElements { get; set; }
         public int Unknown04 { get; set; }
         public int Unknown08 { get; set; }
