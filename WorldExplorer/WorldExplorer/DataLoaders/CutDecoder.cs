@@ -84,9 +84,9 @@ namespace WorldExplorer.DataLoaders
             public string parseWarnings = "";
             public int scale;
 
-            public string subtitles, string48, string74;
+            public string? subtitles, string48, string74;
 
-            private string GetActorName(int actorNum)
+            private string? GetActorName(int actorNum)
             {
                 if (actorNum == -100)
                 {
@@ -213,7 +213,7 @@ namespace WorldExplorer.DataLoaders
             public class Character
             {
                 public int extra0, extra4;
-                public string name;
+                public string? name;
                 public short s28;
                 public float x, y, z;
 

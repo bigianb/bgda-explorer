@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
+using WorldExplorer.DataLoaders;
 using WorldExplorer.WorldDefs;
 
 namespace WorldExplorer
@@ -135,6 +137,9 @@ namespace WorldExplorer
             }
             else if (SelectedObject != null)
             {
+                // Ensure there's an ObjectData instance before changing it
+                SelectedObject.ObjectData ??= ObjectData.Empty;
+                
                 SelectedObject.ObjectData.Name = editor_Obj_NameBox.Text; // Name
                 if (GetIntHex(editor_Obj_I6Box.Text, out tempIntValue)) // I6
                 {
@@ -208,6 +213,9 @@ namespace WorldExplorer
 
                 return;
             }
+            
+            // Ensure there's a value set before reading from it
+            obj.ObjectData ??= ObjectData.Empty;
 
             editor_NameText.Text = "Object";
             editor_Obj_NameBox.Text = obj.ObjectData.Name;
@@ -215,14 +223,9 @@ namespace WorldExplorer
             editor_Obj_Float1Box.Text = obj.ObjectData.Floats[0].ToString(CultureInfo.InvariantCulture);
             editor_Obj_Float2Box.Text = obj.ObjectData.Floats[1].ToString(CultureInfo.InvariantCulture);
             editor_Obj_Float3Box.Text = obj.ObjectData.Floats[2].ToString(CultureInfo.InvariantCulture);
-            if (obj.ObjectData.Properties != null && obj.ObjectData.Properties.Count > 0)
-            {
-                editor_Obj_PropertiesBox.Text = string.Join("\n", obj.ObjectData.Properties);
-            }
-            else
-            {
-                editor_Obj_PropertiesBox.Text = null;
-            }
+            editor_Obj_PropertiesBox.Text = obj.ObjectData.Properties.Count > 0
+                ? string.Join("\n", obj.ObjectData.Properties)
+                : null;
 
             editor_ElementGrid.Visibility = Visibility.Collapsed;
             editor_ObjectGrid.Visibility = Visibility.Visible;

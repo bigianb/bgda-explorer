@@ -224,19 +224,22 @@ namespace WorldExplorer.DataLoaders
                     }
                 }
 
-                int numExtraVlocs = chunk.extraVlocs[0];
-                for (var extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc)
+                if (chunk.ExtraVlocs != null)
                 {
-                    var idx = (extraVloc * 4) + 4;
-                    var stripIndxSrc = (chunk.extraVlocs[idx] & 0x1FF) / regsPerVertex;
-                    var stripIndxDest = (chunk.extraVlocs[idx + 1] & 0x1FF) / regsPerVertex;
-                    
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                    int numExtraVlocs = chunk.ExtraVlocs[0];
+                    for (var extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc)
+                    {
+                        var idx = (extraVloc * 4) + 4;
+                        var stripIndxSrc = (chunk.ExtraVlocs[idx] & 0x1FF) / regsPerVertex;
+                        var stripIndxDest = (chunk.ExtraVlocs[idx + 1] & 0x1FF) / regsPerVertex;
 
-                    stripIndxSrc = (chunk.extraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
-                    stripIndxDest = (chunk.extraVlocs[idx + 3] & 0x1FF) / regsPerVertex;
-                    
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                        vstrip[stripIndxDest] = (chunk.ExtraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+
+                        stripIndxSrc = (chunk.ExtraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
+                        stripIndxDest = (chunk.ExtraVlocs[idx + 3] & 0x1FF) / regsPerVertex;
+
+                        vstrip[stripIndxDest] = (chunk.ExtraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                    }
                 }
 
                 var triIdx = 0;
@@ -576,16 +579,16 @@ namespace WorldExplorer.DataLoaders
                                 var numShorts = numCommand * 4;
                                 if (usn)
                                 {
-                                    currentChunk.extraVlocs = new ushort[numShorts];
+                                    currentChunk.ExtraVlocs = new ushort[numShorts];
                                     for (var i = 0; i < numCommand; ++i)
                                     {
-                                        currentChunk.extraVlocs[i * 4] =
+                                        currentChunk.ExtraVlocs[i * 4] =
                                             DataUtil.getLEUShort(vertData, offset + (i * 8));
-                                        currentChunk.extraVlocs[(i * 4) + 1] =
+                                        currentChunk.ExtraVlocs[(i * 4) + 1] =
                                             DataUtil.getLEUShort(vertData, offset + (i * 8) + 2);
-                                        currentChunk.extraVlocs[(i * 4) + 2] =
+                                        currentChunk.ExtraVlocs[(i * 4) + 2] =
                                             DataUtil.getLEUShort(vertData, offset + (i * 8) + 4);
-                                        currentChunk.extraVlocs[(i * 4) + 3] =
+                                        currentChunk.ExtraVlocs[(i * 4) + 3] =
                                             DataUtil.getLEUShort(vertData, offset + (i * 8) + 6);
                                     }
                                 }
@@ -721,9 +724,9 @@ namespace WorldExplorer.DataLoaders
         public class Chunk
         {
             public readonly List<GIFTag> DirectGifTags = new();
-            public ushort[] extraVlocs;
-            public GIFTag gifTag0;
-            public GIFTag gifTag1;
+            public ushort[]? ExtraVlocs;
+            public GIFTag? gifTag0;
+            public GIFTag? gifTag1;
             public int mscalID;
             public readonly List<SByteVector> Normals = new();
             public readonly List<UV> UVs = new();

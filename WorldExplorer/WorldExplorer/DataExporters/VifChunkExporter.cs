@@ -47,16 +47,19 @@ namespace WorldExplorer.DataExporters
                             FormatFlagShort(vloc.Value3));
                     }
 
-                    writer.WriteLine("");
-                    writer.WriteLine("==== Extra VLocs ====");
-                    for (var o = 0; o + 3 < chunk.extraVlocs.Length; o += 4)
+                    if (chunk.ExtraVlocs != null)
                     {
-                        writer.WriteLine(
-                            "V1: {0}, V2: {1}, V3: {2}, V4: {3}",
-                            FormatFlagShort(chunk.extraVlocs[o]),
-                            FormatFlagShort(chunk.extraVlocs[o + 1]),
-                            FormatFlagShort(chunk.extraVlocs[o + 2]),
-                            FormatFlagShort(chunk.extraVlocs[o + 3]));
+                        writer.WriteLine("");
+                        writer.WriteLine("==== Extra VLocs ====");
+                        for (var o = 0; o + 3 < chunk.ExtraVlocs.Length; o += 4)
+                        {
+                            writer.WriteLine(
+                                "V1: {0}, V2: {1}, V3: {2}, V4: {3}",
+                                FormatFlagShort(chunk.ExtraVlocs[o]),
+                                FormatFlagShort(chunk.ExtraVlocs[o + 1]),
+                                FormatFlagShort(chunk.ExtraVlocs[o + 2]),
+                                FormatFlagShort(chunk.ExtraVlocs[o + 3]));
+                        }
                     }
 
                     writer.WriteLine("");

@@ -68,6 +68,10 @@ namespace WorldExplorer.DataLoaders
         public string Name;
         public readonly List<string> Properties;
 
+        public static ObjectData Empty => new ObjectData(
+            "", 0, new float[3], new List<string>()
+        );
+
         public ObjectData(string name, short i6, float[] floats, List<string> properties)
         {
             Floats = floats;

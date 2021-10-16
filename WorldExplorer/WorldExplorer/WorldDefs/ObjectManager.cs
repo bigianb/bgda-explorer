@@ -54,7 +54,7 @@ namespace WorldExplorer.WorldDefs
             {
                 ObjectData = obj,
                 Offset = new Vector3D(obj.Floats[0] / 4, obj.Floats[1] / 4, obj.Floats[2] / 4),
-                zRotation = 22.5 * (obj.I6 >> 12)
+                ZRotation = 22.5 * (obj.I6 >> 12)
             });
             if (vod != null)
             {
@@ -67,7 +67,7 @@ namespace WorldExplorer.WorldDefs
         {
             foreach (var vod in _visualObjects)
             {
-                if (HitTestModel(vod.Model, hitResult))
+                if (vod.Model != null && HitTestModel(vod.Model, hitResult))
                 {
                     return vod;
                 }
@@ -76,8 +76,9 @@ namespace WorldExplorer.WorldDefs
             return null;
         }
 
-        private static bool HitTestModel(ModelVisual3D obj, ModelVisual3D hitResult)
+        private static bool HitTestModel(ModelVisual3D? obj, ModelVisual3D hitResult)
         {
+            if (obj == null) return false;
             if (obj == hitResult)
             {
                 return true;

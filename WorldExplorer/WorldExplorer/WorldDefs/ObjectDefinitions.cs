@@ -82,7 +82,7 @@ namespace WorldExplorer.WorldDefs
 
         public VisualObjectData? Parse(VisualObjectData obj)
         {
-            if (_objectDefinitions.TryGetValue(obj.ObjectData.Name, out var del))
+            if (obj.ObjectData != null && _objectDefinitions.TryGetValue(obj.ObjectData.Name, out var del))
             {
                 try
                 {
@@ -241,9 +241,14 @@ namespace WorldExplorer.WorldDefs
         // Ambient_Light
         private VisualObjectData? ParseLightObject(VisualObjectData obj)
         {
+            if (obj.ObjectData == null)
+            {
+                return null;
+            }
+            
             obj.Offset = new Vector3D(0, 0, 0);
             SphereVisual3D sphere = new() {Radius = 2.5};
-
+            
             var color = ColorFromArray(obj.ObjectData.Floats);
 
             // Black light, don't show so that we can see actual colors
@@ -260,6 +265,11 @@ namespace WorldExplorer.WorldDefs
 
         private VisualObjectData? ParseDirectionalObject(VisualObjectData obj)
         {
+            if (obj.ObjectData == null)
+            {
+                return null;
+            }
+            
             obj.Offset = new Vector3D(0, 0, 0);
 
             if (obj.ObjectData.Name.EndsWith("D") || obj.ObjectData.Name.EndsWith("D2"))
@@ -308,14 +318,14 @@ namespace WorldExplorer.WorldDefs
             BoxVisual3D box = new();
 
 
-            if (!double.TryParse(obj.ObjectData.GetProperty("w"), out var tempValue))
+            if (obj.ObjectData == null || !double.TryParse(obj.ObjectData.GetProperty("w"), out var tempValue))
             {
                 tempValue = 2.5 * 4;
             }
 
             box.Width = tempValue / 4;
             box.Length = tempValue / 4;
-            if (!double.TryParse(obj.ObjectData.GetProperty("h"), out tempValue))
+            if (obj.ObjectData == null || !double.TryParse(obj.ObjectData.GetProperty("h"), out tempValue))
             {
                 tempValue = 2.5 * 4;
             }
@@ -335,7 +345,7 @@ namespace WorldExplorer.WorldDefs
             SphereVisual3D sphere = new();
 
 
-            if (!double.TryParse(obj.ObjectData.GetProperty("radius"), out var tempRadius))
+            if (obj.ObjectData == null || !double.TryParse(obj.ObjectData.GetProperty("radius"), out var tempRadius))
             {
                 tempRadius = 2.5 * 4;
             }
@@ -419,17 +429,20 @@ namespace WorldExplorer.WorldDefs
         {
             return obj =>
             {
-                var props = obj.ObjectData.Properties.Select(e => e.Split('='))
-                    .ToDictionary(e => e[0], e => e.Length > 1 ? e[1] : e[0]);
-                if (props.TryGetValue(propName, out var lump) && !string.IsNullOrEmpty(lump))
+                if (obj.ObjectData != null)
                 {
-                    lump = lump.Trim().TrimQuotes();
-                    obj.Model = new ModelVisual3D();
-                    obj.Model.Children.Add(LoadModelFromExternalLmp(lump + ".lmp", lump + ".vif", lump + ".tex"));
-                }
-                else
-                {
-                    obj.Model.Children.Add(CreateBox(5, Color.FromRgb(255, 0, 0)));
+                    var props = obj.ObjectData.Properties.Select(e => e.Split('='))
+                        .ToDictionary(e => e[0], e => e.Length > 1 ? e[1] : e[0]);
+                    if (props.TryGetValue(propName, out var lump) && !string.IsNullOrEmpty(lump))
+                    {
+                        lump = lump.Trim().TrimQuotes();
+                        obj.Model = new ModelVisual3D();
+                        obj.Model.Children.Add(LoadModelFromExternalLmp(lump + ".lmp", lump + ".vif", lump + ".tex"));
+                    }
+                    else if (obj.Model != null)
+                    {
+                        obj.Model.Children.Add(CreateBox(5, Color.FromRgb(255, 0, 0)));
+                    }
                 }
 
                 return obj;
