@@ -14,23 +14,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using WorldExplorer.DataModel;
 
 namespace WorldExplorer
 {
-    class SkeletonProcessor
+    internal class SkeletonProcessor
     {
-        public static Model3D GetSkeletonModel(AnimData animData, int frameNo)
+        private static readonly double delta = 0.1;
+
+        public static Model3D? GetSkeletonModel(AnimData? animData, int frameNo)
         {
             if (null == animData)
             {
                 return null;
             }
 
-            var model = new GeometryModel3D();
-            var mesh = new MeshGeometry3D();
+            GeometryModel3D model = new();
+            MeshGeometry3D mesh = new();
 
             var parentPoints = new Point3D[64];
             parentPoints[0] = new Point3D(0, 0, 0);
@@ -43,30 +46,27 @@ namespace WorldExplorer
 
                 if (frameNo >= 0)
                 {
-                    var pose = animData.perFrameFKPoses[frameNo, jointNum];
+                    var pose = animData.perFrameFKPoses?[frameNo, jointNum]
+                        ?? throw new InvalidDataException("Invalid frame/bone pair encountered!");
                     pos = pose.Position;
                 }
+
                 parentPoints[parentIndex + 1] = pos;
                 AddBone(mesh, parentPoints[parentIndex], pos);
             }
 
             model.Geometry = mesh;
 
-            var dm = new DiffuseMaterial
-            {
-                Brush = new SolidColorBrush(Colors.DarkGreen)
-            };
+            DiffuseMaterial dm = new() {Brush = new SolidColorBrush(Colors.DarkGreen)};
             model.Material = dm;
 
             return model;
         }
 
-        private static double delta = 0.1;
-
         private static void AddBone(MeshGeometry3D mesh, Point3D startPoint, Point3D endPoint)
         {
-            var rotate = new AxisAngleRotation3D();
-            var xform = new RotateTransform3D(rotate);
+            AxisAngleRotation3D rotate = new();
+            RotateTransform3D xform = new(rotate);
 
             var boneVec = endPoint - startPoint;
 
@@ -104,15 +104,13 @@ namespace WorldExplorer
 
                 // Bit of a hack to avoid having to set the normals or worry about consistent winding.
                 positions.Add(startPoint);
-                positions.Add(endPoint + delta * vectRadius);
-                positions.Add(endPoint + delta * vectRadius1);
+                positions.Add(endPoint + (delta * vectRadius));
+                positions.Add(endPoint + (delta * vectRadius1));
 
                 positions.Add(startPoint);
-                positions.Add(endPoint + delta * vectRadius1);
-                positions.Add(endPoint + delta * vectRadius);
+                positions.Add(endPoint + (delta * vectRadius1));
+                positions.Add(endPoint + (delta * vectRadius));
             }
-
         }
-
     }
 }

@@ -1,43 +1,50 @@
 ﻿<UserControl x:Class="WorldExplorer.LevelView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:hvd="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
              xmlns:local="clr-namespace:WorldExplorer" d:DataContext="{d:DesignInstance Type=local:LevelViewModel}"
-             mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="500"  DataContext="{Binding}">
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="500" DataContext="{Binding}">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Border Background="Transparent" Name="trackballSource" Margin="0,23,0,0" d:LayoutOverrides="GridBox">
-            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False" Margin="0,-23,0,0"  IsInertiaEnabled="False" UpDownPanSensitivity="10" LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True" ShowCoordinateSystem="True" ShowViewCube="False" CalculateCursorPosition="True">
+            <hvd:HelixViewport3D ClipToBounds="True" Name="viewport" IsChangeFieldOfViewEnabled="False"
+                                 Margin="0,-23,0,0" IsInertiaEnabled="False" UpDownPanSensitivity="10"
+                                 LeftRightPanSensitivity="10" RotateAroundMouseDownPoint="True"
+                                 ShowCoordinateSystem="True" ShowViewCube="False" CalculateCursorPosition="True">
                 <hvd:HelixViewport3D.DefaultCamera>
-                    <PerspectiveCamera Position="-106,79,89" LookDirection="1,0,1" UpDirection="0,0,1" FieldOfView="50" NearPlaneDistance="0.001"/>
+                    <PerspectiveCamera Position="-106,79,89" LookDirection="1,0,1" UpDirection="0,0,1" FieldOfView="50"
+                                       NearPlaneDistance="0.001" />
                 </hvd:HelixViewport3D.DefaultCamera>
                 <local:SceneVisual3D Scene="{Binding Scene}" />
-            </hvd:HelixViewport3D>            
+            </hvd:HelixViewport3D>
         </Border>
-        <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox"/>
+        <Label Grid.Column="0" Grid.Row="1" Content="{Binding InfoText}" d:LayoutOverrides="GridBox" />
         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Expander Header="Help" Grid.Column="0" Focusable="False" IsTabStop="False" VerticalAlignment="Bottom" ExpandDirection="Up" Background="#66FFFFFF">
-                <StackPanel> 
+            <Expander Header="Help" Grid.Column="0" Focusable="False" IsTabStop="False" VerticalAlignment="Bottom"
+                      ExpandDirection="Up" Background="#66FFFFFF">
+                <StackPanel>
                     <TextBlock TextWrapping="WrapWithOverflow">L to toggle lighting</TextBlock>
                 </StackPanel>
             </Expander>
-            <Expander x:Name="editorExpander" Grid.Column="2" Header="Properties" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
+            <Expander x:Name="editorExpander" Grid.Column="2" Header="Properties" HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom" Margin="0" Background="#66FFFFFF" ExpandDirection="Up">
                 <Grid Height="280" Width="248">
-                    <local:LevelObjectPropertiesArea SelectedElement="{Binding SelectedElement, Mode=TwoWay}" SelectedObject="{Binding SelectedObject, Mode=TwoWay}" />
+                    <local:LevelObjectPropertiesArea SelectedElement="{Binding SelectedElement, Mode=TwoWay}"
+                                                     SelectedObject="{Binding SelectedObject, Mode=TwoWay}" />
                 </Grid>
             </Expander>
         </Grid>

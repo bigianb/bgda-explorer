@@ -6,40 +6,41 @@ using System.Windows;
 namespace WorldExplorer
 {
     /// <summary>
-    /// Base class for all ViewModel classes displayed by TreeViewItems.  
+    /// Base class for all ViewModel classes displayed by TreeViewItems.
     /// This acts as an adapter between a raw data object and a TreeViewItem.
     /// </summary>
     public class TreeViewItemViewModel : INotifyPropertyChanged
     {
         #region Data
 
-        static readonly TreeViewItemViewModel DummyChild = new TreeViewItemViewModel();
+        private static readonly TreeViewItemViewModel DummyChild = new();
 
-        readonly ObservableCollection<TreeViewItemViewModel> _children;
-        readonly TreeViewItemViewModel _parent;
-
-        bool _isExpanded;
-        bool _isSelected;
+        private string _label;
+        private bool _isExpanded;
+        private bool _isSelected;
 
         #endregion // Data
 
         #region Constructors
 
-        protected TreeViewItemViewModel(TreeViewItemViewModel parent, bool lazyLoadChildren)
+        protected TreeViewItemViewModel(string label, TreeViewItemViewModel? parent, bool lazyLoadChildren)
         {
-            _parent = parent;
+            _label = label;
+            Parent = parent;
 
-            _children = new ObservableCollection<TreeViewItemViewModel>();
+            Children = new ObservableCollection<TreeViewItemViewModel>();
 
             if (lazyLoadChildren)
             {
-                _children.Add(DummyChild);
+                Children.Add(DummyChild);
             }
         }
 
         // This is used to create the DummyChild instance.
         private TreeViewItemViewModel()
         {
+            _label = "Dummy Child";
+            Children = new ObservableCollection<TreeViewItemViewModel>();
         }
 
         #endregion // Constructors
@@ -51,7 +52,7 @@ namespace WorldExplorer
         /// <summary>
         /// Returns the logical child items of this object.
         /// </summary>
-        public ObservableCollection<TreeViewItemViewModel> Children => _children;
+        public ObservableCollection<TreeViewItemViewModel> Children { get; }
 
         #endregion // Children
 
@@ -67,7 +68,7 @@ namespace WorldExplorer
         #region IsExpanded
 
         /// <summary>
-        /// Gets/sets whether the TreeViewItem 
+        /// Gets/sets whether the TreeViewItem
         /// associated with this object is expanded.
         /// </summary>
         public bool IsExpanded
@@ -82,9 +83,9 @@ namespace WorldExplorer
                 }
 
                 // Expand all the way up to the root.
-                if (_isExpanded && _parent != null)
+                if (_isExpanded && Parent != null)
                 {
-                    _parent.IsExpanded = true;
+                    Parent.IsExpanded = true;
                 }
 
                 // Lazy load the child items, if necessary.
@@ -97,18 +98,40 @@ namespace WorldExplorer
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"There was an error while trying to load the item's details.\n\nNerdy Details: {ex}", "Error Loading Item", MessageBoxButton.OK);
+                        MessageBox.Show(
+                            $"There was an error while trying to load the item's details.\n\nNerdy Details: {ex}",
+                            "Error Loading Item", MessageBoxButton.OK);
                     }
                 }
             }
         }
 
         #endregion // IsExpanded
+        
+        #region Label
+
+        /// <summary>
+        /// Gets/sets the text shown next to this item in the tree view.
+        /// </summary>
+        public string Label
+        {
+            get => _label;
+            set
+            {
+                if (value != _label)
+                {
+                    _label = value;
+                    OnPropertyChanged("Label");
+                }
+            }
+        }
+
+        #endregion // Label
 
         #region IsSelected
 
         /// <summary>
-        /// Gets/sets whether the TreeViewItem 
+        /// Gets/sets whether the TreeViewItem
         /// associated with this object is selected.
         /// </summary>
         public bool IsSelected
@@ -156,7 +179,7 @@ namespace WorldExplorer
 
         #region Parent
 
-        public TreeViewItemViewModel Parent => _parent;
+        public TreeViewItemViewModel? Parent { get; }
 
         #endregion // Parent
 
@@ -164,14 +187,11 @@ namespace WorldExplorer
 
         #region INotifyPropertyChanged Members
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion // INotifyPropertyChanged Members

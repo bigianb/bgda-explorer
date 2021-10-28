@@ -14,12 +14,32 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace WorldExplorer.DataLoaders
 {
     public class CacheFile
     {
+        private readonly EngineVersion _engineVersion;
+
+        public List<Entry> Entries = new();
+
+        /// <summary>
+        /// The raw data of the .dat file.
+        /// </summary>
+        public byte[] FileData;
+
+        /// <summary>
+        /// The raw data of the .hdr file.
+        /// </summary>
+        public byte[] HeaderData;
+
+        /// <summary>
+        /// The .hdr file name.
+        /// </summary>
+        public string Name;
+
         public CacheFile(EngineVersion engineVersion, string name, byte[] hdrData, byte[] datData)
         {
             _engineVersion = engineVersion;
@@ -28,57 +48,18 @@ namespace WorldExplorer.DataLoaders
             FileData = datData;
         }
 
-        private readonly EngineVersion _engineVersion;
-
-        /// <summary>
-        /// The .hdr file name.
-        /// </summary>
-        public string Name;
-
-        /// <summary>
-        /// The raw data of the .hdr file.
-        /// </summary>
-        public byte[] HeaderData;
-
-        /// <summary>
-        /// The raw data of the .dat file.
-        /// </summary>
-        public byte[] FileData;
-
-        public class Child
-        {
-            public int id;
-            public int VifOffset;
-            public int VifLength;
-            public int TexOffset;
-            public int TexLength;
-        }
-
-        public class Entry
-        {
-            public string name;
-            public List<Child> children = new List<Child>();
-
-            public Entry(string name)
-            {
-                this.name = name;
-            }
-        }
-
-        public List<Entry> Entries = new List<Entry>();
-
         public void ReadEntries()
         {
             Entries.Clear();
-            var reader = new DataReader(HeaderData);
+            DataReader reader = new(HeaderData);
             var numEntries = reader.ReadInt32();
-            for (var entryNo=0; entryNo < numEntries; ++entryNo)
+            for (var entryNo = 0; entryNo < numEntries; ++entryNo)
             {
                 Entries.Add(readEntry(reader));
             }
         }
 
-        Entry readEntry(DataReader reader)
+        private Entry readEntry(DataReader reader)
         {
             var childrenOffset = reader.ReadInt32();
             var nameOffset = reader.ReadInt32();
@@ -89,17 +70,18 @@ namespace WorldExplorer.DataLoaders
             reader.Offset = nameOffset;
             var name = reader.ReadZString();
 
-            var entry = new Entry(name);
+            Entry entry = new(name);
             reader.Offset = childrenOffset;
-            for (var i=0; i<numChildren; i += 2)
+            for (var i = 0; i < numChildren; i += 2)
             {
                 entry.children.Add(readChild(reader));
             }
+
             reader.Offset = nextElOffset;
             return entry;
         }
 
-        Child readChild(DataReader reader)
+        private Child readChild(DataReader reader)
         {
             var id = reader.ReadInt16();
             var len = 2048 * reader.ReadInt16();
@@ -111,10 +93,10 @@ namespace WorldExplorer.DataLoaders
 
             if (id != id2)
             {
-                throw new System.Exception("expected ids to match");
+                throw new Exception("expected ids to match");
             }
 
-            var child = new Child();
+            Child child = new();
             child.id = id;
             child.TexLength = len;
             child.TexOffset = start;
@@ -124,5 +106,24 @@ namespace WorldExplorer.DataLoaders
             return child;
         }
 
+        public class Child
+        {
+            public int id;
+            public int TexLength;
+            public int TexOffset;
+            public int VifLength;
+            public int VifOffset;
+        }
+
+        public class Entry
+        {
+            public List<Child> children = new();
+            public string name;
+
+            public Entry(string name)
+            {
+                this.name = name;
+            }
+        }
     }
 }

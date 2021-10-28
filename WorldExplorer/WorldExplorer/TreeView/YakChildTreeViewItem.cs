@@ -20,26 +20,19 @@ namespace WorldExplorer
 {
     public class YakChildTreeViewItem : TreeViewItemViewModel
     {
-        public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.Child value, YakFile.Entry entry, string name)
-            : base(parent, false)
+        public YakFile.YakEntryChild? Value { get; }
+
+        public YakFile.YakEntry ParentEntry { get; }
+
+        public YakFile YakFile { get; }
+
+        public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.YakEntryChild? value,
+            YakFile.YakEntry entry, string name)
+            : base(name, parent, false)
         {
-            _yakFile = yakFile;
-            _value = value;
-            _entry = entry;
-            _name = name;
+            YakFile = yakFile;
+            Value = value;
+            ParentEntry = entry;
         }
-
-        private YakFile _yakFile;
-        private YakFile.Child _value;
-        private YakFile.Entry _entry;
-        private string _name;
-
-        public YakFile.Child Value => _value;
-
-        public YakFile.Entry ParentEntry => _entry;
-
-        public YakFile YakFile => _yakFile;
-
-        public string Text => _name;
     }
 }

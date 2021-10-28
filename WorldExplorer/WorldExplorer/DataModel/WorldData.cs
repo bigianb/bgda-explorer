@@ -13,38 +13,29 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 using System.Collections.Generic;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 
 namespace WorldExplorer.DataModel
 {
     public class WorldData
     {
-        public List<WorldElement> worldElements;
-        public int[,] textureChunkOffsets;
-    }
+        public int[,]? TextureChunkOffsets { get; set; }
 
-    public class WorldElement
-    {
-        public int ElementIndex { get; set; }
-        public Rect3D boundingBox;
-        public Model model;
-        public WriteableBitmap Texture;
+        public List<WorldElement> WorldElements { get; } = new();
 
-        // The position before rotation
-        public Vector3D pos;
-
-        public bool usesRotFlags;
-        public int xyzRotFlags;
-
-        public double cosAlpha;
-        public double sinAlpha;
-        // Whether we should flip the y axis (when not using rot flags)
-        public bool negYaxis;
-
-        // Store info to access again
-        public int VifDataOffset;
-        public int VifDataLength;
+        public Model? GetElementModel(WorldElement element)
+        {
+            // if (element.DataInfo == null) return null;
+            //
+            // element.Model = GetElementModel(
+            //     NullLogger.Instance, 
+            //     element.DataInfo.AbsoluteVifDataOffset,
+            //     data.AsSpan(element.DataInfo.AbsoluteVifDataOffset, element.DataInfo.VifDataLength),
+            //     texWidth,
+            //     texHeight
+            // );
+            return element.Model;
+        }
     }
 }

@@ -28,7 +28,17 @@ namespace WorldExplorer.DataLoaders
 {
     public class VifDecoder
     {
-        public static List<Mesh> Decode(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth, int texturePixelHeight)
+        private const int NOP_CMD = 0;
+        private const int STCYCL_CMD = 1;
+        private const int ITOP_CMD = 4;
+        private const int STMOD_CMD = 5;
+        private const int FLUSH_CMD = 0x11;
+        private const int MSCAL_CMD = 0x14;
+        private const int STMASK_CMD = 0x20;
+        private const int DIRECT_CMD = 0x50;
+
+        public static List<Mesh> Decode(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth,
+            int texturePixelHeight)
         {
             var sig = DataUtil.getLEInt(data, 0);
             var numMeshes = data[0x12] & 0xFF;
@@ -44,42 +54,47 @@ namespace WorldExplorer.DataLoaders
                 numMeshes = 1;
                 meshBlockOffset = 0x68;
             }
-            var offset1 = DataUtil.getLEInt(data, 0x24);
-            var meshes = new List<Mesh>();
+
+            // var offset1 = DataUtil.getLEInt(data, 0x24);
+            List<Mesh> meshes = new();
             var totalNumChunks = 0;
 
             for (var meshNum = 0; meshNum < numMeshes; ++meshNum)
             {
-                var offsetVerts = DataUtil.getLEInt(data, meshBlockOffset + meshNum * 4);
-                var offsetEndVerts = DataUtil.getLEInt(data, meshBlockOffset + 4 + meshNum * 4);
+                var offsetVerts = DataUtil.getLEInt(data, meshBlockOffset + (meshNum * 4));
+                var offsetEndVerts = DataUtil.getLEInt(data, meshBlockOffset + 4 + (meshNum * 4));
                 var chunks = ReadVerts(log, data.Slice(offsetVerts, offsetEndVerts - offsetVerts));
-                var Mesh = ChunksToMesh(log, chunks, texturePixelWidth, texturePixelHeight);
-                meshes.Add(Mesh);
+                var mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
+                meshes.Add(mesh);
                 totalNumChunks += chunks.Count;
             }
+
             log.LogLine("Num Meshes=" + numMeshes);
             log.LogLine("Total Num Chunks=" + totalNumChunks);
 
             return meshes;
         }
 
-        public static List<Chunk> DecodeChunks(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth, int texturePixelHeight)
+        public static List<Chunk> DecodeChunks(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth,
+            int texturePixelHeight)
         {
             var numMeshes = data[0x12] & 0xFF;
-            var chunks = new List<Chunk>();
+            List<Chunk> chunks = new();
             for (var meshNum = 0; meshNum < numMeshes; ++meshNum)
             {
-                var offsetVerts = DataUtil.getLEInt(data, 0x28 + meshNum * 4);
-                var offsetEndVerts = DataUtil.getLEInt(data, 0x2C + meshNum * 4);
+                var offsetVerts = DataUtil.getLEInt(data, 0x28 + (meshNum * 4));
+                var offsetEndVerts = DataUtil.getLEInt(data, 0x2C + (meshNum * 4));
                 chunks.AddRange(ReadVerts(log, data.Slice(offsetVerts, offsetEndVerts - offsetVerts)));
             }
+
             return chunks;
         }
 
-        public static Mesh DecodeMesh(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth, int texturePixelHeight)
+        public static Mesh DecodeMesh(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth,
+            int texturePixelHeight)
         {
             var chunks = ReadVerts(log, data);
-            var mesh = ChunksToMesh(log, chunks, texturePixelWidth, texturePixelHeight);
+            var mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
 
             return mesh;
         }
@@ -87,7 +102,6 @@ namespace WorldExplorer.DataLoaders
         // Finds which vertex weight object to use for the given vertex.
         private static VertexWeight FindVertexWeight(List<VertexWeight> weights, int vertexNum)
         {
-
             foreach (var weight in weights)
             {
                 if (vertexNum >= weight.startVertex && vertexNum <= weight.endVertex)
@@ -95,10 +109,12 @@ namespace WorldExplorer.DataLoaders
                     return weight;
                 }
             }
+
             if (weights.Count != 0)
             {
                 Debug.Fail("Failed to find vertex weight");
             }
+
             return new VertexWeight();
         }
 
@@ -110,112 +126,128 @@ namespace WorldExplorer.DataLoaders
             {
                 pointOut.X = pointOut.X % 1;
             }
+
             if (pointOut.Y > 1.0)
             {
                 pointOut.Y = pointOut.Y % 1;
             }
+
             return pointOut;
         }
 
-        public static Mesh ChunksToMesh(ILogger log, List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
+        public static Mesh ChunksToMesh(List<Chunk> chunks, int texturePixelWidth, int texturePixelHeight)
         {
-            var mesh = new Mesh();
             var numVertices = 0;
             foreach (var chunk in chunks)
             {
-                numVertices += chunk.vertices.Count;
+                numVertices += chunk.Vertices.Count;
             }
-            mesh.TriangleIndices = new Int32Collection();
-            mesh.Positions = new Point3DCollection(numVertices);
-            mesh.Normals = new Vector3DCollection(numVertices);
-            mesh.vertexWeights = new List<VertexWeight>();
+
+            var triangleIndices = new Int32Collection();
+            var positions = new Point3DCollection(numVertices);
+            var normals = new Vector3DCollection(numVertices);
+            var vertexWeights = new List<VertexWeight>();
             var uvCoords = new Point[numVertices];
-            var uninitPoint = new Point(-10000, -10000);
+            Point unInitPoint = new(-10000, -10000);
             for (var uv = 0; uv < uvCoords.Length; ++uv)
             {
-                uvCoords[uv] = uninitPoint;
+                uvCoords[uv] = unInitPoint;
             }
-            var vstart = 0;
+
+            var vStart = 0;
             foreach (var chunk in chunks)
             {
                 if (null == chunk.gifTag0)
-                {
                     // Hack to deal with JLH models. TODO: Fix this properly
+                {
                     continue;
                 }
+
                 if ((chunk.gifTag0.prim & 0x07) != 4)
                 {
                     Debug.Fail("Can only deal with tri strips");
                 }
 
-                foreach (var vertex in chunk.vertices)
+                foreach (var vertex in chunk.Vertices)
                 {
-                    var point = new Point3D(vertex.x / 16.0, vertex.y / 16.0, vertex.z / 16.0);
-                    mesh.Positions.Add(point);
+                    Point3D point = new(vertex.X / 16.0, vertex.Y / 16.0, vertex.Z / 16.0);
+                    positions.Add(point);
                 }
-                foreach (var normal in chunk.normals)
+
+                foreach (var normal in chunk.Normals)
                 {
-                    mesh.Normals.Add(new Vector3D(normal.x / 127.0, normal.y / 127.0, normal.z / 127.0));
+                    normals.Add(new Vector3D(normal.X / 127.0, normal.Y / 127.0, normal.Z / 127.0));
                 }
-                foreach (var vw in chunk.vertexWeights)
+
+                foreach (var vw in chunk.VertexWeights)
                 {
                     var vwAdjusted = vw;
-                    vwAdjusted.startVertex += vstart;
-                    if (vwAdjusted.endVertex >= chunk.vertices.Count)
+                    vwAdjusted.startVertex += vStart;
+                    if (vwAdjusted.endVertex >= chunk.Vertices.Count)
                     {
-                        vwAdjusted.endVertex = chunk.vertices.Count - 1;
+                        vwAdjusted.endVertex = chunk.Vertices.Count - 1;
                     }
-                    vwAdjusted.endVertex += vstart;
-                    if (vw.startVertex <= (chunk.vertices.Count - 1))
+
+                    vwAdjusted.endVertex += vStart;
+                    if (vw.startVertex <= chunk.Vertices.Count - 1)
                     {
-                        mesh.vertexWeights.Add(vwAdjusted);
+                        vertexWeights.Add(vwAdjusted);
                     }
                 }
+
                 var vstrip = new int[chunk.gifTag0.nloop];
                 var regsPerVertex = chunk.gifTag0.nreg;
-                var numVlocs = chunk.vlocs.Count;
-                var numVertsInChunk = chunk.vertices.Count;
+                var numVlocs = chunk.VLocs.Count;
+                var numVertsInChunk = chunk.Vertices.Count;
                 for (var vlocIndx = 2; vlocIndx < numVlocs; ++vlocIndx)
                 {
                     var v = vlocIndx - 2;
-                    var stripIdx2 = (chunk.vlocs[vlocIndx].v2 & 0x1FF) / regsPerVertex;
-                    var stripIdx3 = (chunk.vlocs[vlocIndx].v3 & 0x1FF) / regsPerVertex;
+                    var stripIdx2 = (chunk.VLocs[vlocIndx].Value2 & 0x1FF) / regsPerVertex;
+                    var stripIdx3 = (chunk.VLocs[vlocIndx].Value3 & 0x1FF) / regsPerVertex;
                     if (stripIdx3 < vstrip.Length && stripIdx2 < vstrip.Length)
                     {
                         vstrip[stripIdx3] = vstrip[stripIdx2] & 0x1FF;
 
-                        var skip2 = (chunk.vlocs[vlocIndx].v3 & 0x8000) == 0x8000;
+                        var skip2 = (chunk.VLocs[vlocIndx].Value3 & 0x8000) == 0x8000;
                         if (skip2)
                         {
                             vstrip[stripIdx3] |= 0x8000;
                         }
                     }
-                    var stripIdx = (chunk.vlocs[vlocIndx].v1 & 0x1FF) / regsPerVertex;
-                    var skip = (chunk.vlocs[vlocIndx].v1 & 0x8000) == 0x8000;
+
+                    var stripIdx = (chunk.VLocs[vlocIndx].Value1 & 0x1FF) / regsPerVertex;
+                    var skip = (chunk.VLocs[vlocIndx].Value1 & 0x8000) == 0x8000;
 
                     if (v < numVertsInChunk && stripIdx < vstrip.Length)
                     {
-                        vstrip[stripIdx] = skip ? (v | 0x8000) : v;
+                        vstrip[stripIdx] = skip ? v | 0x8000 : v;
                     }
                 }
-                int numExtraVlocs = chunk.extraVlocs[0];
-                for (var extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc)
-                {
-                    var idx = extraVloc * 4 + 4;
-                    var stripIndxSrc = (chunk.extraVlocs[idx] & 0x1FF) / regsPerVertex;
-                    var stripIndxDest = (chunk.extraVlocs[idx + 1] & 0x1FF) / regsPerVertex; ;
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
 
-                    stripIndxSrc = (chunk.extraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
-                    stripIndxDest = (chunk.extraVlocs[idx + 3] & 0x1FF) / regsPerVertex; ;
-                    vstrip[stripIndxDest] = (chunk.extraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                if (chunk.ExtraVlocs != null)
+                {
+                    int numExtraVlocs = chunk.ExtraVlocs[0];
+                    for (var extraVloc = 0; extraVloc < numExtraVlocs; ++extraVloc)
+                    {
+                        var idx = (extraVloc * 4) + 4;
+                        var stripIndxSrc = (chunk.ExtraVlocs[idx] & 0x1FF) / regsPerVertex;
+                        var stripIndxDest = (chunk.ExtraVlocs[idx + 1] & 0x1FF) / regsPerVertex;
+
+                        vstrip[stripIndxDest] = (chunk.ExtraVlocs[idx + 1] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+
+                        stripIndxSrc = (chunk.ExtraVlocs[idx + 2] & 0x1FF) / regsPerVertex;
+                        stripIndxDest = (chunk.ExtraVlocs[idx + 3] & 0x1FF) / regsPerVertex;
+
+                        vstrip[stripIndxDest] = (chunk.ExtraVlocs[idx + 3] & 0x8000) | (vstrip[stripIndxSrc] & 0x1FF);
+                    }
                 }
+
                 var triIdx = 0;
                 for (var i = 2; i < vstrip.Length; ++i)
                 {
-                    var vidx1 = vstart + (vstrip[i - 2] & 0xFF);
-                    var vidx2 = vstart + (vstrip[i - 1] & 0xFF);
-                    var vidx3 = vstart + (vstrip[i] & 0xFF);
+                    var vidx1 = vStart + (vstrip[i - 2] & 0xFF);
+                    var vidx2 = vStart + (vstrip[i - 1] & 0xFF);
+                    var vidx3 = vStart + (vstrip[i] & 0xFF);
 
                     var uv1 = i - 2;
                     var uv2 = i - 1;
@@ -239,69 +271,71 @@ namespace WorldExplorer.DataLoaders
                         var udiv = texturePixelWidth * 16.0;
                         var vdiv = texturePixelHeight * 16.0;
 
-                        var p1 = new Point(chunk.uvs[uv1].u / udiv, chunk.uvs[uv1].v / vdiv);
-                        var p2 = new Point(chunk.uvs[uv2].u / udiv, chunk.uvs[uv2].v / vdiv);
-                        var p3 = new Point(chunk.uvs[uv3].u / udiv, chunk.uvs[uv3].v / vdiv);
+                        Point p1 = new(chunk.UVs[uv1].U / udiv, chunk.UVs[uv1].V / vdiv);
+                        Point p2 = new(chunk.UVs[uv2].U / udiv, chunk.UVs[uv2].V / vdiv);
+                        Point p3 = new(chunk.UVs[uv3].U / udiv, chunk.UVs[uv3].V / vdiv);
 
                         p1 = TileST(p1);
                         p2 = TileST(p2);
                         p3 = TileST(p3);
 
-                        if (!uninitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
+                        if (!unInitPoint.Equals(uvCoords[vidx1]) && !p1.Equals(uvCoords[vidx1]))
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             var originalVIdx = vidx1;
-                            vidx1 = vstart + numVertsInChunk;
+                            vidx1 = vStart + numVertsInChunk;
                             numVertsInChunk++;
-                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
-                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            positions.Add(positions.ElementAt(originalVIdx));
+                            normals.Add(normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length + 1);
-                            uvCoords[uvCoords.Length - 1] = uninitPoint;
-                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            uvCoords[uvCoords.Length - 1] = unInitPoint;
+                            var weight = FindVertexWeight(chunk.VertexWeights, originalVIdx - vStart);
                             if (weight.boneWeight1 > 0)
                             {
                                 var vw = weight;
                                 vw.startVertex = vidx1;
                                 vw.endVertex = vidx1;
-                                mesh.vertexWeights.Add(vw);
+                                vertexWeights.Add(vw);
                             }
                         }
-                        if (!uninitPoint.Equals(uvCoords[vidx2]) && !p2.Equals(uvCoords[vidx2]))
+
+                        if (!unInitPoint.Equals(uvCoords[vidx2]) && !p2.Equals(uvCoords[vidx2]))
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             var originalVIdx = vidx2;
-                            vidx2 = vstart + numVertsInChunk;
+                            vidx2 = vStart + numVertsInChunk;
                             numVertsInChunk++;
-                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
-                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            positions.Add(positions.ElementAt(originalVIdx));
+                            normals.Add(normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length + 1);
-                            uvCoords[uvCoords.Length - 1] = uninitPoint;
-                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            uvCoords[uvCoords.Length - 1] = unInitPoint;
+                            var weight = FindVertexWeight(chunk.VertexWeights, originalVIdx - vStart);
                             if (weight.boneWeight1 > 0)
                             {
                                 var vw = weight;
                                 vw.startVertex = vidx2;
                                 vw.endVertex = vidx2;
-                                mesh.vertexWeights.Add(vw);
+                                vertexWeights.Add(vw);
                             }
                         }
-                        if (!uninitPoint.Equals(uvCoords[vidx3]) && !p3.Equals(uvCoords[vidx3]))
+
+                        if (!unInitPoint.Equals(uvCoords[vidx3]) && !p3.Equals(uvCoords[vidx3]))
                         {
                             // There is more than 1 uv assigment to this vertex, so we need to duplicate it.
                             var originalVIdx = vidx3;
-                            vidx3 = vstart + numVertsInChunk;
+                            vidx3 = vStart + numVertsInChunk;
                             numVertsInChunk++;
-                            mesh.Positions.Add(mesh.Positions.ElementAt(originalVIdx));
-                            mesh.Normals.Add(mesh.Normals.ElementAt(originalVIdx));
+                            positions.Add(positions.ElementAt(originalVIdx));
+                            normals.Add(normals.ElementAt(originalVIdx));
                             Array.Resize(ref uvCoords, uvCoords.Length + 1);
-                            uvCoords[uvCoords.Length - 1] = uninitPoint;
-                            var weight = FindVertexWeight(chunk.vertexWeights, originalVIdx - vstart);
+                            uvCoords[uvCoords.Length - 1] = unInitPoint;
+                            var weight = FindVertexWeight(chunk.VertexWeights, originalVIdx - vStart);
                             if (weight.boneWeight1 > 0)
                             {
                                 var vw = weight;
                                 vw.startVertex = vidx3;
                                 vw.endVertex = vidx3;
-                                mesh.vertexWeights.Add(vw);
+                                vertexWeights.Add(vw);
                             }
                         }
 
@@ -310,89 +344,31 @@ namespace WorldExplorer.DataLoaders
                         uvCoords[vidx3] = p3;
 
                         // Double sided hack. Should fix this with normals really
-                        mesh.TriangleIndices.Add(vidx1);
-                        mesh.TriangleIndices.Add(vidx2);
-                        mesh.TriangleIndices.Add(vidx3);
+                        triangleIndices.Add(vidx1);
+                        triangleIndices.Add(vidx2);
+                        triangleIndices.Add(vidx3);
 
-                        mesh.TriangleIndices.Add(vidx2);
-                        mesh.TriangleIndices.Add(vidx1);
-                        mesh.TriangleIndices.Add(vidx3);
+                        triangleIndices.Add(vidx2);
+                        triangleIndices.Add(vidx1);
+                        triangleIndices.Add(vidx3);
                     }
+
                     ++triIdx;
                 }
-                vstart += numVertsInChunk;
-            }
-            mesh.TextureCoordinates = new PointCollection(uvCoords);
-            return mesh;
-        }
 
-        public class Vertex
-        {
-            public short x;
-            public short y;
-            public short z;
-        }
-
-        public class SByteVector
-        {
-            public sbyte x;
-            public sbyte y;
-            public sbyte z;
-        }
-
-        public class VLoc
-        {
-            public int v1;
-            public int v2;
-            public int v3;
-
-            public override string ToString()
-            {
-                return HexUtil.formatHexUShort(v1) + ", " + HexUtil.formatHexUShort(v2) + ", " + HexUtil.formatHexUShort(v3);
-            }
-        }
-
-        public class UV
-        {
-            public UV(short u, short v)
-            {
-                this.u = u;
-                this.v = v;
+                vStart += numVertsInChunk;
             }
 
-            public short u;
-            public short v;
+            var textureCoordinates = new PointCollection(uvCoords);
+            return new Mesh(normals, positions, textureCoordinates, triangleIndices, vertexWeights);
         }
-
-        public class Chunk
-        {
-            public int mscalID = 0;
-            public GIFTag gifTag0 = null;
-            public GIFTag gifTag1 = null;
-            public List<Vertex> vertices = new List<Vertex>();
-            public List<SByteVector> normals = new List<SByteVector>();
-            public List<VLoc> vlocs = new List<VLoc>();
-            public List<UV> uvs = new List<UV>();
-            public List<VertexWeight> vertexWeights = new List<VertexWeight>();
-            public ushort[] extraVlocs;
-            public List<GIFTag> DIRECTGifTags = new List<GIFTag>();
-        }
-
-        private const int NOP_CMD = 0;
-        private const int STCYCL_CMD = 1;
-        private const int ITOP_CMD = 4;
-        private const int STMOD_CMD = 5;
-        private const int FLUSH_CMD = 0x11;
-        private const int MSCAL_CMD = 0x14;
-        private const int STMASK_CMD = 0x20;
-        private const int DIRECT_CMD = 0x50;
 
         public static List<Chunk> ReadVerts(ILogger log, ReadOnlySpan<byte> vertData)
         {
-            var chunks = new List<Chunk>();
-            var currentChunk = new Chunk();
-            Chunk previousChunk = null;
-            int offset = 0;
+            List<Chunk> chunks = new();
+            Chunk currentChunk = new();
+            Chunk? previousChunk = null;
+            var offset = 0;
             while (offset < vertData.Length)
             {
                 var vifCommand = vertData[offset + 3] & 0x7f;
@@ -427,6 +403,7 @@ namespace WorldExplorer.DataLoaders
                         {
                             DebugWriteLine("**** Microcode " + immCommand + " not supported");
                         }
+
                         currentChunk.mscalID = immCommand;
                         chunks.Add(currentChunk);
                         previousChunk = currentChunk;
@@ -448,16 +425,17 @@ namespace WorldExplorer.DataLoaders
                         break;
                     case DIRECT_CMD:
                         DebugWrite(HexUtil.formatHex(offset) + " ");
-                        DebugWriteLine("DIRECT, " + immCommand * 16 + " bytes");
+                        DebugWriteLine("DIRECT, " + (immCommand * 16) + " bytes");
 
                         var tags = new GIFTag[immCommand];
 
                         for (var i = 0; i < immCommand; i++)
                         {
                             tags[i] = new GIFTag();
-                            tags[i].parse(vertData, offset + 4 + i * 16);
+                            tags[i].Parse(vertData.Slice(offset + 4 + (i * 16)));
                         }
-                        currentChunk.DIRECTGifTags.AddRange(tags);
+
+                        currentChunk.DirectGifTags.AddRange(tags);
 
                         offset += 4;
                         offset += immCommand * 16;
@@ -466,7 +444,7 @@ namespace WorldExplorer.DataLoaders
                         if ((vifCommand & 0x60) == 0x60)
                         {
                             // unpack command
-                            var mask = ((vifCommand & 0x10) == 0x10);
+                            var mask = (vifCommand & 0x10) == 0x10;
                             var vn = (vifCommand >> 2) & 3;
                             var vl = vifCommand & 3;
                             var addr = immCommand & 0x1ff;
@@ -474,20 +452,24 @@ namespace WorldExplorer.DataLoaders
                             var usn = (immCommand & 0x4000) == 0x4000;
 
                             DebugWrite(HexUtil.formatHex(offset) + " ");
-                            var debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " + numCommand;
+                            var debugMsg = "UNPACK: vn: " + vn + ", vl: " + vl + ", Addr: " + addr + ", num: " +
+                                           numCommand;
 
                             if (flag)
                             {
                                 debugMsg += ", Flag";
                             }
+
                             if (usn)
                             {
                                 debugMsg += ", Unsigned";
                             }
+
                             if (mask)
                             {
                                 debugMsg += ", Mask";
                             }
+
                             DebugWriteLine(debugMsg);
                             offset += 4;
                             if (vn == 1 && vl == 1)
@@ -500,7 +482,7 @@ namespace WorldExplorer.DataLoaders
                                     {
                                         var u = DataUtil.getLEShort(vertData, offset);
                                         var v = DataUtil.getLEShort(vertData, offset + 2);
-                                        previousChunk.uvs.Add(new UV(u, v));
+                                        previousChunk.UVs.Add(new UV(u, v));
                                         offset += 4;
                                     }
                                 }
@@ -523,13 +505,8 @@ namespace WorldExplorer.DataLoaders
                                         var z = DataUtil.getLEShort(vertData, offset + 4);
                                         offset += 6;
 
-                                        var vertex = new Vertex
-                                        {
-                                            x = x,
-                                            y = y,
-                                            z = z
-                                        };
-                                        currentChunk.vertices.Add(vertex);
+                                        Vertex vertex = new() {X = x, Y = y, Z = z};
+                                        currentChunk.Vertices.Add(vertex);
                                     }
                                     else
                                     {
@@ -537,16 +514,11 @@ namespace WorldExplorer.DataLoaders
                                         int y = DataUtil.getLEUShort(vertData, offset + 2);
                                         int z = DataUtil.getLEUShort(vertData, offset + 4);
                                         offset += 6;
-
-                                        var vloc = new VLoc
-                                        {
-                                            v1 = x,
-                                            v2 = y,
-                                            v3 = z
-                                        };
-                                        currentChunk.vlocs.Add(vloc);
+                                        
+                                        currentChunk.VLocs.Add(new(x, y, z));
                                     }
                                 }
+
                                 offset = (offset + 3) & ~3;
                             }
                             else if (vn == 2 && vl == 2)
@@ -555,78 +527,87 @@ namespace WorldExplorer.DataLoaders
                                 var idx = offset;
                                 for (var vnum = 0; vnum < numCommand; ++vnum)
                                 {
-                                    var vec = new SByteVector
+                                    SByteVector vec = new()
                                     {
-                                        x = (sbyte)vertData[idx++],
-                                        y = (sbyte)vertData[idx++],
-                                        z = (sbyte)vertData[idx++]
+                                        X = (sbyte)vertData[idx++],
+                                        Y = (sbyte)vertData[idx++],
+                                        Z = (sbyte)vertData[idx++]
                                     };
-                                    currentChunk.normals.Add(vec);
+                                    currentChunk.Normals.Add(vec);
                                 }
+
                                 var numBytes = ((numCommand * 3) + 3) & ~3;
                                 offset += numBytes;
                             }
                             else if (vn == 3 && vl == 0)
                             {
                                 // v4-32
-                                log.LogLine("v4-32 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") + ", addr=" + addr);
+                                log.LogLine("v4-32 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") +
+                                            ", addr=" + addr);
                                 if (1 == numCommand)
                                 {
                                     currentChunk.gifTag0 = new GIFTag();
-                                    currentChunk.gifTag0.parse(vertData, offset);
+                                    currentChunk.gifTag0.Parse(vertData.Slice(offset));
                                     DebugWrite(HexUtil.formatHex(offset) + " ");
-                                    DebugWriteLine("GifTag: " + currentChunk.gifTag0.ToString());
+                                    DebugWriteLine("GifTag: " + currentChunk.gifTag0);
                                 }
                                 else if (2 == numCommand)
                                 {
                                     currentChunk.gifTag0 = new GIFTag();
-                                    currentChunk.gifTag0.parse(vertData, offset);
+                                    currentChunk.gifTag0.Parse(vertData.Slice(offset));
                                     currentChunk.gifTag1 = new GIFTag();
-                                    currentChunk.gifTag1.parse(vertData, offset + 16);
+                                    currentChunk.gifTag1.Parse(vertData.Slice(offset + 16));
 
                                     DebugWrite(HexUtil.formatHex(offset) + " ");
-                                    DebugWriteLine("GifTag0: " + currentChunk.gifTag0.ToString());
+                                    DebugWriteLine("GifTag0: " + currentChunk.gifTag0);
                                     DebugWrite(HexUtil.formatHex(offset) + " ");
-                                    DebugWriteLine("GifTag1: " + currentChunk.gifTag1.ToString());
+                                    DebugWriteLine("GifTag1: " + currentChunk.gifTag1);
                                 }
                                 else
                                 {
                                     log.LogLine("unknown number of gif commands.");
                                 }
+
                                 var numBytes = numCommand * 16;
                                 offset += numBytes;
                             }
                             else if (vn == 3 && vl == 1)
                             {
                                 // v4-16
-                                log.LogLine("v4-16 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") + ", addr=" + addr);
+                                log.LogLine("v4-16 data, " + numCommand + (numCommand == 1 ? " entry" : " entries") +
+                                            ", addr=" + addr);
                                 var numShorts = numCommand * 4;
                                 if (usn)
                                 {
-                                    currentChunk.extraVlocs = new ushort[numShorts];
+                                    currentChunk.ExtraVlocs = new ushort[numShorts];
                                     for (var i = 0; i < numCommand; ++i)
                                     {
-                                        currentChunk.extraVlocs[i * 4] = DataUtil.getLEUShort(vertData, offset + i * 8);
-                                        currentChunk.extraVlocs[i * 4 + 1] = DataUtil.getLEUShort(vertData, offset + i * 8 + 2);
-                                        currentChunk.extraVlocs[i * 4 + 2] = DataUtil.getLEUShort(vertData, offset + i * 8 + 4);
-                                        currentChunk.extraVlocs[i * 4 + 3] = DataUtil.getLEUShort(vertData, offset + i * 8 + 6);
+                                        currentChunk.ExtraVlocs[i * 4] =
+                                            DataUtil.getLEUShort(vertData, offset + (i * 8));
+                                        currentChunk.ExtraVlocs[(i * 4) + 1] =
+                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 2);
+                                        currentChunk.ExtraVlocs[(i * 4) + 2] =
+                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 4);
+                                        currentChunk.ExtraVlocs[(i * 4) + 3] =
+                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 6);
                                     }
                                 }
                                 else
                                 {
                                     log.LogLine("Unsupported tag");
                                 }
+
                                 offset += numShorts * 2;
                             }
                             else if (vn == 3 && vl == 2)
                             {
                                 // v4-8
-                                var numBytes = numCommand * 4;
-                                currentChunk.vertexWeights = new List<VertexWeight>();
+                                // var numBytes = numCommand * 4;
+                                currentChunk.VertexWeights = new List<VertexWeight>();
                                 var curVertex = 0;
                                 for (var i = 0; i < numCommand; ++i)
                                 {
-                                    var vw = new VertexWeight
+                                    VertexWeight vw = new()
                                     {
                                         startVertex = curVertex,
                                         bone1 = vertData[offset++] / 4,
@@ -659,12 +640,11 @@ namespace WorldExplorer.DataLoaders
                                                 vw.boneWeight4 = bw4;
                                             }
                                         }
-
                                     }
-                                    vw.endVertex = curVertex - 1;
-                                    currentChunk.vertexWeights.Add(vw);
-                                }
 
+                                    vw.endVertex = curVertex - 1;
+                                    currentChunk.VertexWeights.Add(vw);
+                                }
                             }
                             else
                             {
@@ -677,9 +657,11 @@ namespace WorldExplorer.DataLoaders
                             DebugWriteLine("Unknown command: " + vifCommand);
                             offset = vertData.Length;
                         }
+
                         break;
                 }
             }
+
             return chunks;
         }
 
@@ -687,9 +669,70 @@ namespace WorldExplorer.DataLoaders
         {
             //Debug.Write(msg);
         }
+
         private static void DebugWriteLine(string msg)
         {
             //Debug.WriteLine(msg);
+        }
+
+        public class Vertex
+        {
+            public short X;
+            public short Y;
+            public short Z;
+        }
+
+        public class SByteVector
+        {
+            public sbyte X;
+            public sbyte Y;
+            public sbyte Z;
+        }
+
+        public class VLoc
+        {
+            public readonly int Value1;
+            public readonly int Value2;
+            public readonly int Value3;
+
+            public VLoc(int v1, int v2, int v3)
+            {
+                this.Value1 = v1;
+                this.Value2 = v2;
+                this.Value3 = v3;
+            }
+
+            public override string ToString()
+            {
+                return HexUtil.formatHexUShort(Value1) + ", " + HexUtil.formatHexUShort(Value2) + ", " +
+                       HexUtil.formatHexUShort(Value3);
+            }
+        }
+
+        public class UV
+        {
+            public readonly short U;
+            public readonly short V;
+
+            public UV(short u, short v)
+            {
+                this.U = u;
+                this.V = v;
+            }
+        }
+
+        public class Chunk
+        {
+            public readonly List<GIFTag> DirectGifTags = new();
+            public ushort[]? ExtraVlocs;
+            public GIFTag? gifTag0;
+            public GIFTag? gifTag1;
+            public int mscalID;
+            public readonly List<SByteVector> Normals = new();
+            public readonly List<UV> UVs = new();
+            public List<VertexWeight> VertexWeights = new();
+            public readonly List<Vertex> Vertices = new();
+            public readonly List<VLoc> VLocs = new();
         }
     }
 }

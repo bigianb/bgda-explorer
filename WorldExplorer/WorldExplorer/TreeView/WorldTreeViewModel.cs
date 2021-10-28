@@ -16,24 +16,19 @@
 
 using System;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView
 {
     public class WorldTreeViewModel : TreeViewItemViewModel
     {
-        readonly World _world;
+        private readonly World _world;
 
         public WorldTreeViewModel(World world)
-            : base(null, true)
+            : base(world.Name, null, true)
         {
             _world = world;
         }
 
-        public World World()
-        {
-            return _world;
-        }
-
-        public string WorldName => _world.Name;
+        public World World => _world;
 
         protected override void LoadChildren()
         {
@@ -41,19 +36,19 @@ namespace WorldExplorer
 
             if (_world.WorldLmp != null)
             {
-                base.Children.Add(new LmpTreeViewModel(_world, this, _world.WorldLmp));
+                Children.Add(new LmpTreeViewModel(_world, this, _world.WorldLmp));
             }
             else if (_world.WorldGob != null)
             {
-                base.Children.Add(new GobTreeViewModel(_world, this));
+                Children.Add(new GobTreeViewModel(_world, this));
             }
             else if (_world.WorldYak != null)
             {
-                base.Children.Add(new YakTreeViewModel(this, _world.WorldYak));
+                Children.Add(new YakTreeViewModel(this, _world.WorldYak));
             }
             else if (_world.HdrDatFile != null)
             {
-                base.Children.Add(new HdrDatTreeViewModel(this, _world.HdrDatFile));
+                Children.Add(new HdrDatTreeViewModel(this, _world.HdrDatFile));
             }
             else
             {

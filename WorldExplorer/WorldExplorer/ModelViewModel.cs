@@ -24,15 +24,31 @@ using System.Windows.Media.Media3D;
 using WorldExplorer.DataExporters;
 using WorldExplorer.DataModel;
 using WorldExplorer.Win3D;
+using MessageBox = System.Windows.MessageBox;
 
 namespace WorldExplorer
 {
     public class ModelViewModel : BaseViewModel
     {
-        private AnimData _animData;
-        private ModelView _modelView;
+        private readonly ModelView _modelView;
+        private AnimData? _animData;
 
-        public AnimData AnimData
+        private Camera _camera = new OrthographicCamera
+        {
+            Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1)
+        };
+
+        private Transform3D _cameraTransform = Transform3D.Identity;
+
+        private int _currentFrame;
+
+        private string? _infoText;
+
+        private ModelVisual3D? _model;
+
+        private Model? _vifModel;
+
+        public AnimData? AnimData
         {
             get => _animData;
             set
@@ -40,29 +56,92 @@ namespace WorldExplorer
                 _animData = value;
                 CurrentFrame = 0;
                 UpdateModel(false);
-                OnPropertyChanged("AnimData");
-                OnPropertyChanged("MaximumFrame");
+                OnPropertyChanged(nameof(AnimData));
+                OnPropertyChanged(nameof(MaximumFrame));
             }
         }
 
-        private WriteableBitmap _texture;
+        public WriteableBitmap? Texture { get; set; }
 
-        public WriteableBitmap Texture
-        {
-            get => _texture;
-            set => _texture = value;
-        }
-
-        private Model _vifModel;
-
-        public Model VifModel
+        public Model? VifModel
         {
             get => _vifModel;
             set
             {
                 _vifModel = value;
                 UpdateModel(true);
-                OnPropertyChanged("VifModel");
+                OnPropertyChanged(nameof(VifModel));
+            }
+        }
+
+        public int MaximumFrame
+        {
+            get => _animData == null ? 0 : _animData.NumFrames - 1;
+            // set { }
+        }
+
+        public int CurrentFrame
+        {
+            get => _currentFrame;
+            set
+            {
+                _currentFrame = value;
+                UpdateModel(false);
+                OnPropertyChanged(nameof(CurrentFrame));
+            }
+        }
+
+        public string?InfoText
+        {
+            get => _infoText;
+            set
+            {
+                _infoText = value;
+                OnPropertyChanged(nameof(InfoText));
+            }
+        }
+
+        public ModelVisual3D? Model
+        {
+            get => _model;
+            set
+            {
+                _model = value;
+
+                if (_model != null)
+                {
+                    InfoText = $"Model Bounds: {_model.Content.Bounds}";
+                    _modelView.viewport.Children.Remove(_modelView.modelObject);
+                    _modelView.modelObject = _model;
+                    _modelView.viewport.Children.Add(_modelView.modelObject);
+                }
+                else
+                {
+                    InfoText = null;
+                }
+
+                OnPropertyChanged(nameof(Model));
+            }
+        }
+
+        public Transform3D CameraTransform
+        {
+            get => _cameraTransform;
+            set
+            {
+                _cameraTransform = value;
+                _camera.Transform = _cameraTransform;
+                OnPropertyChanged(nameof(CameraTransform));
+            }
+        }
+
+        public Camera Camera
+        {
+            get => _camera;
+            set
+            {
+                _camera = value;
+                OnPropertyChanged(nameof(Camera));
             }
         }
 
@@ -75,105 +154,23 @@ namespace WorldExplorer
         {
             if (_vifModel != null)
             {
-                var newModel = (GeometryModel3D)Conversions.CreateModel3D(_vifModel.meshList, _texture, _animData, CurrentFrame);
-                var container = new ModelVisual3D
-                {
-                    Content = newModel
-                };
+                var newModel =
+                    (GeometryModel3D)Conversions.CreateModel3D(_vifModel.MeshList, Texture, _animData, CurrentFrame);
+                ModelVisual3D container = new() {Content = newModel};
 
                 if (_modelView.normalsBox.IsChecked.GetValueOrDefault())
                 {
-                    var normal = new MeshNormalsVisual3D
-                    {
-                        Mesh = (MeshGeometry3D)newModel.Geometry
-                    };
+                    MeshNormalsVisual3D normal = new() {Mesh = (MeshGeometry3D)newModel.Geometry};
 
                     container.Children.Add(normal);
                 }
 
                 Model = container;
 
-                if (updateCamera)
+                if (updateCamera && _model != null)
                 {
                     UpdateCamera(_model);
                 }
-            }
-        }
-
-        public int MaximumFrame
-        {
-            get => _animData == null ? 0 : _animData.NumFrames - 1;
-            set
-            {
-            }
-        }
-
-        private int _currentFrame = 0;
-
-        public int CurrentFrame
-        {
-            get => _currentFrame;
-            set
-            {
-                _currentFrame = value;
-                UpdateModel(false);
-                OnPropertyChanged("CurrentFrame");
-            }
-        }
-
-        private string _infoText;
-
-        public string InfoText
-        {
-            get => _infoText;
-            set
-            {
-                _infoText = value;
-                OnPropertyChanged("InfoText");
-            }
-
-        }
-
-        private ModelVisual3D _model;
-
-        public ModelVisual3D Model
-        {
-            get => _model;
-            set
-            {
-                _model = value;
-                InfoText = "Model Bounds: " + _model.Content.Bounds.ToString();
-
-                _modelView.viewport.Children.Remove(_modelView.modelObject);
-                _modelView.modelObject = _model;
-                _modelView.viewport.Children.Add(_modelView.modelObject);
-
-                OnPropertyChanged("Model");
-            }
-        }
-
-        private Transform3D _cameraTransform;
-
-        public Transform3D CameraTransform
-        {
-            get => _cameraTransform;
-            set
-            {
-                _cameraTransform = value;
-                _camera.Transform = _cameraTransform;
-                OnPropertyChanged("CameraTransform");
-            }
-        }
-
-        private Camera _camera = new OrthographicCamera { Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1) };
-
-        public Camera Camera
-        {
-            get => _camera;
-            set
-            {
-                _camera = value;
-                OnPropertyChanged("Camera");
             }
         }
 
@@ -182,11 +179,14 @@ namespace WorldExplorer
             var oCam = (OrthographicCamera)_camera;
 
             var bounds = model.Content.Bounds;
-            var centroid = new Point3D(0, 0, 0);
-            var radius = Math.Sqrt(bounds.SizeX * bounds.SizeX + bounds.SizeY * bounds.SizeY + bounds.SizeZ * bounds.SizeZ) / 2.0;
+            Point3D centroid = new(0, 0, 0);
+            var radius =
+                Math.Sqrt((bounds.SizeX * bounds.SizeX) + (bounds.SizeY * bounds.SizeY) +
+                          (bounds.SizeZ * bounds.SizeZ)) /
+                2.0;
             var cameraDistance = radius * 3.0;
 
-            var camPos = new Point3D(centroid.X, centroid.Y - cameraDistance, centroid.Z);
+            Point3D camPos = new(centroid.X, centroid.Y - cameraDistance, centroid.Z);
             oCam.Position = camPos;
             oCam.Width = cameraDistance;
             oCam.LookDirection = new Vector3D(0, 1, 0);
@@ -195,23 +195,26 @@ namespace WorldExplorer
 
         public void ShowExportForPosedModel()
         {
-            if (Model == null)
+            if (Model == null || VifModel == null)
             {
-                System.Windows.MessageBox.Show("No model currently loaded.", "Error", MessageBoxButton.OK);
+                MessageBox.Show("No model currently loaded.", "Error", MessageBoxButton.OK);
                 return;
             }
 
-            var dialog = new SaveFileDialog
+            SaveFileDialog dialog = new()
             {
                 Filter = "GLTF File|*.gltf|OBJ File|*.obj",
                 // Select gltf by default
                 FilterIndex = 1,
                 FileName = "some-model.gltf"
             };
-            if (dialog.ShowDialog() != DialogResult.OK) return;
+            if (dialog.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
 
             var ext = Path.GetExtension(dialog.FileName).ToUpperInvariant();
-            IVifExporter exporter = ext switch
+            IVifExporter? exporter = ext switch
             {
                 ".OBJ" => new VifObjExporter(),
                 ".GLTF" => new VifGltfExporter(),
@@ -219,11 +222,11 @@ namespace WorldExplorer
             };
             if (exporter == null)
             {
-                System.Windows.MessageBox.Show("Unknown file format.", "Error", MessageBoxButton.OK);
+                MessageBox.Show("Unknown file format.", "Error", MessageBoxButton.OK);
                 return;
             }
 
-            exporter.SaveToFile(dialog.FileName, VifModel, Texture, AnimData, CurrentFrame, 1.0);
+            exporter.SaveToFile(dialog.FileName, VifModel, Texture, AnimData, CurrentFrame);
         }
     }
 }

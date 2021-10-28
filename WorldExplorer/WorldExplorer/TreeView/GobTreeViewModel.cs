@@ -21,18 +21,17 @@ namespace WorldExplorer
     /// </summary>
     public class GobTreeViewModel : TreeViewItemViewModel
     {
+        private readonly World _world;
+
         public GobTreeViewModel(World world, TreeViewItemViewModel parent)
-            : base(parent, true)
+            : base(world.WorldGob?.Name ?? "[ERROR: NO GOB FILE]", parent, true)
         {
             _world = world;
         }
 
-        private World _world;
-
-        public string Text => _world.WorldGob.Filename;
-
         protected override void LoadChildren()
         {
+            if (_world.WorldGob == null) return;
             foreach (var entry in _world.WorldGob.Directory)
             {
                 Children.Add(new LmpTreeViewModel(_world, this, entry.Value));

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.IO;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -37,7 +38,7 @@ namespace WorldExplorer
                 var ext = "";
                 try
                 {
-                    ext = (System.IO.Path.GetExtension(entry.Key) ?? "").ToLower();
+                    ext = (Path.GetExtension(entry.Key) ?? "").ToLower();
                 }
                 catch (Exception e)
                 {
@@ -55,6 +56,7 @@ namespace WorldExplorer
                         child = new LmpEntryTreeViewModel(_world, this, _lmpFile, entry.Key);
                         break;
                 }
+
                 Children.Add(child);
             }
         }

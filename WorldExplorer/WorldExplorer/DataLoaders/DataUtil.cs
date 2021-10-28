@@ -15,15 +15,16 @@
 */
 
 using System;
+using System.IO;
 using System.Text;
 
 namespace WorldExplorer.DataLoaders
 {
-    class DataUtil
+    internal class DataUtil
     {
         public static string GetString(byte[] data, int index)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             var i = index;
 
             // TODO: Check array length before access
@@ -32,14 +33,31 @@ namespace WorldExplorer.DataLoaders
                 sb.Append((char)data[i]);
                 ++i;
             }
+
+            return sb.ToString();
+        }
+        
+        public static string GetString(ReadOnlySpan<byte> data, int offset = 0)
+        {
+            if (data.Length == 0)
+                throw new EndOfStreamException();
+
+            StringBuilder sb = new();
+            for (var i = offset; i < data.Length; i++)
+            {
+                var character = data[i];
+                if (character == 0) break;
+                sb.Append((char)character);
+            }
+            
             return sb.ToString();
         }
 
         public static bool FilePathHasInvalidChars(string path)
         {
-            return (!string.IsNullOrEmpty(path) && path.IndexOfAny(System.IO.Path.GetInvalidPathChars()) >= 0);
+            return !string.IsNullOrEmpty(path) && path.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
         }
-        
+
         public static int getLEInt(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToInt32(data.Slice(offset, 4).ToArray());
@@ -49,7 +67,7 @@ namespace WorldExplorer.DataLoaders
         {
             return BitConverter.ToInt32(data, offset);
         }
-        
+
         public static short getLEShort(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToInt16(data.Slice(offset, 2).ToArray());
