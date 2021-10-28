@@ -2,12 +2,12 @@
 
 namespace WorldExplorer.DataLoaders
 {
-    class BitstreamReader
+    internal class BitstreamReader
     {
-        readonly byte[] _data;
-        readonly int _baseOffset;
-        readonly int _length;
-        int _bitPosition;
+        private readonly int _baseOffset;
+        private readonly byte[] _data;
+        private readonly int _length;
+        private int _bitPosition;
 
         public BitstreamReader(byte[] data) : this(data, 0, data.Length)
         {
@@ -17,7 +17,7 @@ namespace WorldExplorer.DataLoaders
         {
             if (data == null)
             {
-                throw new ArgumentNullException("data");
+                throw new ArgumentNullException(nameof(data));
             }
 
             _data = new byte[length];
@@ -48,6 +48,7 @@ namespace WorldExplorer.DataLoaders
             {
                 throw new ArgumentException("numBits");
             }
+
             uint value = 0;
 
             // First read 16 bits from the data starting at the current bit position
@@ -59,13 +60,14 @@ namespace WorldExplorer.DataLoaders
             {
                 value |= _data[_baseOffset + bytePos + 1];
             }
+
             value <<= 8;
             if (bytePos + 2 < _length)
             {
                 value |= _data[_baseOffset + bytePos + 2];
             }
 
-            value >>= (8 - (_bitPosition & 7));
+            value >>= 8 - (_bitPosition & 7);
 
             // bit 15 now contains the first bit we are interested in.
 
@@ -73,7 +75,7 @@ namespace WorldExplorer.DataLoaders
             value >>= 16 - numBits;
 
             // Mask out the unused bits
-            value &= ((uint)0x0000FFFF >> (16 - numBits));
+            value &= (uint)0x0000FFFF >> (16 - numBits);
 
 
             _bitPosition += numBits;
@@ -92,6 +94,7 @@ namespace WorldExplorer.DataLoaders
                 var x = maxVal - (v - maxVal) - 1;
                 v = -x;
             }
+
             return v;
         }
 
@@ -99,11 +102,11 @@ namespace WorldExplorer.DataLoaders
         public static void Main()
         {
             // 12345678
-            var reader = new BitstreamReader(new byte[] { 0x34, 0x12, 0x78, 0x56 });
-            var one = reader.Read(4);        // will return 0x01
-            var twothree = reader.Read(8);   // will return 0x23
-            var eight = reader.Read(5);      // will return 0x08
-            var x15 = reader.Read(5);          // 101 01
+            BitstreamReader reader = new(new byte[] {0x34, 0x12, 0x78, 0x56});
+            var one = reader.Read(4); // will return 0x01
+            var twothree = reader.Read(8); // will return 0x23
+            var eight = reader.Read(5); // will return 0x08
+            var x15 = reader.Read(5); // 101 01
         }
     }
 }

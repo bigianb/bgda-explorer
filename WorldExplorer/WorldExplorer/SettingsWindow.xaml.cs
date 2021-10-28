@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using WorldExplorer.DataLoaders;
 
 namespace WorldExplorer
@@ -15,21 +16,31 @@ namespace WorldExplorer
             InitializeComponent();
 
             // Add engine versions to combo box
-            engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Dark Alliance 1", DataContext = EngineVersion.DarkAlliance });
-            engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Champions: Return To Arms", DataContext = EngineVersion.ReturnToArms });
-            engineVersionBox.Items.Add(new ComboBoxItem() { Content = "Justice League Heroes", DataContext = EngineVersion.JusticeLeagueHeroes });
+            engineVersionBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Dark Alliance 1", DataContext = EngineVersion.DarkAlliance
+            });
+            engineVersionBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Champions: Return To Arms", DataContext = EngineVersion.ReturnToArms
+            });
+            engineVersionBox.Items.Add(new ComboBoxItem
+            {
+                Content = "Justice League Heroes", DataContext = EngineVersion.JusticeLeagueHeroes
+            });
 
             // Select the correct item
-            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion", EngineVersion.DarkAlliance);
+            var engineVersion = App.Settings.Get<EngineVersion>("Core.EngineVersion");
             foreach (ComboBoxItem item in engineVersionBox.Items)
             {
-                if (item.DataContext is EngineVersion && (EngineVersion)item.DataContext == engineVersion)
+                if (item.DataContext is EngineVersion version && version == engineVersion)
                 {
                     engineVersionBox.SelectedItem = item;
                     break;
                 }
             }
-            dataPathTextblock.Text = App.Settings.Get<string>("Files.DataPath", "");
+
+            dataPathTextblock.Text = App.Settings.Get("Files.DataPath", "");
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -67,7 +78,7 @@ namespace WorldExplorer
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            FolderBrowserDialog dialog = new();
 
             // Select the folder path that is in the text box if there is text 
             // and if it's a valid folder

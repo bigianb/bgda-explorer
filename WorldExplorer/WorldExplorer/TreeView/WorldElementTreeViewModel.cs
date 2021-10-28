@@ -20,23 +20,19 @@ namespace WorldExplorer
 {
     public class WorldElementTreeViewModel : TreeViewItemViewModel
     {
-        public WorldElementTreeViewModel(WorldElement worldElement, TreeViewItemViewModel parent, string name)
-            : base(parent, true)
+        public WorldData WorldData { get; }
+        public WorldElement WorldElement { get; }
+
+        public WorldElementTreeViewModel(WorldElement worldElement, string label, TreeViewItemViewModel? parent,
+            WorldData worldData)
+            : base(label, parent, true)
         {
-            _worldElement = worldElement;
-            _name = name;
+            WorldData = worldData;
+            WorldElement = worldElement;
         }
-
-        private string _name;
-        private WorldElement _worldElement;
-
-        public WorldElement WorldElement => _worldElement;
-
-        public string Text => _name;
-
+        
         protected override void LoadChildren()
         {
-
         }
     }
 }

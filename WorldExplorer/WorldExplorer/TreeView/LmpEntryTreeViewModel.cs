@@ -30,7 +30,6 @@ namespace WorldExplorer
 
         protected override void LoadChildren()
         {
-
         }
     }
 }

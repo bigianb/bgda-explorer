@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Windows;
 using WorldExplorer.Tools;
 
 namespace WorldExplorer
@@ -8,15 +7,19 @@ namespace WorldExplorer
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
-        static string SettingsFileName = "settings.ini";
-        public static Section Settings;
+        private static readonly string SettingsFileName = "settings.ini";
+        public static Section Settings = new();
 
         public static void LoadSettings()
         {
-            Environment.CurrentDirectory = Path.GetDirectoryName(ResourceAssembly.Location);
-            Settings = File.Exists(SettingsFileName) ? SettingsIO.Ini.ParseFile(SettingsFileName) : new Section();
+            var appDirectory = Path.GetDirectoryName(ResourceAssembly.Location);
+            if (appDirectory != null)
+                Environment.CurrentDirectory = appDirectory;
+            Settings = File.Exists(SettingsFileName) 
+                ? SettingsIO.Ini.ParseFile(SettingsFileName) 
+                : new Section();
         }
 
         public static void SaveSettings()

@@ -16,12 +16,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace WorldExplorer.DataLoaders
 {
     public class LmpFile
     {
+        private readonly int _dataLen;
+        private readonly EngineVersion _engineVersion;
+
+        private readonly int _startOffset;
+
+        /// <summary>
+        /// A directory of embedded files where the file names are the keys.
+        /// </summary>
+        public readonly Dictionary<string, EntryInfo> Directory = new();
+
+        /// <summary>
+        /// The raw data of the .lmp file.
+        /// </summary>
+        public readonly byte[] FileData;
+
+        /// <summary>
+        /// The .lmp file name.
+        /// </summary>
+        public readonly string Name;
+
         public LmpFile(EngineVersion engineVersion, string name, byte[] data, int startOffset, int dataLen)
         {
             _engineVersion = engineVersion;
@@ -31,20 +50,14 @@ namespace WorldExplorer.DataLoaders
             _dataLen = dataLen;
         }
 
-        private readonly EngineVersion _engineVersion;
-        /// <summary>
-        /// The .lmp file name.
-        /// </summary>
-        public string Name;
-
         public void ReadDirectory()
         {
-            var reader = new DataReader(FileData, _startOffset, _dataLen);
+            DataReader reader = new(FileData, _startOffset, _dataLen);
             var numEntries = reader.ReadInt32();
 
             for (var entry = 0; entry < numEntries; ++entry)
             {
-                if (EngineVersion.ReturnToArms == _engineVersion || EngineVersion.JusticeLeagueHeroes == _engineVersion)
+                if (_engineVersion is EngineVersion.ReturnToArms or EngineVersion.JusticeLeagueHeroes)
                 {
                     var stringOffset = reader.ReadInt32();
                     var dataOffset = reader.ReadInt32();
@@ -54,54 +67,32 @@ namespace WorldExplorer.DataLoaders
                     reader.SetOffset(stringOffset);
                     var name = reader.ReadZString();
                     reader.SetOffset(tempOffset);
-
-                    var info = new EntryInfo() { Name = name, StartOffset = dataOffset + _startOffset, Length = dataLength };
-                    Directory[name] = info;
+                    
+                    Directory[name] = new(name, dataOffset + _startOffset, dataLength);
                 }
                 else
                 {
-                    var headerOffset = _startOffset + 4 + entry * 64;
-                    var subfileName = DataUtil.GetString(FileData, headerOffset);
+                    var headerOffset = _startOffset + 4 + (entry * 64);
+                    var subFileName = DataUtil.GetString(FileData, headerOffset);
 
                     var subOffset = BitConverter.ToInt32(FileData, headerOffset + 56);
                     var subLen = BitConverter.ToInt32(FileData, headerOffset + 60);
-
-                    var info = new EntryInfo()
-                    {
-                        Name = subfileName,
-                        StartOffset = subOffset + _startOffset,
-                        Length = subLen
-                    };
-                    Directory[subfileName] = info;
+                    
+                    Directory[subFileName] = new(subFileName, subOffset + _startOffset, subLen);
                 }
             }
         }
 
-        private int _startOffset;
-        private int _dataLen;
-        /// <summary>
-        /// The raw data of the .lmp file.
-        /// </summary>
-        public byte[] FileData;
-
-        public class EntryInfo
+        public EntryInfo? FindFirstEntryWithSuffix(string suffix)
         {
-            public string Name;
-            public int StartOffset;
-            public int Length;
+            foreach (var (key, value) in Directory)
+            {
+                if (key.EndsWith(suffix)) return value;
+            }
+            return null;
         }
 
-        /// <summary>
-        /// A directory of embeded files where the file names are the keys.
-        /// </summary>
-        public Dictionary<string, EntryInfo> Directory = new Dictionary<string, EntryInfo>();
-
-        public EntryInfo FindFirstEntryWithSuffix(string suffix)
-        {
-            var entry = Directory.Where(x => x.Key.EndsWith(suffix)).FirstOrDefault().Value;
-            return entry;
-        }
-        public EntryInfo FindFile(string file)
+        public EntryInfo? FindFile(string file)
         {
             foreach (var ent in Directory)
             {
@@ -110,7 +101,22 @@ namespace WorldExplorer.DataLoaders
                     return ent.Value;
                 }
             }
+
             return null;
+        }
+
+        public class EntryInfo
+        {
+            public readonly int Length;
+            public string Name;
+            public readonly int StartOffset;
+
+            public EntryInfo(string name, int startOffset, int length)
+            {
+                Length = length;
+                Name = name;
+                StartOffset = startOffset;
+            }
         }
     }
 }

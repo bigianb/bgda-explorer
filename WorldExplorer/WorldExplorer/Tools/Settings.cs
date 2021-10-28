@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -9,7 +10,7 @@ namespace WorldExplorer.Tools
 {
     public class Section : Setting, IEnumerable<Setting>
     {
-        readonly List<Setting> _children = new List<Setting>();
+        private readonly List<Setting> _children = new();
 
         public int Depth
         {
@@ -25,19 +26,19 @@ namespace WorldExplorer.Tools
             }
         }
 
-        public object this[string path]
+        public object? this[string path]
         {
             get
             {
                 if (string.IsNullOrEmpty(path))
                 {
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 }
 
                 var item = GetItemAtPath(path);
                 if (item == null)
                 {
-                    throw new KeyNotFoundException("Could not find item at path \"" + path + "\".");
+                    throw new KeyNotFoundException($"Could not find item at path \"{path}\".");
                 }
 
                 if (item is Section)
@@ -49,53 +50,74 @@ namespace WorldExplorer.Tools
             }
             set => Add(path, value);
         }
-        public object this[string path, object defaultValue, bool addIfMissing = true]
+
+        public object? this[string path, object? defaultValue, bool addIfMissing = true]
         {
             get
             {
                 if (string.IsNullOrEmpty(path))
                 {
-                    throw new ArgumentNullException("path");
+                    throw new ArgumentNullException(nameof(path));
                 }
 
                 var item = GetItemAtPath(path);
-                if (item == null)
+                switch (item)
                 {
-                    if (addIfMissing)
+                    case null:
                     {
-                        this[path] = defaultValue;
+                        if (addIfMissing)
+                        {
+                            this[path] = defaultValue;
+                        }
+
+                        return defaultValue;
                     }
-
-                    return defaultValue;
+                    case Section:
+                        throw new InvalidOperationException("Found a section while looking for a value.");
+                    default:
+                        return item.Value;
                 }
-                if (item is Section)
-                {
-                    throw new InvalidOperationException("Found a section while looking for a value.");
-                }
-
-                return item.Value;
             }
+        }
+
+        public Section()
+        {
+        }
+
+        public Section(string name) : this()
+        {
+            Name = name;
+        }
+
+        public IEnumerator<Setting> GetEnumerator()
+        {
+            return _children.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _children.GetEnumerator();
         }
 
         public bool ContainsItem(string name, bool ignoreCase = true)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
             }
 
             return _children.Any(child => string.Compare(child.Name, name, ignoreCase) == 0);
         }
-        public Setting GetItemAtPath(string path, bool ignoreCase = true)
+
+        public Setting? GetItemAtPath(string path, bool ignoreCase = true)
         {
             if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
 
             var sections = path.Split('.');
             var lastSection = this;
-            Setting lastSetting = null;
             for (var i = 0; i < sections.Length; i++)
             {
                 var section = sections[i];
@@ -104,13 +126,13 @@ namespace WorldExplorer.Tools
                     throw new FormatException("Invalid path \"" + path + "\" supplied. Nothing after dot.");
                 }
 
-                lastSetting = lastSection.GetItem(section, ignoreCase);
+                var lastSetting = lastSection?.GetItem(section, ignoreCase);
                 if (lastSetting != null)
                 {
                     lastSection = lastSetting as Section;
                     if (i + 1 >= sections.Length)
-                    {
                         // We're at the last section so return it
+                    {
                         return lastSetting;
                     }
                 }
@@ -119,13 +141,15 @@ namespace WorldExplorer.Tools
                     return null;
                 }
             }
+
             throw new InvalidOperationException("No sections found in path \"" + path + "\".");
         }
-        public Setting GetItem(string name, bool ignoreCase = true)
+
+        public Setting? GetItem(string name, bool ignoreCase = true)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
             }
 
             return _children.FirstOrDefault(child => string.Compare(child.Name, name, ignoreCase) == 0);
@@ -133,7 +157,7 @@ namespace WorldExplorer.Tools
 
         public void Add(Setting item)
         {
-            if (ContainsItem(item.Name))
+            if (item.Name != null && ContainsItem(item.Name))
             {
                 throw new ApplicationException("Item already exists with that name!");
             }
@@ -141,16 +165,16 @@ namespace WorldExplorer.Tools
             _children.Add(item);
             item.Parent = this;
         }
-        public void Add(string path, object value, bool ignoreCase = true)
+
+        public void Add(string path, object? value, bool ignoreCase = true)
         {
             if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
 
             var sections = path.Split('.');
             var lastSection = this;
-            Setting lastSetting = null;
             for (var i = 0; i < sections.Length; i++)
             {
                 var sectionName = sections[i];
@@ -159,12 +183,12 @@ namespace WorldExplorer.Tools
                     throw new FormatException("Invalid path \"" + path + "\" supplied. Nothing after dot.");
                 }
 
-                lastSetting = lastSection._children.Count == 0 ? null : lastSection.GetItem(sectionName, ignoreCase);
+                var lastSetting = lastSection._children.Count == 0 ? null : lastSection.GetItem(sectionName, ignoreCase);
                 if (lastSetting != null)
                 {
-                    if (lastSetting is Section)
+                    if (lastSetting is Section section)
                     {
-                        lastSection = (Section)lastSetting;
+                        lastSection = section;
                     }
                     else
                     {
@@ -181,46 +205,32 @@ namespace WorldExplorer.Tools
                     if (i + 1 >= sections.Length)
                     {
                         // Is the last section in the path
-                        var setting = new Setting(sectionName, value);
+                        Setting setting = new(sectionName, value);
 
-                        if (lastSection != null)
-                        {
-                            lastSection.Add(setting);
-                        }
-                        else
-                        {
-                            Add(setting);
-                        }
+                        lastSection.Add(setting);
                     }
                     else
                     {
                         // Section doesn't exist, create it
-                        var section = new Section(sectionName);
+                        Section section = new(sectionName);
 
-                        if (lastSection != null)
-                        {
-                            lastSection.Add(section);
-                        }
-                        else
-                        {
-                            Add(section);
-                        }
+                        lastSection.Add(section);
 
                         lastSection = section;
                     }
                 }
             }
         }
+
         public void Delete(string path, bool ignoreCase = true)
         {
             if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
 
             var sections = path.Split('.');
             var lastSection = this;
-            Setting lastSetting = null;
             for (var i = 0; i < sections.Length; i++)
             {
                 var section = sections[i];
@@ -229,24 +239,17 @@ namespace WorldExplorer.Tools
                     throw new FormatException("Invalid path \"" + path + "\" supplied. Nothing after dot.");
                 }
 
-                lastSetting = lastSection.GetItem(section, ignoreCase);
+                var lastSetting = lastSection.GetItem(section, ignoreCase);
                 if (lastSetting != null)
                 {
-                    if (lastSetting is Section)
+                    if (lastSetting is Section sec)
                     {
-                        lastSection = lastSetting as Section;
+                        lastSection = sec;
                     }
                     else if (i + 1 >= sections.Length)
                     {
                         // We're at the last section so remove it
-                        if (lastSection == null)
-                        {
-                            _children.Remove(lastSetting);
-                        }
-                        else
-                        {
-                            lastSection._children.Remove(lastSetting);
-                        }
+                        lastSection._children.Remove(lastSetting);
 
                         return;
                     }
@@ -256,12 +259,14 @@ namespace WorldExplorer.Tools
                     return;
                 }
             }
+
             throw new InvalidOperationException("No sections in the path \"" + path + "\"");
         }
 
-        public T Get<T>(string path, T defaultValue = default(T), bool addIfMissing = true, bool ingoreCase = true)
+        public T? Get<T>(string path, T? defaultValue = default, bool addIfMissing = true, bool ingoreCase = true)
         {
             var value = this[path, defaultValue, addIfMissing];
+            if (value == null) return defaultValue;
             var type = typeof(T);
             if (type.IsEnum)
             {
@@ -284,97 +289,169 @@ namespace WorldExplorer.Tools
                     return defaultValue;
                 }
             }
+
             return (T)Convert.ChangeType(value, typeof(T));
         }
-
-        public Section()
-        {
-        }
-        public Section(string name) : this()
-        {
-            Name = name;
-        }
-
-        public IEnumerator<Setting> GetEnumerator()
-        {
-            return _children.GetEnumerator();
-        }
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return _children.GetEnumerator();
-        }
     }
+
     public class Setting : MarshalByRefObject
     {
-        public Section Parent;
-        public string Name;
-        public object Value;
+        public string? Name;
+        public Section? Parent;
+        public object? Value;
 
-        public override string ToString()
-        {
-            if (Parent != null && Parent.Name != null)
-            {
-                return Parent.ToString() + "." + Name;
-            }
-
-            return Name;
-        }
-        public override bool Equals(object obj)
-        {
-            if (obj != null && obj is Setting)
-            {
-                var setting = (Setting)obj;
-                return Name == setting.Name && Value == setting.Value;
-            }
-            return false;
-        }
-        public override int GetHashCode()
-        {
-            var hash = 0x154654;
-
-            if (Name != null)
-            {
-                hash ^= (Name.GetHashCode() + 3) * 2;
-            }
-
-            if (Value != null)
-            {
-                hash ^= (Value.GetHashCode() - 3) << 2;
-            }
-
-            return hash;
-        }
-
-        public Setting()
+        protected Setting()
         {
         }
-        public Setting(Section parent, string name, object value)
+
+        public Setting(Section parent, string? name, object? value)
         {
             Parent = parent;
             Name = name;
             Value = value;
         }
-        public Setting(string name, object value)
+
+        public Setting(string? name, object? value)
         {
             Name = name;
             Value = value;
         }
+
+        public override string ToString()
+        {
+            if (Parent != null && Parent.Name != null)
+            {
+                return $"{Parent}.{Name}";
+            }
+
+            return Name ?? "";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is Setting setting)
+            {
+                return Name == setting.Name && Value == setting.Value;
+            }
+
+            return false;
+        }
+
+        protected bool Equals(Setting other)
+        {
+            return Name == other.Name && Equals(Parent, other.Parent) && Equals(Value, other.Value);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Parent, Value);
+        }
     }
-    abstract class SettingsIO : MarshalByRefObject
+
+    internal abstract class SettingsIO : MarshalByRefObject
     {
+        public delegate bool ValueParserExtensionHandler(string value, out object obj);
+
+        private static readonly List<ValueParserExtensionHandler> ValueParsers = new();
+
+        private static INISettingsIO? _mINI;
+
+        public static SettingsIO Ini
+        {
+            get
+            {
+                if (_mINI == null)
+                {
+                    _mINI = new INISettingsIO();
+                }
+
+                return _mINI;
+            }
+        }
+
+        public static void RegisterValueParser(ValueParserExtensionHandler parser)
+        {
+            ValueParsers.Add(parser);
+        }
+
+        public static void UnregisterValueParser(ValueParserExtensionHandler parser)
+        {
+            ValueParsers.Remove(parser);
+        }
+
+
+        private void Error(string message)
+        {
+            Console.WriteLine($"> Error: {message}");
+        }
+
+        private void Warning(string message)
+        {
+            Console.WriteLine($"> Warning: {message}");
+        }
+
+        private static bool TryParseValue(string value, out object? obj)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                obj = null;
+                return true;
+            }
+
+            if (string.Compare(value, "true", true, CultureInfo.InvariantCulture) == 0)
+            {
+                obj = true;
+                return true;
+            }
+
+            if (string.Compare(value, "false", true, CultureInfo.InvariantCulture) == 0)
+            {
+                obj = false;
+                return true;
+            }
+
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+            {
+                obj = intValue;
+                return true;
+            }
+
+            if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var floatValue))
+            {
+                obj = floatValue;
+                return true;
+            }
+
+            foreach (var parser in ValueParsers)
+            {
+                if (parser(value, out obj))
+                {
+                    return true;
+                }
+            }
+
+            obj = value;
+            return true;
+        }
+
+        public abstract Section ParseFile(string filePath);
+        public abstract void WriteFile(string filePath, Section root);
+
         #region Ini Implementation
 
         private class INISettingsIO : SettingsIO
         {
-            char _c;
-            Section _root;
-            Section _currentSection;
-            Reader _reader;
+            private char _c;
+            private Section? _currentSection;
+            private Reader? _reader;
+            private Section? _root;
 
             private bool IsAtEnd()
             {
+                if (_reader == null) return true;
                 return _reader.AmountLeft <= 0;
             }
+
             private void Reset()
             {
                 _c = '\0';
@@ -382,13 +459,16 @@ namespace WorldExplorer.Tools
                 _reader = null;
                 _currentSection = null;
             }
+
             private void Next()
             {
+                if (_reader == null) return;
                 _c = _reader.Read();
             }
+
             private string ReadLine(bool useCurrentChar = true)
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
                 if (!useCurrentChar)
                 {
                     Next();
@@ -404,11 +484,13 @@ namespace WorldExplorer.Tools
 
                     Next();
                 }
+
                 return sb.ToString();
             }
-            private string ReadIdentifier(bool useCurrentChar = true)
+
+            private string? ReadIdentifier(bool useCurrentChar = true)
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
                 if (!useCurrentChar)
                 {
                     Next();
@@ -427,8 +509,10 @@ namespace WorldExplorer.Tools
                     Error("Invalid character \"" + _c + "\", expecting a indentifier character.");
                     return null;
                 }
+
                 return sb.ToString();
             }
+
             private void SkipWhiteSpace()
             {
                 if (char.IsWhiteSpace(_c))
@@ -441,7 +525,8 @@ namespace WorldExplorer.Tools
                     Next();
                 }
             }
-            private void PrintSection(StreamWriter writer, Section section)
+
+            private static void PrintSection(TextWriter writer, Section section)
             {
                 if (!string.IsNullOrEmpty(section.Name))
                 {
@@ -450,13 +535,13 @@ namespace WorldExplorer.Tools
 
                 foreach (var setting in section)
                 {
-                    if (setting is Section)
+                    if (setting is Section section1)
                     {
-                        PrintSection(writer, (Section)setting);
+                        PrintSection(writer, section1);
                     }
                     else
-                    {
                         // Is a setting, write it
+                    {
                         writer.Write("{0} = {1}\n", setting.Name, setting.Value);
                     }
                 }
@@ -481,7 +566,7 @@ namespace WorldExplorer.Tools
 
                         if (_c == '[')
                         {
-                            var nameBuilder = new StringBuilder();
+                            StringBuilder nameBuilder = new();
                             Next();
                             while (!IsAtEnd() && _c != ']')
                             {
@@ -490,9 +575,11 @@ namespace WorldExplorer.Tools
                                     Warning("Unexpected newline inside section header.");
                                     break;
                                 }
+
                                 nameBuilder.Append(_c);
                                 Next();
                             }
+
                             while (_c != '\n')
                             {
                                 Next();
@@ -501,7 +588,8 @@ namespace WorldExplorer.Tools
                                     Error("Expecting a new line after section header.");
                                 }
                             }
-                            var section = new Section(nameBuilder.ToString());
+
+                            Section section = new(nameBuilder.ToString());
                             _currentSection = section;
                             _root.Add(section);
                         }
@@ -520,16 +608,16 @@ namespace WorldExplorer.Tools
                                     Error("Invalid/Unsupported value \"" + valueString + "\".");
                                 }
 
-                                var setting = new Setting(name, value);
+                                Setting setting = new(name, value);
 
                                 if (_currentSection != null)
-                                {
                                     // Add the parsed setting to the current section
+                                {
                                     _currentSection.Add(setting);
                                 }
                                 else
-                                {
                                     // Not section exists, add it to root
+                                {
                                     _root.Add(setting);
                                 }
                             }
@@ -549,103 +637,22 @@ namespace WorldExplorer.Tools
                 Reset();
                 return temp;
             }
+
             public override void WriteFile(string filePath, Section root)
             {
                 Reset();
                 using (Stream file = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read))
-                using (var writer = new StreamWriter(file))
+                using (StreamWriter writer = new(file))
                 {
                     PrintSection(writer, root);
 
                     writer.Flush();
                 }
+
                 Reset();
             }
         }
 
         #endregion
-
-        public delegate bool ValueParserExtentionHandler(string value, out object obj);
-
-        private static readonly List<ValueParserExtentionHandler> ValueParsers = new List<ValueParserExtentionHandler>();
-
-        private static INISettingsIO _mINI;
-        public static SettingsIO Ini
-        {
-            get
-            {
-                if (_mINI == null)
-                {
-                    _mINI = new INISettingsIO();
-                }
-
-                return _mINI;
-            }
-        }
-
-        public static void RegisterValueParser(ValueParserExtentionHandler parser)
-        {
-            ValueParsers.Add(parser);
-        }
-        public static void UnregisterValueParser(ValueParserExtentionHandler parser)
-        {
-            ValueParsers.Remove(parser);
-        }
-
-
-        private void Error(string message)
-        {
-            Console.WriteLine("> Error: " + message);
-        }
-
-        private void Warning(string message)
-        {
-            Console.WriteLine("> Warning: " + message);
-        }
-
-        private static bool TryParseValue(string value, out object obj)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                obj = null;
-                return true;
-            }
-            if (string.Compare(value, "true", true) == 0)
-            {
-                obj = true;
-                return true;
-            }
-            if (string.Compare(value, "false", true) == 0)
-            {
-                obj = false;
-                return true;
-            }
-
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.CurrentCulture, out var intValue))
-            {
-                obj = intValue;
-                return true;
-            }
-
-            if (float.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out var floatValue))
-            {
-                obj = floatValue;
-                return true;
-            }
-
-            foreach (var parser in ValueParsers)
-            {
-                if (parser(value, out obj))
-                {
-                    return true;
-                }
-            }
-
-            obj = value;
-            return true;
-        }
-
-        public abstract Section ParseFile(string filePath);
-        public abstract void WriteFile(string filePath, Section root);
     }
 }

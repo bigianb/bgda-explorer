@@ -2,29 +2,30 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WorldExplorer"
-        Title="MainWindow" Height="582" Width="848" DataContext="{Binding}">
+        xmlns:treeView="clr-namespace:WorldExplorer.TreeView"
+        Title="World Explorer" Height="582" Width="848" DataContext="{Binding}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <Menu IsMainMenu="True">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open File" Click="MenuOpenFileClick" />
-                <Separator/>
+                <Separator />
                 <MenuItem x:Name="MenuRecentFiles" Header="Recent _Files" SubmenuOpened="MenuRecentFilesSubmenuOpened">
-                    <MenuItem/>
+                    <MenuItem />
                 </MenuItem>
-                <Separator/>
+                <Separator />
                 <MenuItem Header="E_xit" Click="MenuExitClick" />
             </MenuItem>
             <MenuItem Header="_Edit">
-            	<MenuItem x:Name="Menu_Export" Header="_Export">
-            		<MenuItem x:Name="Menu_Export_Texture" Header="Texture" Click="Menu_Export_Texture_Click"/>
-                    <MenuItem x:Name="Menu_Export_Model" Header="Model" Click="Menu_Export_Model_Click"/>
-                    <MenuItem x:Name="Menu_Export_PosedModel" Header="Posed Model" Click="Menu_Export_PosedModel_Click"/>
-            	</MenuItem>
+                <MenuItem x:Name="Menu_Export" Header="_Export">
+                    <MenuItem x:Name="Menu_Export_Texture" Header="Texture" Click="Menu_Export_Texture_Click" />
+                    <MenuItem x:Name="Menu_Export_Model" Header="Model" Click="Menu_Export_Model_Click" />
+                    <MenuItem x:Name="Menu_Export_PosedModel" Header="Posed Model" Click="Menu_Export_PosedModel_Click" />
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Settings" Command="Properties" />
@@ -36,7 +37,9 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0" DataContext="{Binding}" ItemsSource="{Binding Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+            <TreeView HorizontalAlignment="Stretch" Name="treeView" VerticalAlignment="Stretch" Grid.Column="0"
+                      DataContext="{Binding}" ItemsSource="{Binding Children}"
+                      SelectedItemChanged="TreeView_OnSelectedItemChanged">
                 <TreeView.ItemContainerStyle>
                     <!-- 
                         This Style binds a TreeViewItem to a TreeViewItemViewModel. 
@@ -54,38 +57,36 @@
                 </TreeView.ItemContainerStyle>
 
                 <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type local:WorldTreeViewModel}" ItemsSource="{Binding Children}">
+                    <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}"
+                                              ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding WorldName}" />
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Text}" />
+                            <TextBlock Text="{Binding Label}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>
             </TreeView>
-            <GridSplitter HorizontalAlignment="Right" 
-                  VerticalAlignment="Stretch" 
-                  Grid.Column="1" ResizeBehavior="PreviousAndNext"
-                  Width="5" Background="#FFBCBCBC"/>
+            <GridSplitter HorizontalAlignment="Right"
+                          VerticalAlignment="Stretch"
+                          Grid.Column="1" ResizeBehavior="PreviousAndNext"
+                          Width="5" Background="#FFBCBCBC" />
             <TabControl Grid.Column="2" Name="tabControl">
                 <TabItem Header="Texture">
-                    <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"  Source="{Binding SelectedNodeImage}" />
+                    <Image HorizontalAlignment="Stretch" Name="texture" VerticalAlignment="Stretch"
+                           Source="{Binding SelectedNodeImage}" />
                 </TabItem>
                 <TabItem Header="3D View">
-                    <local:ModelView x:Name="modelView" DataContext="{Binding TheModelViewModel}"/>
+                    <local:ModelView x:Name="modelView" DataContext="{Binding TheModelViewModel}" />
                 </TabItem>
                 <TabItem Header="Skeleton">
-                    <local:SkeletonView x:Name="skeletonView" DataContext="{Binding TheSkeletonViewModel}"/>
+                    <local:SkeletonView x:Name="skeletonView" DataContext="{Binding TheSkeletonViewModel}" />
                 </TabItem>
                 <TabItem Header="Level">
-                    <local:LevelView x:Name="levelView" DataContext="{Binding TheLevelViewModel}"/>
+                    <local:LevelView x:Name="levelView" DataContext="{Binding TheLevelViewModel}" />
                 </TabItem>
                 <TabItem Header="Log">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"  Text="{Binding LogText}" FontFamily="Consolas" FontSize="12" />
+                        <TextBox HorizontalAlignment="Stretch" Name="log" VerticalAlignment="Stretch"
+                                 Text="{Binding LogText}" FontFamily="Consolas" FontSize="12" />
                     </ScrollViewer>
                 </TabItem>
             </TabControl>

@@ -27,7 +27,7 @@ namespace WorldExplorer
     /// </summary>
     public partial class LevelView
     {
-        private LevelViewModel _lvm;
+        private LevelViewModel? _lvm;
 
         public LevelView()
         {
@@ -40,13 +40,15 @@ namespace WorldExplorer
 
         private void Viewport_KeyDown(object sender, KeyEventArgs e)
         {
+            if (_lvm == null) return;
+            
             switch (e.Key)
             {
                 case Key.L:
-                    {
-                        // Toggle lighting
-                        _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
-                    }
+                {
+                    // Toggle lighting
+                    _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
+                }
                     break;
             }
         }
@@ -63,12 +65,16 @@ namespace WorldExplorer
             _lvm = lvm;
         }
 
-        private Brush TryGettingAmbientLightColor()
+        private Brush? TryGettingAmbientLightColor()
         {
             var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
-            if (ambientLight == null) return null;
+            if (ambientLight == null)
+            {
+                return null;
+            }
 
-            return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1], (byte)ambientLight.Floats[2]));
+            return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1],
+                (byte)ambientLight.Floats[2]));
         }
 
         protected void OnSceneUpdated()
@@ -82,16 +88,19 @@ namespace WorldExplorer
             base.OnRender(drawingContext);
         }
 
-        void viewport_MouseUp(object sender, MouseButtonEventArgs e)
+        private void viewport_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            if (e.ChangedButton == MouseButton.Left &&
+                (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
                 var hitResult = GetHitTestResult(e.GetPosition(viewport));
+
+                if (hitResult == null) return;
 
                 var levelViewModel = (LevelViewModel)DataContext;
                 var worldNode = levelViewModel.WorldNode;
 
-                WorldElementTreeViewModel selectedElement = null;
+                WorldElementTreeViewModel? selectedElement = null;
 
                 if (worldNode == null)
                 {
@@ -107,12 +116,15 @@ namespace WorldExplorer
                     return;
                 }
 
-                for (var i = 0; i < worldNode.Children.Count; i++)
+                if (levelViewModel.Scene != null)
                 {
-                    if (levelViewModel.Scene[i + 2] == hitResult)
+                    for (var i = 0; i < worldNode.Children.Count; i++)
                     {
-                        selectedElement = (WorldElementTreeViewModel)worldNode.Children[i];
-                        break;
+                        if (levelViewModel.Scene[i + 2] == hitResult)
+                        {
+                            selectedElement = (WorldElementTreeViewModel)worldNode.Children[i];
+                            break;
+                        }
                     }
                 }
 
@@ -120,7 +132,7 @@ namespace WorldExplorer
             }
         }
 
-        private void ElementSelected(WorldElementTreeViewModel ele)
+        private void ElementSelected(WorldElementTreeViewModel? ele)
         {
             if (_lvm != null)
             {
@@ -134,6 +146,7 @@ namespace WorldExplorer
                 editorExpander.IsExpanded = true;
             }
         }
+
         private void ObjectSelected(VisualObjectData obj)
         {
             if (_lvm != null)
@@ -141,7 +154,7 @@ namespace WorldExplorer
                 _lvm.SelectedElement = null;
                 _lvm.SelectedObject = obj;
             }
-            
+
             // Expand after values have changed
             if (!editorExpander.IsExpanded)
             {
@@ -149,7 +162,7 @@ namespace WorldExplorer
             }
         }
 
-        ModelVisual3D GetHitTestResult(Point location)
+        private ModelVisual3D? GetHitTestResult(Point location)
         {
             var result = VisualTreeHelper.HitTest(viewport, location);
             if (result is {VisualHit: ModelVisual3D})

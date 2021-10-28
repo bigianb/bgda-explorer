@@ -5,33 +5,9 @@ namespace WorldExplorer.DataLoaders
 {
     public class DataReader
     {
-        readonly byte[] _data;
-        readonly int _baseOffset;
-        readonly int _length;
-        int _offset;
-
-        public DataReader(byte[] data)
-        {
-            if (data == null)
-            {
-                throw new ArgumentNullException("data");
-            }
-
-            _data = data;
-            _baseOffset = 0;
-            _length = _data.Length;
-        }
-
-        public DataReader(byte[] data, int baseOffset, int length)
-        {
-            _data = data;
-            _baseOffset = baseOffset;
-            _length = length;
-
-            _offset = 0;
-        }
-
-        public byte[] Data => _data;
+        private readonly int _baseOffset;
+        private readonly byte[] _data;
+        private int _offset;
 
         public int RealOffset
         {
@@ -45,13 +21,29 @@ namespace WorldExplorer.DataLoaders
             set => SetOffset(value);
         }
 
-        public int Length => _length;
+        public int Length { get; }
+
+        public DataReader(byte[] data)
+        {
+            _data = data ?? throw new ArgumentNullException(nameof(data));
+            _baseOffset = 0;
+            Length = _data.Length;
+        }
+
+        public DataReader(byte[] data, int baseOffset, int length)
+        {
+            _data = data;
+            _baseOffset = baseOffset;
+            Length = length;
+
+            _offset = 0;
+        }
 
         public void SetOffset(int offset)
         {
             if (offset < 0 || offset > Length)
             {
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             }
 
             _offset = offset;
@@ -61,7 +53,7 @@ namespace WorldExplorer.DataLoaders
         {
             if (_offset + bytesToSkip < 0 || _offset + bytesToSkip > Length)
             {
-                throw new ArgumentOutOfRangeException("bytesToSkip");
+                throw new ArgumentOutOfRangeException(nameof(bytesToSkip));
             }
 
             _offset = _offset + bytesToSkip;
@@ -126,7 +118,7 @@ namespace WorldExplorer.DataLoaders
         {
             if (_offset + length > Length)
             {
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException(nameof(length));
             }
 
             var value = Encoding.ASCII.GetString(_data, _baseOffset + _offset, length);
@@ -143,13 +135,16 @@ namespace WorldExplorer.DataLoaders
                 {
                     break;
                 }
+
                 stringLength++;
             }
+
             var value = ReadString(stringLength);
             if (_offset != Length)
             {
                 Skip(1); // Skip the zero
             }
+
             return value;
         }
     }

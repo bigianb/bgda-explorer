@@ -23,18 +23,15 @@ namespace WorldExplorer
     /// </summary>
     public class HdrDatTreeViewModel : TreeViewItemViewModel
     {
-        public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(parent, true)
+        private readonly CacheFile _cacheFile;
+
+        private TreeViewItemViewModel _parent;
+
+        public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(cacheFile.Name, parent, true)
         {
             _parent = parent;
             _cacheFile = cacheFile;
-            _name = cacheFile.Name;
         }
-
-        private TreeViewItemViewModel _parent;
-        private CacheFile _cacheFile;
-        private string _name;
-
-        public string Text => _name;
 
         protected override void LoadChildren()
         {

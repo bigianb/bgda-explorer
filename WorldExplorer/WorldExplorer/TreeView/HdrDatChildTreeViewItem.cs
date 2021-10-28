@@ -20,26 +20,19 @@ namespace WorldExplorer
 {
     public class HdrDatChildTreeViewItem : TreeViewItemViewModel
     {
-        public HdrDatChildTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Child value, CacheFile.Entry entry, string name)
-            : base(parent, false)
+        public CacheFile.Child Value { get; }
+
+        public CacheFile.Entry ParentEntry { get; }
+
+        public CacheFile CacheFile { get; }
+
+        public HdrDatChildTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Child value,
+            CacheFile.Entry entry, string name)
+            : base(name, parent, false)
         {
-            _cacheFile = cacheFile;
-            _value = value;
-            _entry = entry;
-            _name = name;
+            CacheFile = cacheFile;
+            Value = value;
+            ParentEntry = entry;
         }
-
-        private CacheFile _cacheFile;
-        private CacheFile.Child _value;
-        private CacheFile.Entry _entry;
-        private string _name;
-
-        public CacheFile.Child Value => _value;
-
-        public CacheFile.Entry ParentEntry => _entry;
-
-        public CacheFile CacheFile => _cacheFile;
-
-        public string Text => _name;
     }
 }
