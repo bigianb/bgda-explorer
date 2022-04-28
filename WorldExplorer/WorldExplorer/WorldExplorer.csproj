@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Copyright>Copyright © Ian Brown 2012-2018</Copyright>
-        <TargetFramework>net5.0-windows</TargetFramework>
+        <TargetFramework>net6.0-windows10.0.22000.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <OutputType>WinExe</OutputType>
-        <UseWindowsForms>true</UseWindowsForms>
+        <UseWindowsForms>True</UseWindowsForms>
         <UseWPF>true</UseWPF>
         <Nullable>enable</Nullable>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -14,7 +14,7 @@
         <StartupObject>WorldExplorer.App</StartupObject>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="HelixToolkit.Wpf" Version="2.17.0"/>
-        <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0022"/>
+        <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.20.2" />
+        <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0022" />
     </ItemGroup>
 </Project>

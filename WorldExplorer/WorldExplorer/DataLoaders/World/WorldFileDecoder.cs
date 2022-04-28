@@ -100,13 +100,16 @@ namespace WorldExplorer.DataLoaders.World
             var absoluteVifStartOffset = element.DataInfo.VifDataOffset + vifStartOffset;
             var vifDataLength = (element.DataInfo.VifDataLength * 0x10) - vifStartOffset;
 
-            element.Model = GetElementModel(
-                NullLogger.Instance,
-                absoluteVifStartOffset,
-                data.Slice(absoluteVifStartOffset, vifDataLength),
-                element.DataInfo.TextureWidth,
-                element.DataInfo.TextureHeight
-            );
+            if (vifDataLength > 0)
+            {
+                element.Model = GetElementModel(
+                    NullLogger.Instance,
+                    absoluteVifStartOffset,
+                    data.Slice(absoluteVifStartOffset, vifDataLength),
+                    element.DataInfo.TextureWidth,
+                    element.DataInfo.TextureHeight
+                );
+            }
         }
 
         private Model GetElementModel(ILogger log, int startOffset, ReadOnlySpan<byte> data, int texWidth, int texHeight)
