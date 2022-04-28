@@ -54,6 +54,7 @@ namespace WorldExplorer.DataLoaders.World
                     VifDataOffset = rawEl.VifDataOffset,
                     VifDataLength = rawEl.VifLength,
                 },
+                RawFlags = rawEl.Flags & 0xFFFF
             };
 
             if (element.UsesRotFlags)

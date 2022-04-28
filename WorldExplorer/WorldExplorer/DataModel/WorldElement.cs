@@ -26,5 +26,7 @@ namespace WorldExplorer.DataModel
         /// Contains info on data this element references.
         /// </summary>
         public WorldElementDataInfo? DataInfo { get; set; }
+
+        public int RawFlags { get; set; }
     }
 }
