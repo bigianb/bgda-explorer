@@ -79,37 +79,41 @@ namespace WorldExplorer.DataLoaders
             int dataIndex)
         {
             var startBlockPos = dbp * 64;
-            for (var y = dsay; y < dsay + rrh; y++)
-            for (var x = dsax; x < dsax + rrw; x++)
-            {
-                var pageX = x / 64;
-                var pageY = y / 32;
-                var page = pageX + (pageY * dbw);
+            for (var y = dsay; y < dsay + rrh; y++) {
+                for (var x = dsax; x < dsax + rrw; x++)
+                {
+                    var pageX = x / 64;
+                    var pageY = y / 32;
+                    var page = pageX + (pageY * dbw);
 
-                var px = x - (pageX * 64);
-                var py = y - (pageY * 32);
+                    var px = x - (pageX * 64);
+                    var py = y - (pageY * 32);
 
-                var blockX = px / 8;
-                var blockY = py / 8;
-                var block = block32[blockX + (blockY * 8)];
+                    var blockX = px / 8;
+                    var blockY = py / 8;
+                    var block = block32[blockX + (blockY * 8)];
 
-                var bx = px - (blockX * 8);
-                var by = py - (blockY * 8);
+                    var bx = px - (blockX * 8);
+                    var by = py - (blockY * 8);
 
-                var column = by / 2;
+                    var column = by / 2;
 
-                var cx = bx;
-                var cy = by - (column * 2);
-                var cw = columnWord32[cx + (cy * 8)];
+                    var cx = bx;
+                    var cy = by - (column * 2);
+                    var cw = columnWord32[cx + (cy * 8)];
 
-                var gsIndex = startBlockPos + (page * 2048) + (block * 64) + (column * 16) + cw;
-                gsIndex *= 4;
+                    var gsIndex = startBlockPos + (page * 2048) + (block * 64) + (column * 16) + cw;
+                    gsIndex *= 4;
 
-                mem[gsIndex++] = data[dataIndex];
-                mem[gsIndex++] = data[dataIndex + 1];
-                mem[gsIndex++] = data[dataIndex + 2];
-                mem[gsIndex] = data[dataIndex + 3];
-                dataIndex += 4;
+                    if (dataIndex+3 < data.Length)
+                    {
+                        mem[gsIndex++] = data[dataIndex];
+                        mem[gsIndex++] = data[dataIndex + 1];
+                        mem[gsIndex++] = data[dataIndex + 2];
+                        mem[gsIndex] = data[dataIndex + 3];
+                        dataIndex += 4;
+                    }
+                }
             }
         }
 
