@@ -180,7 +180,7 @@ namespace WorldExplorer.DataLoaders
 
                 if (palette.Length == 256)
                 {
-                    destWBytes = (finalW + 0x3f) & ~0x3f;
+                    destWBytes = (finalW + 0x7f) & ~0x7f;
                     dbw = destWBytes / 0x40;
                     bytes = gsMem.readTexPSMT8(dbp, dbw, 0, 0, destWBytes, finalH);
                 }
