@@ -36,11 +36,11 @@ namespace WorldExplorer.DataLoaders
         {
             GSMemory gsMem = new();
 
-            var length = DataUtil.getLEShort(data, 6) * 16;
+            var length = DataUtil.GetLeShort(data, 6) * 16;
 
             int finalW = BitConverter.ToInt16(data[..2].ToArray());
             int finalH = BitConverter.ToInt16(data.Slice(2, 2).ToArray());
-            var offsetToGIF = DataUtil.getLEInt(data, 16);
+            var offsetToGIF = DataUtil.GetLeInt(data, 16);
 
             var sourceW = finalW;
             var sourceH = finalH;
@@ -57,8 +57,8 @@ namespace WorldExplorer.DataLoaders
             // we can safely make some assumptions about their structure.
             if (gifTag.nloop == 4)
             {
-                int palW = DataUtil.getLEShort(data, curIdx + 0x30);
-                int palH = DataUtil.getLEShort(data, curIdx + 0x34);
+                int palW = DataUtil.GetLeShort(data, curIdx + 0x30);
+                int palH = DataUtil.GetLeShort(data, curIdx + 0x34);
 
                 curIdx += gifTag.Length;
                 GIFTag gifTag2 = new();
@@ -90,15 +90,15 @@ namespace WorldExplorer.DataLoaders
                         var trxregOffset = FindAdEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXREG);
                         if (trxregOffset != 0)
                         {
-                            rrw = DataUtil.getLEShort(data, trxregOffset);
-                            rrh = DataUtil.getLEShort(data, trxregOffset + 4);
+                            rrw = DataUtil.GetLeShort(data, trxregOffset);
+                            rrh = DataUtil.GetLeShort(data, trxregOffset + 4);
                         }
 
                         var trxposOffset = FindAdEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, TRXPOS);
                         if (trxposOffset != 0)
                         {
-                            startX = DataUtil.getLEShort(data, trxposOffset + 0x04) & 0x07FF;
-                            startY = DataUtil.getLEShort(data, trxposOffset + 0x06) & 0x07FF;
+                            startX = DataUtil.GetLeShort(data, trxposOffset + 0x04) & 0x07FF;
+                            startY = DataUtil.GetLeShort(data, trxposOffset + 0x06) & 0x07FF;
                         }
 
                         var bitbltOffset = FindAdEntry(data, curIdx + GIFTag.Size, gifTag3.nloop, BITBLTBUF);
@@ -280,7 +280,7 @@ namespace WorldExplorer.DataLoaders
             var result = 0;
             for (var i = 0; i < nloop; ++i)
             {
-                var reg = DataUtil.getLEInt(fileData, dataStartIdx + (i * 0x10) + 0x08);
+                var reg = DataUtil.GetLeInt(fileData, dataStartIdx + (i * 0x10) + 0x08);
                 if (reg == registerId)
                 {
                     result = dataStartIdx + (i * 0x10);

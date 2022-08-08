@@ -11,21 +11,21 @@ public class BdgaAnmDecoder : AnmDecoder
     public override AnimData Decode(ReadOnlySpan<byte> data)
     {
         var endIndex = data.Length;
-        var numBones = DataUtil.getLEInt(data, 0);
-        var offset4Val = DataUtil.getLEInt(data, 4);
-        var offset8Val = DataUtil.getLEInt(data, 8);
-        var offset10Val = DataUtil.getLEInt(data, 0x10);
-        var offset14Val = DataUtil.getLEInt(data, 0x14);
-        var offset18Val = DataUtil.getLEInt(data, 0x18);
-        var bindingPoseOffset = DataUtil.getLEInt(data, 0x0C);
+        var numBones = DataUtil.GetLeInt(data, 0);
+        var offset4Val = DataUtil.GetLeInt(data, 4);
+        var offset8Val = DataUtil.GetLeInt(data, 8);
+        var offset10Val = DataUtil.GetLeInt(data, 0x10);
+        var offset14Val = DataUtil.GetLeInt(data, 0x14);
+        var offset18Val = DataUtil.GetLeInt(data, 0x18);
+        var bindingPoseOffset = DataUtil.GetLeInt(data, 0x0C);
 
         var bindingPose = new Point3D[numBones];
         for (var i = 0; i < numBones; ++i)
         {
             bindingPose[i] = new Point3D(
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
             );
         }
 
@@ -46,14 +46,14 @@ public class BdgaAnmDecoder : AnmDecoder
             var frameOff = offset8Val + boneNum * 0x0e;
 
             pose.Position = new Point3D(
-                DataUtil.getLEShort(data, frameOff) / 64.0,
-                DataUtil.getLEShort(data, frameOff + 2) / 64.0,
-                DataUtil.getLEShort(data, frameOff + 4) / 64.0);
+                DataUtil.GetLeShort(data, frameOff) / 64.0,
+                DataUtil.GetLeShort(data, frameOff + 2) / 64.0,
+                DataUtil.GetLeShort(data, frameOff + 4) / 64.0);
 
-            var a = DataUtil.getLEShort(data, frameOff + 6) / 4096.0;
-            var b = DataUtil.getLEShort(data, frameOff + 8) / 4096.0;
-            var c = DataUtil.getLEShort(data, frameOff + 0x0A) / 4096.0;
-            var d = DataUtil.getLEShort(data, frameOff + 0x0C) / 4096.0;
+            var a = DataUtil.GetLeShort(data, frameOff + 6) / 4096.0;
+            var b = DataUtil.GetLeShort(data, frameOff + 8) / 4096.0;
+            var c = DataUtil.GetLeShort(data, frameOff + 0x0A) / 4096.0;
+            var d = DataUtil.GetLeShort(data, frameOff + 0x0C) / 4096.0;
 
             pose.Rotation = new Quaternion(b, c, d, a);
 
@@ -118,10 +118,10 @@ public class BdgaAnmDecoder : AnmDecoder
                 }
                 else
                 {
-                    a = DataUtil.getLEShort(data, otherOff);
-                    b = DataUtil.getLEShort(data, otherOff + 2);
-                    c = DataUtil.getLEShort(data, otherOff + 4);
-                    d = DataUtil.getLEShort(data, otherOff + 6);
+                    a = DataUtil.GetLeShort(data, otherOff);
+                    b = DataUtil.GetLeShort(data, otherOff + 2);
+                    c = DataUtil.GetLeShort(data, otherOff + 4);
+                    d = DataUtil.GetLeShort(data, otherOff + 6);
                     otherOff += 8;
                 }
 
@@ -153,9 +153,9 @@ public class BdgaAnmDecoder : AnmDecoder
                 }
                 else
                 {
-                    x = DataUtil.getLEShort(data, otherOff);
-                    y = DataUtil.getLEShort(data, otherOff + 2);
-                    z = DataUtil.getLEShort(data, otherOff + 4);
+                    x = DataUtil.GetLeShort(data, otherOff);
+                    y = DataUtil.GetLeShort(data, otherOff + 2);
+                    z = DataUtil.GetLeShort(data, otherOff + 4);
                     otherOff += 6;
                 }
 

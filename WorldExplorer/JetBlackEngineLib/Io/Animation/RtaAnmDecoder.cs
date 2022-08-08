@@ -14,25 +14,25 @@ public class RtaAnmDecoder : AnmDecoder
     
     public override AnimData Decode(ReadOnlySpan<byte> data)
     {
-        var numBones = DataUtil.getLEInt(data, 0);
-        var maxFrames = DataUtil.getLEInt(data, 4); // max frame
-        var offset14Val = DataUtil.getLEInt(data, 0x14);
-        var offset18Val = DataUtil.getLEInt(data, 0x18);
-        var offset8Val = DataUtil.getLEInt(data, 8);
+        var numBones = DataUtil.GetLeInt(data, 0);
+        var maxFrames = DataUtil.GetLeInt(data, 4); // max frame
+        var offset14Val = DataUtil.GetLeInt(data, 0x14);
+        var offset18Val = DataUtil.GetLeInt(data, 0x18);
+        var offset8Val = DataUtil.GetLeInt(data, 8);
 
-        var bindingPoseOffset = DataUtil.getLEInt(data, 0x0C);
+        var bindingPoseOffset = DataUtil.GetLeInt(data, 0x0C);
         var bindingPose = new Point3D[numBones];
         for (var i = 0; i < numBones; ++i)
         {
             bindingPose[i] = new Point3D(
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
-                -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
+                -DataUtil.GetLeShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
             );
         }
 
         // Skeleton structure
-        var offset10Val = DataUtil.getLEInt(data, 0x10);
+        var offset10Val = DataUtil.GetLeInt(data, 0x10);
         var skeletonDef = new int[numBones];
         for (var i = 0; i < numBones; ++i)
         {

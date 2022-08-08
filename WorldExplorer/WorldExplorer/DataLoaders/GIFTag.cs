@@ -77,11 +77,11 @@ namespace WorldExplorer.DataLoaders
 
         public void Parse(ReadOnlySpan<byte> data)
         {
-            var low32 = DataUtil.getLEInt(data, 0);
+            var low32 = DataUtil.GetLeInt(data, 0);
             nloop = low32 & 0x7FFF;
             eop = (low32 & 0x8000) == 0x8000;
 
-            var next32 = DataUtil.getLEInt(data, 4);
+            var next32 = DataUtil.GetLeInt(data, 4);
 
             // bit 32 is bit 0 of next 32
             pre = ((next32 >> (46 - 32)) & 1) == 1;
@@ -95,8 +95,8 @@ namespace WorldExplorer.DataLoaders
                 nreg = 16;
             }
 
-            var regs64 = DataUtil.getLEInt(data, 8);
-            var regs96 = DataUtil.getLEInt(data, 12);
+            var regs64 = DataUtil.GetLeInt(data, 8);
+            var regs96 = DataUtil.GetLeInt(data, 12);
 
             regs = new int[nreg];
             for (var reg = 0; reg < nreg; ++reg)

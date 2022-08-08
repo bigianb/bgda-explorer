@@ -78,7 +78,7 @@ namespace WorldExplorer.DataLoaders.World
 
         public WriteableBitmap? GetBitmap(int chunkStartOffset, int textureNumber)
         {
-            var numTexturesInChunk = DataUtil.getLEInt(FileData, chunkStartOffset);
+            var numTexturesInChunk = DataUtil.GetLeInt(FileData, chunkStartOffset);
             if (textureNumber > numTexturesInChunk)
             {
                 return null;
@@ -103,9 +103,9 @@ namespace WorldExplorer.DataLoaders.World
             // Return to arms (more sensibly) encodes pointers as offsets from the current chunk loaded from the disc.
             var deltaOffset = EngineVersion.DarkAlliance == EngineVersion ? offset : chunkStartOffset;
 
-            var pixelWidth = DataUtil.getLEUShort(FileData, offset);
-            var pixelHeight = DataUtil.getLEUShort(FileData, offset + 2);
-            var header10 = DataUtil.getLEInt(FileData, offset + 0x10);
+            var pixelWidth = DataUtil.GetLeUShort(FileData, offset);
+            var pixelHeight = DataUtil.GetLeUShort(FileData, offset + 2);
+            var header10 = DataUtil.GetLeInt(FileData, offset + 0x10);
             // Unused for now
             // var compressedDataLen = DataUtil.getLEInt(FileData, offset + 0x14);
             var compressedDataOffset = header10 + deltaOffset;
@@ -114,7 +114,7 @@ namespace WorldExplorer.DataLoaders.World
                 return null;
             }
 
-            var palOffset = DataUtil.getLEInt(FileData, compressedDataOffset) + deltaOffset;
+            var palOffset = DataUtil.GetLeInt(FileData, compressedDataOffset) + deltaOffset;
 
             var palette = PalEntry.readPalette(FileData, palOffset, 16, 16);
             palette = PalEntry.unswizzlePalette(palette);
@@ -142,7 +142,7 @@ namespace WorldExplorer.DataLoaders.World
                 for (var yBlock = y0; yBlock <= y1; ++yBlock)
                 for (var xBlock = x0; xBlock <= x1; ++xBlock)
                 {
-                    var blockDataStart = DataUtil.getLEInt(FileData, p) + deltaOffset;
+                    var blockDataStart = DataUtil.GetLeInt(FileData, p) + deltaOffset;
                     DecodeBlock(xBlock, yBlock, blockDataStart, palOffset + 0x400, image, palette, huffVals);
                     p += 4;
                 }
@@ -161,7 +161,7 @@ namespace WorldExplorer.DataLoaders.World
             PalEntry[] palette, HuffVal[] huffVals)
         {
             var tableOffset = table0Start + 0x800;
-            var table1Len = DataUtil.getLEInt(FileData, tableOffset) * 2;
+            var table1Len = DataUtil.GetLeInt(FileData, tableOffset) * 2;
             var table1Start = tableOffset + 4;
             var table2Start = table1Start + table1Len;
             var table3Start = table2Start + 0x48;
@@ -174,8 +174,8 @@ namespace WorldExplorer.DataLoaders.World
             for (var x = 0; x < 16; ++x)
             {
                 var startWordIdx = startBit / 16;
-                int word1 = DataUtil.getLEUShort(FileData, blockDataStart + (startWordIdx * 2));
-                int word2 = DataUtil.getLEUShort(FileData, blockDataStart + (startWordIdx * 2) + 2);
+                int word1 = DataUtil.GetLeUShort(FileData, blockDataStart + (startWordIdx * 2));
+                int word2 = DataUtil.GetLeUShort(FileData, blockDataStart + (startWordIdx * 2) + 2);
                 // if startBit is 0, word == word1
                 // if startBit is 1, word is 15 bits of word1 and 1 bit of word2
                 var word = (((word1 << 16) | word2) >> (16 - (startBit & 0x0f))) & 0xFFFF;
@@ -193,7 +193,7 @@ namespace WorldExplorer.DataLoaders.World
                     // Must be more than an 8 bit code
                     var bit = 9;
                     var a = word >> (16 - bit);
-                    var v = DataUtil.getLEInt(FileData, table3Start + (bit * 4));
+                    var v = DataUtil.GetLeInt(FileData, table3Start + (bit * 4));
                     while (v < a)
                     {
                         ++bit;
@@ -203,14 +203,14 @@ namespace WorldExplorer.DataLoaders.World
                         }
 
                         a = word >> (16 - bit);
-                        v = DataUtil.getLEInt(FileData, table3Start + (bit * 4));
+                        v = DataUtil.GetLeInt(FileData, table3Start + (bit * 4));
                     }
 
                     startBit += bit;
-                    var val = DataUtil.getLEInt(FileData, table2Start + (bit * 4));
+                    var val = DataUtil.GetLeInt(FileData, table2Start + (bit * 4));
                     var table1Index = a + val;
 
-                    pixCmd = DataUtil.getLEShort(FileData, table1Start + (table1Index * 2));
+                    pixCmd = DataUtil.GetLeShort(FileData, table1Start + (table1Index * 2));
                 }
 
                 int pix8;
@@ -252,7 +252,7 @@ namespace WorldExplorer.DataLoaders.World
         {
             var huffOut = new HuffVal[256];
 
-            var table1Len = DataUtil.getLEInt(FileData, tableOffset) * 2;
+            var table1Len = DataUtil.GetLeInt(FileData, tableOffset) * 2;
             var table1Start = tableOffset + 4;
             var table2Start = table1Start + table1Len;
             var table3Start = table2Start + 0x48;
@@ -261,7 +261,7 @@ namespace WorldExplorer.DataLoaders.World
             {
                 var bit = 1;
                 var a = i >> (8 - bit);
-                var v = DataUtil.getLEInt(FileData, table3Start + (bit * 4));
+                var v = DataUtil.GetLeInt(FileData, table3Start + (bit * 4));
                 while (v < a)
                 {
                     ++bit;
@@ -271,15 +271,15 @@ namespace WorldExplorer.DataLoaders.World
                     }
 
                     a = i >> (8 - bit);
-                    v = DataUtil.getLEInt(FileData, table3Start + (bit * 4));
+                    v = DataUtil.GetLeInt(FileData, table3Start + (bit * 4));
                 }
 
                 huffOut[i] = new HuffVal();
                 if (bit <= 8)
                 {
-                    var val = DataUtil.getLEInt(FileData, table2Start + (bit * 4));
+                    var val = DataUtil.GetLeInt(FileData, table2Start + (bit * 4));
                     var table1Index = a + val;
-                    huffOut[i].val = DataUtil.getLEShort(FileData, table1Start + (table1Index * 2));
+                    huffOut[i].val = DataUtil.GetLeShort(FileData, table1Start + (table1Index * 2));
                     huffOut[i].numBits = (short)bit;
                 }
             }

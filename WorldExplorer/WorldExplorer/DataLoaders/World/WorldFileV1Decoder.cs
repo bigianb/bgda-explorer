@@ -30,7 +30,7 @@ namespace WorldExplorer.DataLoaders.World
                 // This test is needed to deal with town.world in BGDA which addresses textures outside of the maximum x range.
                 if (data.Length >= offset + cellOffset + 4)
                 {
-                    var address = DataUtil.getLEInt(data, offset + cellOffset);
+                    var address = DataUtil.GetLeInt(data, offset + cellOffset);
                     chunkOffsets[y, x] = address;
                 }
             }

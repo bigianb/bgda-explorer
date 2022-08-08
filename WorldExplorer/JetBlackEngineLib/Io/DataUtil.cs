@@ -20,6 +20,7 @@ namespace JetBlackEngineLib.Io
         public static string GetString(ReadOnlySpan<byte> data, int offset = 0)
         {
             if (data.Length == 0)
+                // Maybe we return an empty string instead?
                 throw new EndOfStreamException();
             
             var length = 0;
@@ -32,37 +33,37 @@ namespace JetBlackEngineLib.Io
             return Encoding.UTF8.GetString(data.Slice(offset, length));
         }
 
-        public static int getLEInt(ReadOnlySpan<byte> data, int offset)
+        public static int GetLeInt(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToInt32(data.Slice(offset, 4).ToArray());
         }
 
-        public static int getLEInt(byte[] data, int offset)
+        public static int GetLeInt(byte[] data, int offset)
         {
             return BitConverter.ToInt32(data, offset);
         }
 
-        public static short getLEShort(ReadOnlySpan<byte> data, int offset)
+        public static short GetLeShort(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToInt16(data.Slice(offset, 2).ToArray());
         }
 
-        public static short getLEShort(byte[] data, int offset)
+        public static short GetLeShort(byte[] data, int offset)
         {
             return BitConverter.ToInt16(data, offset);
         }
 
-        public static float getLEFloat(byte[] data, int offset)
+        public static float GetLeFloat(byte[] data, int offset)
         {
             return BitConverter.ToSingle(data, offset);
         }
 
-        public static ushort getLEUShort(byte[] data, int offset)
+        public static ushort GetLeUShort(byte[] data, int offset)
         {
             return BitConverter.ToUInt16(data, offset);
         }
 
-        public static ushort getLEUShort(ReadOnlySpan<byte> data, int offset)
+        public static ushort GetLeUShort(ReadOnlySpan<byte> data, int offset)
         {
             return BitConverter.ToUInt16(data.Slice(offset, 2).ToArray());
         }

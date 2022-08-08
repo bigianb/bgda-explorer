@@ -41,7 +41,7 @@ namespace WorldExplorer.DataLoaders
         public static List<Mesh> Decode(ILogger log, ReadOnlySpan<byte> data, int texturePixelWidth,
             int texturePixelHeight)
         {
-            var sig = DataUtil.getLEInt(data, 0);
+            var sig = DataUtil.GetLeInt(data, 0);
             var numMeshes = data[0x12] & 0xFF;
             var meshBlockOffset = 0x28;
             if (sig == 0x30332E31)
@@ -62,8 +62,8 @@ namespace WorldExplorer.DataLoaders
 
             for (var meshNum = 0; meshNum < numMeshes; ++meshNum)
             {
-                var offsetVerts = DataUtil.getLEInt(data, meshBlockOffset + (meshNum * 4));
-                var offsetEndVerts = DataUtil.getLEInt(data, meshBlockOffset + 4 + (meshNum * 4));
+                var offsetVerts = DataUtil.GetLeInt(data, meshBlockOffset + (meshNum * 4));
+                var offsetEndVerts = DataUtil.GetLeInt(data, meshBlockOffset + 4 + (meshNum * 4));
                 var chunks = ReadVerts(log, data.Slice(offsetVerts, offsetEndVerts - offsetVerts));
                 var mesh = ChunksToMesh(chunks, texturePixelWidth, texturePixelHeight);
                 meshes.Add(mesh);
@@ -83,8 +83,8 @@ namespace WorldExplorer.DataLoaders
             List<Chunk> chunks = new();
             for (var meshNum = 0; meshNum < numMeshes; ++meshNum)
             {
-                var offsetVerts = DataUtil.getLEInt(data, 0x28 + (meshNum * 4));
-                var offsetEndVerts = DataUtil.getLEInt(data, 0x2C + (meshNum * 4));
+                var offsetVerts = DataUtil.GetLeInt(data, 0x28 + (meshNum * 4));
+                var offsetEndVerts = DataUtil.GetLeInt(data, 0x2C + (meshNum * 4));
                 chunks.AddRange(ReadVerts(log, data.Slice(offsetVerts, offsetEndVerts - offsetVerts)));
             }
 
@@ -374,7 +374,7 @@ namespace WorldExplorer.DataLoaders
             {
                 var vifCommand = vertData[offset + 3] & 0x7f;
                 var numCommand = vertData[offset + 2] & 0xff;
-                int immCommand = DataUtil.getLEShort(vertData, offset);
+                int immCommand = DataUtil.GetLeShort(vertData, offset);
                 switch (vifCommand)
                 {
                     case NOP_CMD:
@@ -415,7 +415,7 @@ namespace WorldExplorer.DataLoaders
                     case STMASK_CMD:
                         DebugWrite(HexUtil.formatHex(offset) + " ");
                         offset += 4;
-                        var stmask = DataUtil.getLEInt(vertData, offset);
+                        var stmask = DataUtil.GetLeInt(vertData, offset);
                         DebugWriteLine("STMASK: " + stmask);
                         offset += 4;
                         break;
@@ -481,8 +481,8 @@ namespace WorldExplorer.DataLoaders
                                 {
                                     for (var uvnum = 0; uvnum < numCommand; ++uvnum)
                                     {
-                                        var u = DataUtil.getLEShort(vertData, offset);
-                                        var v = DataUtil.getLEShort(vertData, offset + 2);
+                                        var u = DataUtil.GetLeShort(vertData, offset);
+                                        var v = DataUtil.GetLeShort(vertData, offset + 2);
                                         previousChunk.UVs.Add(new UV(u, v));
                                         offset += 4;
                                     }
@@ -501,9 +501,9 @@ namespace WorldExplorer.DataLoaders
                                 {
                                     if (!usn)
                                     {
-                                        var x = DataUtil.getLEShort(vertData, offset);
-                                        var y = DataUtil.getLEShort(vertData, offset + 2);
-                                        var z = DataUtil.getLEShort(vertData, offset + 4);
+                                        var x = DataUtil.GetLeShort(vertData, offset);
+                                        var y = DataUtil.GetLeShort(vertData, offset + 2);
+                                        var z = DataUtil.GetLeShort(vertData, offset + 4);
                                         offset += 6;
 
                                         Vertex vertex = new() {X = x, Y = y, Z = z};
@@ -511,9 +511,9 @@ namespace WorldExplorer.DataLoaders
                                     }
                                     else
                                     {
-                                        int x = DataUtil.getLEUShort(vertData, offset);
-                                        int y = DataUtil.getLEUShort(vertData, offset + 2);
-                                        int z = DataUtil.getLEUShort(vertData, offset + 4);
+                                        int x = DataUtil.GetLeUShort(vertData, offset);
+                                        int y = DataUtil.GetLeUShort(vertData, offset + 2);
+                                        int z = DataUtil.GetLeUShort(vertData, offset + 4);
                                         offset += 6;
                                         
                                         currentChunk.VLocs.Add(new(x, y, z));
@@ -584,13 +584,13 @@ namespace WorldExplorer.DataLoaders
                                     for (var i = 0; i < numCommand; ++i)
                                     {
                                         currentChunk.ExtraVlocs[i * 4] =
-                                            DataUtil.getLEUShort(vertData, offset + (i * 8));
+                                            DataUtil.GetLeUShort(vertData, offset + (i * 8));
                                         currentChunk.ExtraVlocs[(i * 4) + 1] =
-                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 2);
+                                            DataUtil.GetLeUShort(vertData, offset + (i * 8) + 2);
                                         currentChunk.ExtraVlocs[(i * 4) + 2] =
-                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 4);
+                                            DataUtil.GetLeUShort(vertData, offset + (i * 8) + 4);
                                         currentChunk.ExtraVlocs[(i * 4) + 3] =
-                                            DataUtil.getLEUShort(vertData, offset + (i * 8) + 6);
+                                            DataUtil.GetLeUShort(vertData, offset + (i * 8) + 6);
                                     }
                                 }
                                 else
