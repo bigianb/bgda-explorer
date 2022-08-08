@@ -7,38 +7,29 @@ namespace JetBlackEngineLib.Io
     {
         public static string GetString(byte[] data, int index)
         {
-            StringBuilder sb = new();
-            var i = index;
+            var length = 0;
 
-            // TODO: Check array length before access
-            while (data[i] != 0)
+            for (var i = index; i < data.Length && data[i] != 0; i++)
             {
-                sb.Append((char)data[i]);
-                ++i;
+                length++;
             }
-
-            return sb.ToString();
+            
+            return Encoding.UTF8.GetString(data, index, length);
         }
 
         public static string GetString(ReadOnlySpan<byte> data, int offset = 0)
         {
             if (data.Length == 0)
                 throw new EndOfStreamException();
+            
+            var length = 0;
 
-            StringBuilder sb = new();
-            for (var i = offset; i < data.Length; i++)
+            for (var i = offset; i < data.Length && data[i] != 0; i++)
             {
-                var character = data[i];
-                if (character == 0) break;
-                sb.Append((char)character);
+                length++;
             }
 
-            return sb.ToString();
-        }
-
-        public static bool FilePathHasInvalidChars(string path)
-        {
-            return !string.IsNullOrEmpty(path) && path.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
+            return Encoding.UTF8.GetString(data.Slice(offset, length));
         }
 
         public static int getLEInt(ReadOnlySpan<byte> data, int offset)
