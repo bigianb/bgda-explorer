@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using JetBlackEngineLib.Data;
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataModel;
 
-namespace WorldExplorer.DataLoaders.Animation
+namespace JetBlackEngineLib.Io.Animation
 {
     public class BdgaAnmDecoder : AnmDecoder
     {
@@ -17,19 +15,19 @@ namespace WorldExplorer.DataLoaders.Animation
             var offset14Val = DataUtil.getLEInt(data, 0x14);
             var offset18Val = DataUtil.getLEInt(data, 0x18);
             var bindingPoseOffset = DataUtil.getLEInt(data, 0x0C);
-            
+
             var bindingPose = new Point3D[numBones];
             for (var i = 0; i < numBones; ++i)
             {
                 bindingPose[i] = new Point3D(
-                    -DataUtil.getLEShort(data, bindingPoseOffset + (i * 8) + 0) / 64.0,
-                    -DataUtil.getLEShort(data, bindingPoseOffset + (i * 8) + 2) / 64.0,
-                    -DataUtil.getLEShort(data, bindingPoseOffset + (i * 8) + 4) / 64.0
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 0) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 2) / 64.0,
+                    -DataUtil.getLEShort(data, bindingPoseOffset + i * 8 + 4) / 64.0
                 );
             }
 
             // Skeleton structure
-            
+
             var skeletonDef = new int[numBones];
             for (var i = 0; i < numBones; ++i)
             {
@@ -41,8 +39,8 @@ namespace WorldExplorer.DataLoaders.Animation
             AnimMeshPose? pose;
             for (var boneNum = 0; boneNum < numBones; ++boneNum)
             {
-                pose = new AnimMeshPose {BoneNum = boneNum, FrameNum = 0};
-                var frameOff = offset8Val + (boneNum * 0x0e);
+                pose = new AnimMeshPose { BoneNum = boneNum, FrameNum = 0 };
+                var frameOff = offset8Val + boneNum * 0x0e;
 
                 pose.Position = new Point3D(
                     DataUtil.getLEShort(data, frameOff) / 64.0,
@@ -69,8 +67,8 @@ namespace WorldExplorer.DataLoaders.Animation
 
             var numFrames = 1;
 
-            var totalFrame = 0;
-            var otherOff = offset8Val + (numBones * 0x0e);
+            var frameNumber = 0;
+            var otherOff = offset8Val + numBones * 0x0e;
 
             pose = null;
             while (otherOff < endIndex)
@@ -83,9 +81,9 @@ namespace WorldExplorer.DataLoaders.Animation
                     break;
                 }
 
-                totalFrame += count;
+                frameNumber += count;
 
-                if (pose == null || pose.FrameNum != totalFrame || pose.BoneNum != boneNum)
+                if (pose == null || pose.FrameNum != frameNumber || pose.BoneNum != boneNum)
                 {
                     if (pose != null)
                     {
@@ -94,7 +92,7 @@ namespace WorldExplorer.DataLoaders.Animation
 
                     pose = new AnimMeshPose
                     {
-                        FrameNum = totalFrame,
+                        FrameNum = frameNumber,
                         BoneNum = boneNum,
                         Position = curPose[boneNum].Position,
                         Rotation = curPose[boneNum].Rotation,
@@ -127,19 +125,19 @@ namespace WorldExplorer.DataLoaders.Animation
                     Quaternion angVel = new(b, c, d, a);
 
                     var prevAngVel = pose.AngularVelocity;
-                    var coeff = (totalFrame - curAngVelFrame[boneNum]) / 131072.0;
+                    var coeff = (frameNumber - curAngVelFrame[boneNum]) / 131072.0;
                     Quaternion angDelta = new(prevAngVel.X * coeff, prevAngVel.Y * coeff,
                         prevAngVel.Z * coeff,
                         prevAngVel.W * coeff);
                     pose.Rotation = new Quaternion(pose.Rotation.X + angDelta.X, pose.Rotation.Y + angDelta.Y,
                         pose.Rotation.Z + angDelta.Z, pose.Rotation.W + angDelta.W);
 
-                    pose.FrameNum = totalFrame;
+                    pose.FrameNum = frameNumber;
                     pose.AngularVelocity = angVel;
 
                     curPose[boneNum].Rotation = pose.Rotation;
                     curPose[boneNum].AngularVelocity = pose.AngularVelocity;
-                    curAngVelFrame[boneNum] = totalFrame;
+                    curAngVelFrame[boneNum] = frameNumber;
                 }
                 else
                 {
@@ -160,16 +158,16 @@ namespace WorldExplorer.DataLoaders.Animation
 
                     Point3D vel = new(x, y, z);
                     var prevVel = pose.Velocity;
-                    var coeff = (totalFrame - curVelFrame[boneNum]) / 512.0;
+                    var coeff = (frameNumber - curVelFrame[boneNum]) / 512.0;
                     Point3D posDelta = new(prevVel.X * coeff, prevVel.Y * coeff, prevVel.Z * coeff);
                     pose.Position = new Point3D(pose.Position.X + posDelta.X, pose.Position.Y + posDelta.Y,
                         pose.Position.Z + posDelta.Z);
-                    pose.FrameNum = totalFrame;
+                    pose.FrameNum = frameNumber;
                     pose.Velocity = vel;
 
                     curPose[boneNum].Position = pose.Position;
                     curPose[boneNum].Velocity = pose.Velocity;
-                    curVelFrame[boneNum] = totalFrame;
+                    curVelFrame[boneNum] = frameNumber;
                 }
             }
 
@@ -178,12 +176,10 @@ namespace WorldExplorer.DataLoaders.Animation
                 meshPoses.Add(pose);
             }
 
-            numFrames = totalFrame + 1;
+            numFrames = frameNumber + 1;
 
             var animData = new AnimData(bindingPose, numBones, numFrames, offset4Val, offset14Val, offset18Val,
                 skeletonDef, meshPoses);
-            animData.BuildPerFramePoses();
-            animData.BuildPerFrameFKPoses();
             return animData;
         }
     }

@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using JetBlackEngineLib.Data;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -73,8 +74,8 @@ namespace WorldExplorer.Win3D
                         }
 
                         var bone1No = vw.bone1;
-                        var bindingPos1 = pose.bindingPose[bone1No];
-                        var bone1Pose = pose.perFrameFKPoses?[frame, bone1No] 
+                        var bindingPos1 = pose.BindingPose[bone1No];
+                        var bone1Pose = pose.PerFrameFkPoses?[frame, bone1No] 
                                         ?? throw new InvalidDataException("Invalid frame/bone pair encountered!");
                         // var joint1Pos = bone1Pose.Position;
                         if (vw.bone2 == 0xFF)
@@ -90,8 +91,8 @@ namespace WorldExplorer.Win3D
                         {
                             // multi-bone
                             var bone2No = vw.bone2;
-                            var bindingPos2 = pose.bindingPose[bone2No];
-                            var bone2Pose = pose.perFrameFKPoses[frame, bone2No];
+                            var bindingPos2 = pose.BindingPose[bone2No];
+                            var bone2Pose = pose.PerFrameFkPoses[frame, bone2No];
                             double boneSum = vw.boneWeight1 + vw.boneWeight2;
                             var bone1Coeff = vw.boneWeight1 / boneSum;
                             var bone2Coeff = vw.boneWeight2 / boneSum;

@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using JetBlackEngineLib;
+using JetBlackEngineLib.Data;
+using JetBlackEngineLib.Io.Animation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,7 +25,6 @@ using System.IO;
 using System.Text;
 using System.Windows.Media.Imaging;
 using WorldExplorer.DataLoaders;
-using WorldExplorer.DataLoaders.Animation;
 using WorldExplorer.DataLoaders.World;
 using WorldExplorer.DataModel;
 using WorldExplorer.Logging;
@@ -237,11 +239,12 @@ namespace WorldExplorer
                     if (_modelViewModel.VifModel != null)
                     {
                         var boneCount = _modelViewModel.VifModel.CountBones();
+                        // Ensure the animation has the same number of bones as the model
                         if (boneCount != 0 && boneCount == animData.NumBones)
                         {
                             _modelViewModel.AnimData = animData;
 
-                            // Switch tab to animation tab only if the current tab isnt the model view tab
+                            // Switch tab to animation tab only if the current tab isn't the model view tab
                             if (MainWindow.tabControl.SelectedIndex != 1) // Model View
                             {
                                 MainWindow.tabControl.SelectedIndex = 2; // Skeleton View

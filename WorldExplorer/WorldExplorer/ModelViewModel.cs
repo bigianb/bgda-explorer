@@ -15,6 +15,7 @@
 */
 
 using HelixToolkit.Wpf;
+using JetBlackEngineLib.Data;
 using System;
 using System.IO;
 using System.Windows;

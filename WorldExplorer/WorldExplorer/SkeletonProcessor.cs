@@ -14,6 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using JetBlackEngineLib.Data;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -38,15 +39,15 @@ namespace WorldExplorer
             var parentPoints = new Point3D[64];
             parentPoints[0] = new Point3D(0, 0, 0);
 
-            for (var jointNum = 0; jointNum < animData.skeletonDef.GetLength(0); ++jointNum)
+            for (var jointNum = 0; jointNum < animData.SkeletonDef.GetLength(0); ++jointNum)
             {
-                var parentIndex = animData.skeletonDef[jointNum];
+                var parentIndex = animData.SkeletonDef[jointNum];
                 // Binding position
-                var pos = animData.bindingPose[jointNum];
+                var pos = animData.BindingPose[jointNum];
 
                 if (frameNo >= 0)
                 {
-                    var pose = animData.perFrameFKPoses?[frameNo, jointNum]
+                    var pose = animData.PerFrameFkPoses?[frameNo, jointNum]
                         ?? throw new InvalidDataException("Invalid frame/bone pair encountered!");
                     pos = pose.Position;
                 }

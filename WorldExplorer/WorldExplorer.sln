@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetBlackEngineLib", "JetBlackEngineLib\JetBlackEngineLib.csproj", "{4801909E-0F0D-4F6F-9585-64F78E5D907E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JetBlackEngineLib", "JetBlackEngineLib\JetBlackEngineLib.csproj", "{4801909E-0F0D-4F6F-9585-64F78E5D907E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JetBlackEngineLib.Tests", "JetBlackEngineLib.Tests\JetBlackEngineLib.Tests.csproj", "{51269237-2429-4E73-B22A-5C69DD5FAE96}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JetBlackEngineLib.Tests", "JetBlackEngineLib.Tests\JetBlackEngineLib.Tests.csproj", "{51269237-2429-4E73-B22A-5C69DD5FAE96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

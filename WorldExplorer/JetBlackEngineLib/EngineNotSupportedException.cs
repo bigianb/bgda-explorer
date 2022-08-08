@@ -1,7 +1,4 @@
-﻿using System;
-using WorldExplorer.DataLoaders;
-
-namespace WorldExplorer
+﻿namespace JetBlackEngineLib
 {
     public class EngineNotSupportedException : Exception
     {

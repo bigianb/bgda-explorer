@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBlackEngineLib;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -116,7 +117,7 @@ namespace WorldExplorer.DataLoaders.World
 
             var palette = PalEntry.readPalette(FileData, palOffset, 16, 16);
             palette = PalEntry.unswizzlePalette(palette);
-            var huffVals = decodeHuff(palOffset + 0xc00);
+            var huffVals = DecodeHuff(palOffset + 0xc00);
 
             var p = compressedDataOffset + 4;
 
@@ -246,7 +247,7 @@ namespace WorldExplorer.DataLoaders.World
             }
         }
 
-        private HuffVal[] decodeHuff(int tableOffset)
+        private HuffVal[] DecodeHuff(int tableOffset)
         {
             var huffOut = new HuffVal[256];
 

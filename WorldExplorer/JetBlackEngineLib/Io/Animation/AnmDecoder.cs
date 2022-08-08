@@ -1,7 +1,6 @@
-﻿using System;
-using WorldExplorer.DataModel;
+﻿using JetBlackEngineLib.Data;
 
-namespace WorldExplorer.DataLoaders.Animation
+namespace JetBlackEngineLib.Io.Animation
 {
     public abstract class AnmDecoder
     {
