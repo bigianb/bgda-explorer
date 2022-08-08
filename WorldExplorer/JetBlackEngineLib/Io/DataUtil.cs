@@ -3,7 +3,7 @@ using System.Text;
 
 namespace JetBlackEngineLib.Io
 {
-    internal class DataUtil
+    public static class DataUtil
     {
         public static string GetString(byte[] data, int index)
         {

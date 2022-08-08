@@ -15,6 +15,7 @@
 */
 
 using JetBlackEngineLib;
+using JetBlackEngineLib.Io;
 using System;
 using System.Collections.Generic;
 using System.IO;
