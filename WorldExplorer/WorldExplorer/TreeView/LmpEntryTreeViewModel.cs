@@ -14,22 +14,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+/// <summary>
+/// A simple model that displays an entry in a LMP file.
+/// </summary>
+public class LmpEntryTreeViewModel : AbstractLmpTreeViewModel
 {
-    /// <summary>
-    /// A simple model that displays an entry in a LMP file.
-    /// </summary>
-    public class LmpEntryTreeViewModel : AbstractLmpTreeViewModel
+    public LmpEntryTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+        : base(world, parent, lmpFile, entryName)
     {
-        public LmpEntryTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
-            : base(world, parent, lmpFile, entryName)
-        {
-        }
+    }
 
-        protected override void LoadChildren()
-        {
-        }
+    protected override void LoadChildren()
+    {
     }
 }

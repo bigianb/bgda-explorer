@@ -17,43 +17,42 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+/// <summary>
+/// Interaction logic for ModelView.xaml
+/// </summary>
+public partial class ModelView
 {
-    /// <summary>
-    /// Interaction logic for ModelView.xaml
-    /// </summary>
-    public partial class ModelView
+    private ModelViewModel ViewModel => (ModelViewModel)DataContext;
+
+    public ModelView()
     {
-        private ModelViewModel ViewModel => (ModelViewModel)DataContext;
+        InitializeComponent();
 
-        public ModelView()
+        viewport.KeyDown += Viewport_KeyDown;
+    }
+
+    private void Viewport_KeyDown(object sender, KeyEventArgs e)
+    {
+        switch (e.Key)
         {
-            InitializeComponent();
+            case Key.G:
+                if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+                {
+                    ViewModel.ShowExportForPosedModel();
+                }
 
-            viewport.KeyDown += Viewport_KeyDown;
+                break;
         }
+    }
 
-        private void Viewport_KeyDown(object sender, KeyEventArgs e)
+    private void normalsBox_IsCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ModelViewModel vm)
         {
-            switch (e.Key)
-            {
-                case Key.G:
-                    if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-                    {
-                        ViewModel.ShowExportForPosedModel();
-                    }
-
-                    break;
-            }
-        }
-
-        private void normalsBox_IsCheckedChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is ModelViewModel vm)
-            {
-                // Force Update
-                vm.VifModel = vm.VifModel;
-            }
+            // Force Update
+            vm.VifModel = vm.VifModel;
         }
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace JetBlackEngineLib
+﻿namespace JetBlackEngineLib;
+
+public enum EngineVersion
 {
-    public enum EngineVersion
-    {
-        DarkAlliance,
-        ReturnToArms,
-        JusticeLeagueHeroes
-    }
+    DarkAlliance,
+    ReturnToArms,
+    JusticeLeagueHeroes
 }

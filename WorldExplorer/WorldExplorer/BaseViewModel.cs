@@ -1,31 +1,30 @@
 ﻿using System.ComponentModel;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+public abstract class BaseViewModel : INotifyPropertyChanged
 {
-    public abstract class BaseViewModel : INotifyPropertyChanged
+    /// <summary>
+    /// The MainWindowViewModel that contains a lot of the information about the application.
+    /// </summary>
+    public MainWindowViewModel MainViewModel { get; set; }
+
+    protected BaseViewModel(MainWindowViewModel mainViewModel)
     {
-        /// <summary>
-        /// The MainWindowViewModel that contains a lot of the information about the application.
-        /// </summary>
-        public MainWindowViewModel MainViewModel { get; set; }
-
-        protected BaseViewModel(MainWindowViewModel mainViewModel)
-        {
-            MainViewModel = mainViewModel;
-        }
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        #endregion // INotifyPropertyChanged Members
+        MainViewModel = mainViewModel;
     }
+
+    #region INotifyPropertyChanged Members
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        if (PropertyChanged != null)
+        {
+            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    #endregion // INotifyPropertyChanged Members
 }

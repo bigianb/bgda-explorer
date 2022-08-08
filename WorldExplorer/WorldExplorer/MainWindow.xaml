@@ -57,7 +57,7 @@
                 </TreeView.ItemContainerStyle>
 
                 <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type local:TreeViewItemViewModel}"
+                    <HierarchicalDataTemplate DataType="{x:Type treeView:TreeViewItemViewModel}"
                                               ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Label}" />
