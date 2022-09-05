@@ -14,28 +14,27 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+/// <summary>
+/// A simple model that displays a GOB file.
+/// </summary>
+public class GobTreeViewModel : TreeViewItemViewModel
 {
-    /// <summary>
-    /// A simple model that displays a GOB file.
-    /// </summary>
-    public class GobTreeViewModel : TreeViewItemViewModel
+    private readonly World _world;
+
+    public GobTreeViewModel(World world, TreeViewItemViewModel parent)
+        : base(world.WorldGob?.Name ?? "[ERROR: NO GOB FILE]", parent, true)
     {
-        private readonly World _world;
+        _world = world;
+    }
 
-        public GobTreeViewModel(World world, TreeViewItemViewModel parent)
-            : base(world.WorldGob?.Name ?? "[ERROR: NO GOB FILE]", parent, true)
+    protected override void LoadChildren()
+    {
+        if (_world.WorldGob == null) return;
+        foreach (var entry in _world.WorldGob.Directory)
         {
-            _world = world;
-        }
-
-        protected override void LoadChildren()
-        {
-            if (_world.WorldGob == null) return;
-            foreach (var entry in _world.WorldGob.Directory)
-            {
-                Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
-            }
+            Children.Add(new LmpTreeViewModel(_world, this, entry.Value));
         }
     }
 }

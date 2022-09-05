@@ -1,43 +1,77 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Text;
 
-namespace WorldExplorer.Logging
+namespace WorldExplorer.Logging;
+
+/// <summary>
+/// This doesn't really do anything
+/// </summary>
+internal sealed class ScopeDisposable : IDisposable
 {
-    public interface ILogger
+    public void Dispose()
     {
-        void LogLine(string line);
+    }
+}
+
+public class StringLogger : ILogger
+{
+    private readonly StringBuilder _sb = new();
+    private readonly LogLevel _minLevel = LogLevel.Trace;
+        
+    public StringLogger()
+    {
     }
 
-    public class StringLogger : ILogger
+    public StringLogger(LogLevel minLevel)
     {
-        private readonly StringBuilder _sb = new();
-
-        public void LogLine(string line)
-        {
-            _sb.AppendLine(line);
-        }
-
-        public override string ToString()
-        {
-            return _sb.ToString();
-        }
+        _minLevel = minLevel;
     }
 
-    public class NullLogger : ILogger
+    public void LogLine(string line)
     {
-        private static NullLogger? _instance;
+        _sb.AppendLine(line);
+    }
 
-        public static NullLogger Instance
-        {
-            get
-            {
-                if (_instance == null)
-                    _instance = new NullLogger();
-                return _instance;
-            }
-        }
-        public void LogLine(string line)
-        {
-            // Do nothing
-        }
+    public override string ToString()
+    {
+        return _sb.ToString();
+    }
+
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+        var msg = formatter(state, exception);
+        _sb.Append($"{msg}\n");
+    }
+
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return logLevel >= _minLevel;
+    }
+
+    public IDisposable BeginScope<TState>(TState state)
+    {
+        return new ScopeDisposable();
+    }
+}
+
+public class NullLogger : ILogger
+{
+    private static readonly Lazy<NullLogger> InstanceLazy = new(() => new NullLogger());
+
+    public static NullLogger Instance => InstanceLazy.Value;
+
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    {
+    }
+
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return false;
+    }
+
+    public IDisposable BeginScope<TState>(TState state)
+    {
+        return new ScopeDisposable();
     }
 }

@@ -14,22 +14,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public abstract class AbstractLmpTreeViewModel : TreeViewItemViewModel
 {
-    public abstract class AbstractLmpTreeViewModel : TreeViewItemViewModel
+    protected LmpFile _lmpFile;
+    protected World _world;
+
+    public LmpFile LmpFileProperty => _lmpFile;
+
+    protected AbstractLmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+        : base(entryName, parent, true)
     {
-        protected LmpFile _lmpFile;
-        protected World _world;
-
-        public LmpFile LmpFileProperty => _lmpFile;
-
-        protected AbstractLmpTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
-            : base(entryName, parent, true)
-        {
-            _lmpFile = lmpFile;
-            _world = world;
-        }
+        _lmpFile = lmpFile;
+        _world = world;
     }
 }

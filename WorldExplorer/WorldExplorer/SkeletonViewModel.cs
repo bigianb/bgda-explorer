@@ -14,120 +14,119 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using JetBlackEngineLib.Data.Animation;
 using System;
 using System.Windows.Media.Media3D;
-using WorldExplorer.DataModel;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+public class SkeletonViewModel : BaseViewModel
 {
-    public class SkeletonViewModel : BaseViewModel
+    private AnimData? _animData;
+
+    private Camera _camera = new OrthographicCamera
     {
-        private AnimData? _animData;
+        Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1)
+    };
 
-        private Camera _camera = new OrthographicCamera
+    private Transform3D _cameraTransform = Transform3D.Identity;
+
+    private int _currentFrame;
+
+    private Model3D? _model;
+
+    public AnimData? AnimData
+    {
+        get => _animData;
+        set
         {
-            Position = new Point3D(0, 10, -10), LookDirection = new Vector3D(0, -1, 1)
-        };
+            _animData = value;
+            CurrentFrame = 0;
+            UpdateModel();
+            OnPropertyChanged("AnimData");
+            OnPropertyChanged("MaximumFrame");
+        }
+    }
 
-        private Transform3D _cameraTransform = Transform3D.Identity;
+    public int MaximumFrame
+    {
+        get => _animData == null ? 0 : _animData.NumFrames - 1;
+        // set { }
+    }
 
-        private int _currentFrame;
-
-        private Model3D? _model;
-
-        public AnimData? AnimData
+    public int CurrentFrame
+    {
+        get => _currentFrame;
+        set
         {
-            get => _animData;
-            set
-            {
-                _animData = value;
-                CurrentFrame = 0;
-                UpdateModel();
-                OnPropertyChanged("AnimData");
-                OnPropertyChanged("MaximumFrame");
-            }
+            _currentFrame = value;
+            UpdateModel();
+            OnPropertyChanged("CurrentFrame");
+        }
+    }
+
+    public Model3D? Model
+    {
+        get => _model;
+        set
+        {
+            _model = value;
+            UpdateCamera(_model);
+            OnPropertyChanged("Model");
+        }
+    }
+
+    public Transform3D CameraTransform
+    {
+        get => _cameraTransform;
+        set
+        {
+            _cameraTransform = value;
+            _camera.Transform = _cameraTransform;
+            OnPropertyChanged("CameraTransform");
+        }
+    }
+
+    public Camera Camera
+    {
+        get => _camera;
+        set
+        {
+            _camera = value;
+            OnPropertyChanged("Camera");
+        }
+    }
+
+    public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
+    {
+    }
+
+    private void UpdateModel()
+    {
+        Model = SkeletonProcessor.GetSkeletonModel(_animData, CurrentFrame);
+    }
+
+    private void UpdateCamera(Model3D? model)
+    {
+        if (model == null)
+        {
+            return;
         }
 
-        public int MaximumFrame
-        {
-            get => _animData == null ? 0 : _animData.NumFrames - 1;
-            // set { }
-        }
+        var oCam = (OrthographicCamera)_camera;
 
-        public int CurrentFrame
-        {
-            get => _currentFrame;
-            set
-            {
-                _currentFrame = value;
-                UpdateModel();
-                OnPropertyChanged("CurrentFrame");
-            }
-        }
+        var bounds = model.Bounds;
+        //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
+        Point3D centroid = new(0, 0, 0);
+        var radius =
+            Math.Sqrt((bounds.SizeX * bounds.SizeX) + (bounds.SizeY * bounds.SizeY) +
+                      (bounds.SizeZ * bounds.SizeZ)) /
+            2.0;
+        var cameraDistance = radius * 2.0;
 
-        public Model3D? Model
-        {
-            get => _model;
-            set
-            {
-                _model = value;
-                UpdateCamera(_model);
-                OnPropertyChanged("Model");
-            }
-        }
-
-        public Transform3D CameraTransform
-        {
-            get => _cameraTransform;
-            set
-            {
-                _cameraTransform = value;
-                _camera.Transform = _cameraTransform;
-                OnPropertyChanged("CameraTransform");
-            }
-        }
-
-        public Camera Camera
-        {
-            get => _camera;
-            set
-            {
-                _camera = value;
-                OnPropertyChanged("Camera");
-            }
-        }
-
-        public SkeletonViewModel(MainWindowViewModel mainViewWindow) : base(mainViewWindow)
-        {
-        }
-
-        private void UpdateModel()
-        {
-            Model = SkeletonProcessor.GetSkeletonModel(_animData, CurrentFrame);
-        }
-
-        private void UpdateCamera(Model3D? model)
-        {
-            if (model == null)
-            {
-                return;
-            }
-
-            var oCam = (OrthographicCamera)_camera;
-
-            var bounds = model.Bounds;
-            //Point3D centroid = new Point3D(bounds.X + bounds.SizeX / 2.0, bounds.Y + bounds.SizeY / 2.0, bounds.Z + bounds.SizeZ / 2.0);
-            Point3D centroid = new(0, 0, 0);
-            var radius =
-                Math.Sqrt((bounds.SizeX * bounds.SizeX) + (bounds.SizeY * bounds.SizeY) +
-                          (bounds.SizeZ * bounds.SizeZ)) /
-                2.0;
-            var cameraDistance = radius * 2.0;
-
-            Point3D camPos = new(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
-            oCam.Position = camPos;
-            oCam.Width = cameraDistance;
-            oCam.LookDirection = new Vector3D(0, 1, -1);
-        }
+        Point3D camPos = new(centroid.X, centroid.Y - cameraDistance, centroid.Z + cameraDistance);
+        oCam.Position = camPos;
+        oCam.Width = cameraDistance;
+        oCam.LookDirection = new Vector3D(0, 1, -1);
     }
 }

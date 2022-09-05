@@ -14,74 +14,74 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using JetBlackEngineLib;
+using JetBlackEngineLib.Data.DataContainers;
+using JetBlackEngineLib.Data.Textures;
+using JetBlackEngineLib.Data.World;
 using System;
 using System.IO;
-using WorldExplorer.DataLoaders;
-using WorldExplorer.DataLoaders.World;
-using WorldExplorer.DataModel;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+public class World
 {
-    public class World
+    public readonly string DataPath;
+    public readonly EngineVersion EngineVersion;
+    public readonly string Name;
+    public CacheFile? HdrDatFile;
+
+    // The parsed data from the various files.
+    public WorldData? WorldData = null;
+
+    public GobFile? WorldGob;
+    public LmpFile? WorldLmp;
+    public WorldTexFile? WorldTex;
+    public YakFile? WorldYak;
+
+    public World(EngineVersion engineVersion, string dataPath, string name)
     {
-        public readonly string DataPath;
-        public readonly EngineVersion EngineVersion;
-        public readonly string Name;
-        public CacheFile? HdrDatFile;
+        EngineVersion = engineVersion;
+        DataPath = dataPath ?? throw new ArgumentNullException(nameof(dataPath));
+        Name = name;
+    }
 
-        // The parsed data from the various files.
-        public WorldData? WorldData = null;
+    public void Load()
+    {
+        var ext = (Path.GetExtension(Name) ?? "").ToLower();
 
-        public GobFile? WorldGob;
-        public LmpFile? WorldLmp;
-        public WorldTexFile? WorldTex;
-        public YakFile? WorldYak;
-
-        public World(EngineVersion engineVersion, string dataPath, string name)
+        switch (ext)
         {
-            EngineVersion = engineVersion;
-            DataPath = dataPath ?? throw new ArgumentNullException(nameof(dataPath));
-            Name = name;
-        }
+            case ".gob":
+                var texFileName = Path.GetFileNameWithoutExtension(Name) + ".tex";
+                var textFilePath = Path.Combine(DataPath, texFileName);
+                WorldGob = new GobFile(EngineVersion, Path.Combine(DataPath, Name));
+                if (File.Exists(textFilePath))
+                {
+                    WorldTex = new WorldTexFile(EngineVersion, textFilePath);
+                }
+                else
+                {
+                    WorldTex = null;
+                }
 
-        public void Load()
-        {
-            var ext = (Path.GetExtension(Name) ?? "").ToLower();
-
-            switch (ext)
-            {
-                case ".gob":
-                    var texFileName = Path.GetFileNameWithoutExtension(Name) + ".tex";
-                    var textFilePath = Path.Combine(DataPath, texFileName);
-                    WorldGob = new GobFile(EngineVersion, Path.Combine(DataPath, Name));
-                    if (File.Exists(textFilePath))
-                    {
-                        WorldTex = new WorldTexFile(EngineVersion, textFilePath);
-                    }
-                    else
-                    {
-                        WorldTex = null;
-                    }
-
-                    break;
-                case ".lmp":
-                    // TODO: Support just passing the filepath instead of having to load data here
-                    var data = File.ReadAllBytes(Path.Combine(DataPath, Name));
-                    WorldLmp = new LmpFile(EngineVersion, Name, data, 0, data.Length);
-                    break;
-                case ".yak":
-                    var yakData = File.ReadAllBytes(Path.Combine(DataPath, Name));
-                    WorldYak = new YakFile(EngineVersion, Name, yakData);
-                    break;
-                case ".hdr":
-                    var baseName = Name.Substring(0, Name.Length - 4);
-                    var hdrData = File.ReadAllBytes(Path.Combine(DataPath, Name));
-                    var datData = File.ReadAllBytes(Path.Combine(DataPath, baseName + ".DAT"));
-                    HdrDatFile = new CacheFile(EngineVersion, baseName, hdrData, datData);
-                    break;
-                default:
-                    throw new NotSupportedException("Unsupported file type");
-            }
+                break;
+            case ".lmp":
+                // TODO: Support just passing the filepath instead of having to load data here
+                var data = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                WorldLmp = new LmpFile(EngineVersion, Name, data, 0, data.Length);
+                break;
+            case ".yak":
+                var yakData = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                WorldYak = new YakFile(EngineVersion, Name, yakData);
+                break;
+            case ".hdr":
+                var baseName = Name[..^4];
+                var hdrData = File.ReadAllBytes(Path.Combine(DataPath, Name));
+                var datData = File.ReadAllBytes(Path.Combine(DataPath, baseName + ".DAT"));
+                HdrDatFile = new CacheFile(EngineVersion, baseName, hdrData, datData);
+                break;
+            default:
+                throw new NotSupportedException("Unsupported file type");
         }
     }
 }

@@ -18,160 +18,160 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using WorldExplorer.TreeView;
 using WorldExplorer.WorldDefs;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+/// <summary>
+/// Interaction logic for LevelView.xaml
+/// </summary>
+public partial class LevelView
 {
-    /// <summary>
-    /// Interaction logic for LevelView.xaml
-    /// </summary>
-    public partial class LevelView
+    private LevelViewModel? _lvm;
+
+    public LevelView()
     {
-        private LevelViewModel? _lvm;
+        InitializeComponent();
+        DataContextChanged += LevelView_DataContextChanged;
+        viewport.MouseUp += viewport_MouseUp;
+        viewport.KeyDown += Viewport_KeyDown;
+        ElementSelected(null);
+    }
 
-        public LevelView()
-        {
-            InitializeComponent();
-            DataContextChanged += LevelView_DataContextChanged;
-            viewport.MouseUp += viewport_MouseUp;
-            viewport.KeyDown += Viewport_KeyDown;
-            ElementSelected(null);
-        }
-
-        private void Viewport_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (_lvm == null) return;
+    private void Viewport_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (_lvm == null) return;
             
-            switch (e.Key)
+        switch (e.Key)
+        {
+            case Key.L:
             {
-                case Key.L:
-                {
-                    // Toggle lighting
-                    _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
-                }
-                    break;
+                // Toggle lighting
+                _lvm.EnableLevelSpecifiedLights = !_lvm.EnableLevelSpecifiedLights;
             }
+                break;
+        }
+    }
+
+    private void LevelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (!(DataContext is LevelViewModel lvm))
+        {
+            // Cleared level view
+            _lvm = null;
+            return;
         }
 
-        private void LevelView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        _lvm = lvm;
+    }
+
+    private Brush? TryGettingAmbientLightColor()
+    {
+        var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
+        if (ambientLight == null)
         {
-            if (!(DataContext is LevelViewModel lvm))
+            return null;
+        }
+
+        return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1],
+            (byte)ambientLight.Floats[2]));
+    }
+
+    protected void OnSceneUpdated()
+    {
+        Background = TryGettingAmbientLightColor() ?? Brushes.White;
+    }
+
+    protected override void OnRender(DrawingContext drawingContext)
+    {
+        viewport.CameraController.MoveSensitivity = 30;
+        base.OnRender(drawingContext);
+    }
+
+    private void viewport_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left &&
+            (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            var hitResult = GetHitTestResult(e.GetPosition(viewport));
+
+            if (hitResult == null) return;
+
+            var levelViewModel = (LevelViewModel)DataContext;
+            var worldNode = levelViewModel.WorldNode;
+
+            WorldElementTreeViewModel? selectedElement = null;
+
+            if (worldNode == null)
             {
-                // Cleared level view
-                _lvm = null;
+                ElementSelected(null);
                 return;
             }
 
-            _lvm = lvm;
-        }
+            var vod = levelViewModel.ObjectManager.HitTest(hitResult);
 
-        private Brush? TryGettingAmbientLightColor()
-        {
-            var ambientLight = _lvm?.ObjectManager.GetObjectByName("Ambient_Light");
-            if (ambientLight == null)
+            if (vod != null)
             {
-                return null;
+                ObjectSelected(vod);
+                return;
             }
 
-            return new SolidColorBrush(Color.FromRgb((byte)ambientLight.Floats[0], (byte)ambientLight.Floats[1],
-                (byte)ambientLight.Floats[2]));
-        }
-
-        protected void OnSceneUpdated()
-        {
-            Background = TryGettingAmbientLightColor() ?? Brushes.White;
-        }
-
-        protected override void OnRender(DrawingContext drawingContext)
-        {
-            viewport.CameraController.MoveSensitivity = 30;
-            base.OnRender(drawingContext);
-        }
-
-        private void viewport_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left &&
-                (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            if (levelViewModel.Scene != null)
             {
-                var hitResult = GetHitTestResult(e.GetPosition(viewport));
-
-                if (hitResult == null) return;
-
-                var levelViewModel = (LevelViewModel)DataContext;
-                var worldNode = levelViewModel.WorldNode;
-
-                WorldElementTreeViewModel? selectedElement = null;
-
-                if (worldNode == null)
+                for (var i = 0; i < worldNode.Children.Count; i++)
                 {
-                    ElementSelected(null);
-                    return;
-                }
-
-                var vod = levelViewModel.ObjectManager.HitTest(hitResult);
-
-                if (vod != null)
-                {
-                    ObjectSelected(vod);
-                    return;
-                }
-
-                if (levelViewModel.Scene != null)
-                {
-                    for (var i = 0; i < worldNode.Children.Count; i++)
+                    if (levelViewModel.Scene[i + 2] == hitResult)
                     {
-                        if (levelViewModel.Scene[i + 2] == hitResult)
-                        {
-                            selectedElement = (WorldElementTreeViewModel)worldNode.Children[i];
-                            break;
-                        }
+                        selectedElement = (WorldElementTreeViewModel)worldNode.Children[i];
+                        break;
                     }
                 }
-
-                ElementSelected(selectedElement);
             }
-        }
 
-        private void ElementSelected(WorldElementTreeViewModel? ele)
+            ElementSelected(selectedElement);
+        }
+    }
+
+    private void ElementSelected(WorldElementTreeViewModel? ele)
+    {
+        if (_lvm != null)
         {
-            if (_lvm != null)
-            {
-                _lvm.SelectedObject = null;
-                _lvm.SelectedElement = ele;
-            }
-
-            // Expand after values have changed
-            if (!editorExpander.IsExpanded)
-            {
-                editorExpander.IsExpanded = true;
-            }
+            _lvm.SelectedObject = null;
+            _lvm.SelectedElement = ele;
         }
 
-        private void ObjectSelected(VisualObjectData obj)
+        // Expand after values have changed
+        if (!editorExpander.IsExpanded)
         {
-            if (_lvm != null)
-            {
-                _lvm.SelectedElement = null;
-                _lvm.SelectedObject = obj;
-            }
-
-            // Expand after values have changed
-            if (!editorExpander.IsExpanded)
-            {
-                editorExpander.IsExpanded = true;
-            }
+            editorExpander.IsExpanded = true;
         }
+    }
 
-        private ModelVisual3D? GetHitTestResult(Point location)
+    private void ObjectSelected(VisualObjectData obj)
+    {
+        if (_lvm != null)
         {
-            var result = VisualTreeHelper.HitTest(viewport, location);
-            if (result is {VisualHit: ModelVisual3D})
-            {
-                var visual = (ModelVisual3D)result.VisualHit;
-                return visual;
-            }
-
-            return null;
+            _lvm.SelectedElement = null;
+            _lvm.SelectedObject = obj;
         }
+
+        // Expand after values have changed
+        if (!editorExpander.IsExpanded)
+        {
+            editorExpander.IsExpanded = true;
+        }
+    }
+
+    private ModelVisual3D? GetHitTestResult(Point location)
+    {
+        var result = VisualTreeHelper.HitTest(viewport, location);
+        if (result is {VisualHit: ModelVisual3D})
+        {
+            var visual = (ModelVisual3D)result.VisualHit;
+            return visual;
+        }
+
+        return null;
     }
 }

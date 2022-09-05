@@ -14,35 +14,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+/// <summary>
+/// A simple model that displays a HDR/DAT cache file.
+/// </summary>
+public class HdrDatTreeViewModel : TreeViewItemViewModel
 {
-    /// <summary>
-    /// A simple model that displays a HDR/DAT cache file.
-    /// </summary>
-    public class HdrDatTreeViewModel : TreeViewItemViewModel
+    private readonly CacheFile _cacheFile;
+
+    private TreeViewItemViewModel _parent;
+
+    public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(cacheFile.Name, parent, true)
     {
-        private readonly CacheFile _cacheFile;
+        _parent = parent;
+        _cacheFile = cacheFile;
+    }
 
-        private TreeViewItemViewModel _parent;
-
-        public HdrDatTreeViewModel(TreeViewItemViewModel parent, CacheFile cacheFile) : base(cacheFile.Name, parent, true)
+    protected override void LoadChildren()
+    {
+        _cacheFile.ReadEntries();
+        var entries = _cacheFile.Entries;
+        var i = 0;
+        foreach (var entry in entries)
         {
-            _parent = parent;
-            _cacheFile = cacheFile;
-        }
-
-        protected override void LoadChildren()
-        {
-            _cacheFile.ReadEntries();
-            var entries = _cacheFile.Entries;
-            var i = 0;
-            foreach (var entry in entries)
-            {
-                Children.Add(new HdrDatTreeViewItem(this, _cacheFile, entry, entry.name));
-                ++i;
-            }
+            Children.Add(new HdrDatTreeViewItem(this, _cacheFile, entry, entry.name));
+            ++i;
         }
     }
 }

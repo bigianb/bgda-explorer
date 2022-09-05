@@ -14,25 +14,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.Textures;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public class YakChildTreeViewItem : TreeViewItemViewModel
 {
-    public class YakChildTreeViewItem : TreeViewItemViewModel
+    public YakEntryChild? Value { get; }
+
+    public YakEntry ParentEntry { get; }
+
+    public YakFile YakFile { get; }
+
+    public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakEntryChild? value,
+        YakEntry entry, string name)
+        : base(name, parent, false)
     {
-        public YakFile.YakEntryChild? Value { get; }
-
-        public YakFile.YakEntry ParentEntry { get; }
-
-        public YakFile YakFile { get; }
-
-        public YakChildTreeViewItem(TreeViewItemViewModel parent, YakFile yakFile, YakFile.YakEntryChild? value,
-            YakFile.YakEntry entry, string name)
-            : base(name, parent, false)
-        {
-            YakFile = yakFile;
-            Value = value;
-            ParentEntry = entry;
-        }
+        YakFile = yakFile;
+        Value = value;
+        ParentEntry = entry;
     }
 }

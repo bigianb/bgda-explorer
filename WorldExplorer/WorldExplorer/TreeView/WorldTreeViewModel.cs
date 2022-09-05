@@ -16,44 +16,43 @@
 
 using System;
 
-namespace WorldExplorer.TreeView
+namespace WorldExplorer.TreeView;
+
+public class WorldTreeViewModel : TreeViewItemViewModel
 {
-    public class WorldTreeViewModel : TreeViewItemViewModel
+    private readonly World _world;
+
+    public WorldTreeViewModel(World world)
+        : base(world.Name, null, true)
     {
-        private readonly World _world;
+        _world = world;
+    }
 
-        public WorldTreeViewModel(World world)
-            : base(world.Name, null, true)
+    public World World => _world;
+
+    protected override void LoadChildren()
+    {
+        _world.Load();
+
+        if (_world.WorldLmp != null)
         {
-            _world = world;
+            Children.Add(new LmpTreeViewModel(_world, this, _world.WorldLmp));
         }
-
-        public World World => _world;
-
-        protected override void LoadChildren()
+        else if (_world.WorldGob != null)
         {
-            _world.Load();
-
-            if (_world.WorldLmp != null)
-            {
-                Children.Add(new LmpTreeViewModel(_world, this, _world.WorldLmp));
-            }
-            else if (_world.WorldGob != null)
-            {
-                Children.Add(new GobTreeViewModel(_world, this));
-            }
-            else if (_world.WorldYak != null)
-            {
-                Children.Add(new YakTreeViewModel(this, _world.WorldYak));
-            }
-            else if (_world.HdrDatFile != null)
-            {
-                Children.Add(new HdrDatTreeViewModel(this, _world.HdrDatFile));
-            }
-            else
-            {
-                throw new NotSupportedException("Unknown or corrupted file");
-            }
+            Children.Add(new GobTreeViewModel(_world, this));
+        }
+        else if (_world.WorldYak != null)
+        {
+            Children.Add(new YakTreeViewModel(this, _world.WorldYak));
+        }
+        else if (_world.HdrDatFile != null)
+        {
+            Children.Add(new HdrDatTreeViewModel(this, _world.HdrDatFile));
+        }
+        else
+        {
+            throw new NotSupportedException("Unknown or corrupted file");
         }
     }
 }
