@@ -1,10 +1,9 @@
-﻿namespace WorldExplorer
+﻿namespace WorldExplorer;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
+    public static string TrimQuotes(this string value)
     {
-        public static string TrimQuotes(this string value)
-        {
-            return value.Replace("\"", "");
-        }
+        return value.Replace("\"", "");
     }
 }

@@ -14,38 +14,37 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public class WorldFileTreeViewModel : AbstractLmpTreeViewModel
 {
-    public class WorldFileTreeViewModel : AbstractLmpTreeViewModel
+    public WorldFileTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
+        : base(world, parent, lmpFile, entryName)
     {
-        public WorldFileTreeViewModel(World world, TreeViewItemViewModel parent, LmpFile lmpFile, string entryName)
-            : base(world, parent, lmpFile, entryName)
+    }
+
+    public void ReloadChildren()
+    {
+        Children.Clear();
+        LoadChildren();
+    }
+
+    protected override void LoadChildren()
+    {
+        if (_world.WorldData == null)
         {
+            // Force loading the tree item
+            IsSelected = true;
+            return; // Return to prevent adding elements twice
         }
 
-        public void ReloadChildren()
+        if (_world.WorldData != null)
         {
-            Children.Clear();
-            LoadChildren();
-        }
-
-        protected override void LoadChildren()
-        {
-            if (_world.WorldData == null)
+            foreach (var element in _world.WorldData.WorldElements)
             {
-                // Force loading the tree item
-                IsSelected = true;
-                return; // Return to prevent adding elements twice
-            }
-
-            if (_world.WorldData != null)
-            {
-                foreach (var element in _world.WorldData.WorldElements)
-                {
-                    Children.Add(new WorldElementTreeViewModel(element, "Element " + element.ElementIndex + " 0x" + element.RawFlags.ToString("X4"), Parent, _world.WorldData));
-                }
+                Children.Add(new WorldElementTreeViewModel(element, "Element " + element.ElementIndex + " 0x" + element.RawFlags.ToString("X4"), Parent, _world.WorldData));
             }
         }
     }

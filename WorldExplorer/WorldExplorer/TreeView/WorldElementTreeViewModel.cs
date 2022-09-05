@@ -14,25 +14,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataModel;
+using JetBlackEngineLib.Data.World;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public class WorldElementTreeViewModel : TreeViewItemViewModel
 {
-    public class WorldElementTreeViewModel : TreeViewItemViewModel
-    {
-        public WorldData WorldData { get; }
-        public WorldElement WorldElement { get; }
+    public WorldData WorldData { get; }
+    public WorldElement WorldElement { get; }
 
-        public WorldElementTreeViewModel(WorldElement worldElement, string label, TreeViewItemViewModel? parent,
-            WorldData worldData)
-            : base(label, parent, true)
-        {
-            WorldData = worldData;
-            WorldElement = worldElement;
-        }
+    public WorldElementTreeViewModel(WorldElement worldElement, string label, TreeViewItemViewModel? parent,
+        WorldData worldData)
+        : base(label, parent, true)
+    {
+        WorldData = worldData;
+        WorldElement = worldElement;
+    }
         
-        protected override void LoadChildren()
-        {
-        }
+    protected override void LoadChildren()
+    {
     }
 }

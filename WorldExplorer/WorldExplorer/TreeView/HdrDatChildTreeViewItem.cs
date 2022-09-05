@@ -14,25 +14,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public class HdrDatChildTreeViewItem : TreeViewItemViewModel
 {
-    public class HdrDatChildTreeViewItem : TreeViewItemViewModel
+    public CacheFile.Child Value { get; }
+
+    public CacheFile.Entry ParentEntry { get; }
+
+    public CacheFile CacheFile { get; }
+
+    public HdrDatChildTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Child value,
+        CacheFile.Entry entry, string name)
+        : base(name, parent, false)
     {
-        public CacheFile.Child Value { get; }
-
-        public CacheFile.Entry ParentEntry { get; }
-
-        public CacheFile CacheFile { get; }
-
-        public HdrDatChildTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Child value,
-            CacheFile.Entry entry, string name)
-            : base(name, parent, false)
-        {
-            CacheFile = cacheFile;
-            Value = value;
-            ParentEntry = entry;
-        }
+        CacheFile = cacheFile;
+        Value = value;
+        ParentEntry = entry;
     }
 }

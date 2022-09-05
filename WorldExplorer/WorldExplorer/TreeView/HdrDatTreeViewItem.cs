@@ -14,30 +14,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using WorldExplorer.DataLoaders;
+using JetBlackEngineLib.Data.DataContainers;
 
-namespace WorldExplorer
+namespace WorldExplorer.TreeView;
+
+public class HdrDatTreeViewItem : TreeViewItemViewModel
 {
-    public class HdrDatTreeViewItem : TreeViewItemViewModel
+    private readonly CacheFile _cacheFile;
+    private readonly CacheFile.Entry _entry;
+
+    public HdrDatTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Entry entry, string name)
+        : base(name, parent, true)
     {
-        private readonly CacheFile _cacheFile;
-        private readonly CacheFile.Entry _entry;
+        _cacheFile = cacheFile;
+        _entry = entry;
+    }
 
-        public HdrDatTreeViewItem(TreeViewItemViewModel parent, CacheFile cacheFile, CacheFile.Entry entry, string name)
-            : base(name, parent, true)
+    protected override void LoadChildren()
+    {
+        var i = 0;
+        foreach (var child in _entry.children)
         {
-            _cacheFile = cacheFile;
-            _entry = entry;
-        }
-
-        protected override void LoadChildren()
-        {
-            var i = 0;
-            foreach (var child in _entry.children)
-            {
-                Children.Add(new HdrDatChildTreeViewItem(this, _cacheFile, child, _entry, "Id " + child.id));
-                ++i;
-            }
+            Children.Add(new HdrDatChildTreeViewItem(this, _cacheFile, child, _entry, "Id " + child.id));
+            ++i;
         }
     }
 }

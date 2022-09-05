@@ -16,16 +16,15 @@
 
 using System.Windows.Controls;
 
-namespace WorldExplorer
+namespace WorldExplorer;
+
+/// <summary>
+/// Interaction logic for SkeletonView.xaml
+/// </summary>
+public partial class SkeletonView : UserControl
 {
-    /// <summary>
-    /// Interaction logic for SkeletonView.xaml
-    /// </summary>
-    public partial class SkeletonView : UserControl
+    public SkeletonView()
     {
-        public SkeletonView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
