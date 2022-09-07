@@ -20,10 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TestData\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="TestData\bdga_anim1.anm">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
